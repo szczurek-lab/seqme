@@ -15,7 +15,7 @@ For more examples visit [examples](/examples) directory.
 #### (RECOMMENDED) Local install for macOS (zsh) and Linux (bash) users
 
 Run the following commands:
-```properties
+```shell
 python3 -m venv $HOME/uv_venv
 echo "export PATH=$HOME/uv_venv/bin:$PATH" > $HOME/.$(basename $SHELL)rc
 source $HOME/.$(basename $SHELL)rc
@@ -26,7 +26,7 @@ The above commands automatically append `eport PATH=...` to `.bashrc` or `.zshrc
 
 #### (OPTIONAL) Systemwide install 
 Run any of the following commands:
-```properties
+```shell
 curl -LsSf https://astral.sh/uv/install.sh | sh
 wget -qO- https://astral.sh/uv/install.sh | sh
 pip install uv
@@ -34,13 +34,13 @@ pip install uv
 If you have troubles, visit the [official site](https://docs.astral.sh/uv/getting-started/installation/) for more information.
 
 ### 2. Create project virtual environment:
-```properties
+```shell
 uv venv --python 3.9
 source .venv/bin/activate
 ```
 
 ### 3. Install dependencies:
-```properties
+```shell
 uv sync
 ```
 
@@ -48,12 +48,12 @@ uv sync
 
 ## Testing
 Write tests in the [tests](/tests) directory. Follow the [`pytest`](#tooling) guidlines. Each file in the directory has to follow the naming convention.
-<h5 a><strong><code>tests/test_{name}.py</code></strong></h5>
+<h5 a><strong><code>tests/test_foo.py</code></strong></h5>
 
 ```python
 def helper(): # pytest does not check this function
     ...
-def test_{subname}(): # pytest recognizes it as a test
+def test_bar(): # pytest recognizes it as a test
     assert ...
 ```
 
@@ -61,19 +61,19 @@ Remember it is crucial to add the `test` prefix to files and functions for [`pyt
 
 ## Code checks
 Use [`ruff`](#tooling) to check and format code:
-```properties
+```shell
 uv run ruff check
 uv run ruff check --fix
 uv run ruff format
 ```
 
 Use [`mypy`](#tooling) for typing errors:
-```properties
+```shell
 uv run mypy -p pepme
 ```
 
 Use [`pytest`](#tooling) to run tests:
-```properties
+```shell
 uv run pytest
 ```
 
@@ -82,11 +82,11 @@ All checks are run automatically with [`pre-commit`](#tooling).
 
 ## Dependencies
 To add a library dependency use `uv add`, eg.:
-```properties
+```shell
 uv add numpy
 ```
 To add a development dependency use `uv add --dev`, eg.:
-```properties
+```shell
 uv add --dev ruff
 ```
 
