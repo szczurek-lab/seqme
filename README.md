@@ -10,13 +10,36 @@ import pepme
 For more examples visit [examples](/examples) directory.
 
 ## Installation
-#### 1. Install [`uv`](#tooling):
+### 1. Install [`uv`](#tooling):
+
+#### (RECOMMENDED) Local install for macOS (zsh) and Linux (bash) users
+
+Run the following commands:
+```properties
+python3 -m venv $HOME/uv_venv
+echo "export PATH=$HOME/uv_venv/bin:$PATH" > $HOME/.$(basename $SHELL)rc
+source $HOME/.$(basename $SHELL)rc
+pip install uv 
+```
+The above commands automatically append `eport PATH=...` to `.bashrc` or `.zshrc` depending on your default shell. If you use different shell append the `export PATH=...` to the apropriate shell initialization script.
+
+
+#### (OPTIONAL) Systemwide install 
+Run any of the following commands:
 ```properties
 curl -LsSf https://astral.sh/uv/install.sh | sh
+wget -qO- https://astral.sh/uv/install.sh | sh
+pip install uv
 ```
 If you have troubles, visit the [official site](https://docs.astral.sh/uv/getting-started/installation/) for more information.
 
-#### 2. Install dependencies:
+### 2. Create project virtual environment:
+```properties
+uv venv --python 3.9
+source .venv/bin/activate
+```
+
+### 3. Install dependencies:
 ```properties
 uv sync
 ```
