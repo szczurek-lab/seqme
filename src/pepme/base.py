@@ -1,0 +1,438 @@
+import abc
+from dataclasses import dataclass
+from random import Random
+from typing import Dict, List, Literal, Optional, Union
+
+import matplotlib.pyplot as plt
+import pandas as pd
+from pandas.io.formats.style import Styler
+from rich.progress import track
+
+
+@dataclass
+class MetricResult:
+    value: Union[float, int]
+    deviation: Optional[float] = None
+
+
+class Metric(abc.ABC):
+    @abc.abstractmethod
+    def __call__(self, sequences: List[str]) -> MetricResult:
+        raise NotImplementedError()
+
+    @property
+    @abc.abstractmethod
+    def name(self) -> str:
+        raise NotImplementedError()
+
+    @property
+    @abc.abstractmethod
+    def objective(self) -> Literal["minimize", "maximize", "ambiguous"]:
+        raise NotImplementedError()
+
+
+def default_metrics() -> List[Metric]:
+    return []  # @TODO
+
+
+def compute_metrics(
+    sequences: Dict[str, List[str]],
+    metrics: Optional[List[Metric]] = None,
+    verbose: bool = True,
+) -> pd.DataFrame:
+    """
+    Compute a set of metrics on multiple sequence groups.
+
+    Args:
+        sequences: A dict mapping group names to lists of sequences.
+        metrics: A list of Metric instances to apply.
+        verbose: Whether to show progressbar.
+
+    Returns:
+        A DataFrame where each row corresponds to a sequence group (dict key)
+        and columns are a MultiIndex [metric_name, {"value", "deviation"}].
+    """
+
+    metrics = metrics or default_metrics()
+
+    if len(metrics) == 0:
+        raise ValueError("No metrics provided")
+
+    # ensure all metrics have unique names
+    metric_names = [m.name for m in metrics]
+    if len(metric_names) != len(set(metric_names)):
+        raise ValueError(
+            "Metrics must have unique names. Found duplicates: "
+            + ", ".join(name for name in metric_names if metric_names.count(name) > 1)
+        )
+
+    # Prepare nested results: group -> metric -> {value, deviation}
+    nested: dict[str, dict[str, dict[str, Union[float, None]]]] = {}
+    for group_name, seqs in track(
+        sequences.items(),
+        description="Computing metrics",
+        transient=False,
+        disable=(not verbose),
+    ):
+        group_results: dict[str, dict[str, Union[float, None]]] = {}
+        for metric in metrics:
+            result: MetricResult = metric(seqs)
+            group_results[metric.name] = {
+                "value": result.value,
+                "deviation": result.deviation,
+            }
+        nested[group_name] = group_results
+
+    # Convert to a DataFrame with MultiIndex columns
+    # First, create a dict of DataFrames per metric
+    df_parts: list[pd.DataFrame] = []
+    for metric in metrics:
+        name = metric.name
+        # DataFrame with two columns: (name, 'value') and (name, 'deviation')
+        df_metric = pd.DataFrame(
+            {
+                (name, "value"): {g: nested[g][name]["value"] for g in nested},
+                (name, "deviation"): {g: nested[g][name]["deviation"] for g in nested},
+            },
+            dtype=float,
+        )
+        df_parts.append(df_metric)
+
+    df = pd.concat(df_parts, axis=1)
+    # Ensure order matches input metrics
+    df = df.reindex(
+        columns=pd.MultiIndex.from_product(
+            [[m.name for m in metrics], ["value", "deviation"]]
+        )
+    )
+    df.attrs["objective"] = {m.name: m.objective for m in metrics}
+    return df
+
+
+def combine_metric_dataframes(dfs: List[pd.DataFrame]) -> pd.DataFrame:
+    """
+    Combine multiple DataFrames with metrics results into a single DataFrame.
+
+    Args:
+        dfs: List of DataFrames, each with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], and an 'objective' attribute.
+
+    Returns:
+        A single DataFrame with combined metrics, ensuring no overlapping cells and converting all values to float.
+
+    Raises:
+        ValueError: If dfs is empty, any DataFrame lacks 'objective', objectives conflict, or overlapping non-null cells.
+    """
+    if not dfs:
+        raise ValueError("The list of DataFrames is empty.")
+
+    # Prepare lists for ordered index and columns
+    combined_index = []  # maintain order of first occurrence
+    seen_idx = set()
+
+    combined_columns = []
+    seen_cols = set()
+
+    combined_objectives: dict[str, str] = {}
+
+    # Collect indices, columns, and objectives preserving order
+    for df in dfs:
+        if "objective" not in df.attrs:
+            raise ValueError("Each DataFrame must have an 'objective' attribute.")
+
+        # Merge objectives
+        for key, value in df.attrs["objective"].items():
+            if key in combined_objectives and combined_objectives[key] != value:
+                raise ValueError(
+                    f"Conflicting objective for metric '{key}': {combined_objectives[key]} vs {value}"
+                )
+            combined_objectives[key] = value
+
+        # Index order
+        for idx in df.index:
+            if idx not in seen_idx:
+                seen_idx.add(idx)
+                combined_index.append(idx)
+
+        # Column order
+        for col in df.columns:
+            if col not in seen_cols:
+                seen_cols.add(col)
+                combined_columns.append(col)
+
+    # Reconstruct MultiIndex with original level names
+    col_index = pd.MultiIndex.from_tuples(combined_columns, names=dfs[0].columns.names)
+
+    combined_df = pd.DataFrame(index=combined_index, columns=col_index, dtype=float)
+    combined_df.attrs["objective"] = combined_objectives
+
+    # Populate and check for overlapping values
+    for df in dfs:
+        for col in df.columns:
+            for idx, val in df[col].items():
+                if pd.isna(val):
+                    continue
+                if pd.notna(combined_df.at[idx, col]):
+                    raise ValueError(
+                        f"Overlap detected at index '{idx}', column '{col}' (value: {combined_df.at[idx, col]} vs {val})."
+                    )
+                combined_df.at[idx, col] = float(val)
+
+    return combined_df
+
+
+def show_table(
+    df: pd.DataFrame,
+    decimals: Union[int, List[int]] = 2,
+    color: str = "#68d6bc",
+    missing_value: str = "-",
+) -> Styler:
+    """
+    Render a styled DataFrame that:
+    - Combines 'value' and 'deviation' into "value ± deviation".
+    - Highlights the best metric per column with color.
+    - Underlines the second-best metric per column.
+    - Arrows indicate maximize (↑) or minimize (↓).
+    - Vertical divider between columns.
+
+    Args:
+        df: DataFrame with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], attributed with 'objective'.
+        decimals: Decimal precision for formatting.
+        color: Color for highlighting best scores.
+        missing_value: str to show for cells with no metric value, i.e., cells with NaN values.
+
+    Returns:
+        Styler: pandas Styler object.
+    """
+    if "objective" not in df.attrs:
+        raise ValueError(
+            "DataFrame must have an 'objective' attribute. Use `compute_metrics` to create the DataFrame."
+        )
+
+    objectives = df.attrs["objective"]
+
+    n_metrics = df.shape[1] // 2
+    decimals = [decimals] * n_metrics if isinstance(decimals, int) else decimals
+
+    if len(decimals) != n_metrics:
+        raise ValueError(
+            f"Expected {n_metrics} decimals, got {len(decimals)}. "
+            "Provide a single int or a list matching the number of metrics."
+        )
+
+    metric_names = pd.unique(df.columns.get_level_values(0)).tolist()
+    arrows = {"maximize": "↑", "minimize": "↓", "ambiguous": ""}
+
+    # @TODO: take deviation into account
+    def get_top_two_row_indices(bests: pd.Series) -> tuple[list[float], list[float]]:
+        if pd.isna(bests.values[0]):
+            return [], []
+
+        # get all indices with the same value as the best value
+        value1 = bests.values[0]
+        indices1 = bests.index[bests == value1].tolist()
+        if len(indices1) > 2:
+            return indices1, []
+
+        if len(bests) < 2 or pd.isna(bests.values[1]):
+            return indices1, []
+
+        # get all indices with the same value as the second best value
+        value2 = bests.values[1]
+        indices2 = bests.index[bests == value2].tolist()
+
+        return indices1, indices2
+
+    # Build combined DataFrame and track raw values
+    combined = pd.DataFrame(index=df.index)
+    best_idx = {}
+    second_idx = {}
+
+    for i, m in enumerate(metric_names):
+        vals = df[(m, "value")]
+        devs = df[(m, "deviation")]
+
+        # Determine the two best indices based on objective
+        if objectives[m] == "maximize":
+            best_cells = vals.nlargest(2, keep="all")
+            best_idx[m], second_idx[m] = get_top_two_row_indices(best_cells)
+        elif objectives[m] == "minimize":
+            best_cells = vals.nsmallest(2, keep="all")
+            best_idx[m], second_idx[m] = get_top_two_row_indices(best_cells)
+        else:
+            if objectives[m] != "ambiguous":
+                raise ValueError(f"Unknown objective '{objectives[m]}' for metric '{m}")
+            best_idx[m] = []
+            second_idx[m] = []
+
+        def format_cell(
+            val: float,
+            dev: float,
+            n_decimals: int,
+            no_value: str = missing_value,
+        ) -> str:
+            if pd.isna(val):
+                return no_value
+            if pd.isna(dev):
+                return f"{val:.{n_decimals}f}"
+            return f"{val:.{n_decimals}f}±{dev:.{n_decimals}f}"
+
+        # Combine formatting
+        n_decimals = decimals[i]
+        arrow = arrows[objectives[m]]
+        combined[f"{m}{arrow}"] = [
+            format_cell(v, d, n_decimals) for v, d in zip(vals, devs)
+        ]
+
+    styler = combined.style
+
+    # Apply cell styles per column
+    for col, metric_name in zip(combined.columns, metric_names):
+
+        def highlight_column(col_series, metric_name=metric_name):
+            return [
+                f"background-color:{color}; font-weight:bold"
+                if idx in best_idx[metric_name]
+                else "text-decoration:underline; font-weight:bold"
+                if idx in second_idx[metric_name]
+                else ""
+                for idx in col_series.index
+            ]
+
+        styler = styler.apply(highlight_column, axis=0, subset=[col])
+
+    table_styles = [
+        {"selector": "th.col_heading", "props": [("text-align", "center")]},
+        {"selector": "td", "props": [("border-right", "1px solid #ccc")]},
+        {"selector": "th.row_heading", "props": [("border-right", "1px solid #ccc")]},
+        # {"selector": "tr:nth-child(odd)", "props": [("background-color", "#f9f9f9")]},
+        # {"selector": "tr:nth-child(even)", "props": [("background-color", "#fff")]},
+        # {"selector": "td", "props": [("text-align", "center"), ("padding", "5px")]}
+    ]
+    styler = styler.set_table_styles(table_styles, overwrite=False)  # type: ignore
+    return styler
+
+
+def barplot(
+    df: pd.DataFrame,
+    metric: str,
+    color: str = "#68d6bc",
+    x_ticks_label_rotation: float = 45,
+    ylim: Optional[tuple[float, float]] = None,
+    figsize: tuple[int, int] = (5, 4),
+    show_arrow: bool = True,
+):
+    """
+    Plot a bar chart for a given metric, optionally with error bars.
+
+    Args:
+        df: A DataFrame with a MultiIndex column [metric_name, {"value", "deviation"}].
+        metric: The name of the metric to plot.
+        color: Bar color (optional, default is teal).
+        x_ticks_label_rotation: Rotation angle for x-axis tick labels.
+        ylim: Y-axis limits (optional).
+        figsize: Size of the figure.
+        show_arrow: Whether to show an arrow indicating maximize/minimize (default is True).
+    """
+    if metric not in df.columns.get_level_values(0):
+        raise ValueError(f"'{metric}' is not a column in the DataFrame.")
+
+    values = df[(metric, "value")]
+    deviations = df[(metric, "deviation")]
+
+    # filter NaN values
+    valid_mask = values.notna()
+    values = values[valid_mask]
+    deviations = deviations[valid_mask]
+
+    fig, ax = plt.subplots(figsize=figsize)
+    ax.bar(values.index, values, color=color, edgecolor="black")
+
+    if deviations.notna().all():
+        ax.errorbar(
+            values.index,
+            values,
+            yerr=deviations,
+            fmt="none",
+            ecolor="black",
+            capsize=4,
+            lw=1,
+        )
+
+    arrows = {"maximize": "↑", "minimize": "↓", "ambiguous": ""}
+    arrow = arrows[df.attrs["objective"][metric]]
+
+    ax.set_xticks(range(len(values)))
+    ax.set_xticklabels(values.index, rotation=x_ticks_label_rotation, ha="center")
+
+    ax.set_ylabel(f"{metric}{arrow}" if show_arrow else metric)
+
+    if ylim is not None:
+        ax.set_ylim(ylim)
+
+    ax.grid(axis="y", linestyle="--", alpha=0.7)
+    ax.set_axisbelow(True)
+
+    fig.tight_layout()
+
+
+def random_subset(sequences: List[str], n_samples: int, seed: int = 42) -> List[str]:
+    """
+    Select a random subset of `n_samples` unique sequences with a fixed seed for reproducibility.
+
+    Args:
+        sequences: The list of input sequences to sample from.
+        n_samples: The number of sequences to sample.
+        seed: The random seed to ensure deterministic behavior.
+
+    Returns:
+        A list of `n_samples` randomly sampled sequences.
+
+    Raises:
+        ValueError: If `n_samples` is greater than the number of available sequences.
+    """
+    if n_samples > len(sequences):
+        raise ValueError(
+            f"Cannot sample {n_samples} sequences from a list of length {len(sequences)}."
+        )
+
+    rng = Random(seed)
+    return rng.sample(sequences, n_samples)
+
+
+def read_fasta_file(path: str) -> list[str]:
+    sequences: list[str] = []
+    current_seq: list[str] = []
+
+    with open(path, "r") as file:
+        for line in file:
+            line = line.strip()
+            if not line:
+                continue  # skip empty lines
+            if line.startswith(">"):
+                if current_seq:
+                    sequence = "".join(current_seq)
+                    if sequence:
+                        sequences.append(sequence)
+                    current_seq = []
+            else:
+                current_seq.append(line)
+
+        # Add the last sequence if present
+        if current_seq:
+            sequence = "".join(current_seq)
+            if sequence:
+                sequences.append(sequence)
+
+    return sequences
+
+
+def write_to_fasta_file(
+    sequences: list[str],
+    path: str,
+    headers: Optional[list[str]] = None,
+):
+    with open(path, "w") as f:
+        for i, seq in enumerate(sequences):
+            header = headers[i] if headers else f">sequence_{i + 1}"
+            f.write(f"{header}\n")
+            f.write(f"{seq}\n")
