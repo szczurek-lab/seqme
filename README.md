@@ -12,37 +12,42 @@ For more examples visit [examples](/examples) directory.
 ## Installation
 ### 1. Install [`uv`](#tooling):
 
-#### (RECOMMENDED) Local install for macOS (zsh) and Linux (bash) users
+#### Systemwide install 
+Run any of the following commands:
+```shell
+pip install uv
+curl -LsSf https://astral.sh/uv/install.sh | sh
+wget -qO- https://astral.sh/uv/install.sh | sh
+```
+If you have troubles, visit the [official site](https://docs.astral.sh/uv/getting-started/installation/) for more information or install [`uv`](#tooling) locally as described below.
+
+#### Local install for macOS (zsh) and Linux (bash) users
 
 Run the following commands:
 ```shell
-python3 -m venv $HOME/uv_venv
-echo "export PATH=$HOME/uv_venv/bin:$PATH" > $HOME/.$(basename $SHELL)rc
+export UV_VENV_LOCATION={some path with enough storage to install Python packages}
+python3 -m venv $UV_VENV_LOCATION/uv_venv
+echo "export PATH=$UV_VENV_LOCATION/uv_venv/bin:$PATH" > $HOME/.$(basename $SHELL)rc
 source $HOME/.$(basename $SHELL)rc
 pip install uv 
 ```
 The above commands automatically append `eport PATH=...` to `.bashrc` or `.zshrc` depending on your default shell. If you use different shell append the `export PATH=...` to the apropriate shell initialization script.
 
-
-#### (OPTIONAL) Systemwide install 
-Run any of the following commands:
-```shell
-curl -LsSf https://astral.sh/uv/install.sh | sh
-wget -qO- https://astral.sh/uv/install.sh | sh
-pip install uv
-```
-If you have troubles, visit the [official site](https://docs.astral.sh/uv/getting-started/installation/) for more information.
-
-### 2. Create project virtual environment:
-```shell
-uv venv --python 3.9
-source .venv/bin/activate
-```
-
-### 3. Install dependencies:
+### 2. Install dependencies:
 ```shell
 uv sync
 ```
+
+### 3. Activate the virtual environment:
+```shell
+source .venv/bin/activate
+```
+
+### 4. Install pre-commit
+```shell
+pre-commit install
+```
+
 
 # Development guide
 
