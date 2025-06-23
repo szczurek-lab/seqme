@@ -1,9 +1,10 @@
 import abc
 from dataclasses import dataclass
 from random import Random
-from typing import Dict, List, Literal, Optional, Union
+from typing import Callable, Dict, List, Literal, Optional, Union
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 from pandas.io.formats.style import Styler
 from rich.progress import track
@@ -399,40 +400,51 @@ def random_subset(sequences: List[str], n_samples: int, seed: int = 42) -> List[
     return rng.sample(sequences, n_samples)
 
 
-def read_fasta_file(path: str) -> list[str]:
-    sequences: list[str] = []
-    current_seq: list[str] = []
+class SequenceCache:
+    def __init__(
+        self,
+        models: Optional[dict[str, Callable[[list[str]], np.ndarray]]] = None,
+        init_cache: Optional[dict[str, dict[str, np.ndarray]]] = None,
+    ):
+        self.model_to_callable = models.copy() if models else {}
+        self.model_to_cache = init_cache.copy() if init_cache else {}
 
-    with open(path, "r") as file:
-        for line in file:
-            line = line.strip()
-            if not line:
-                continue  # skip empty lines
-            if line.startswith(">"):
-                if current_seq:
-                    sequence = "".join(current_seq)
-                    if sequence:
-                        sequences.append(sequence)
-                    current_seq = []
-            else:
-                current_seq.append(line)
+        for name in self.model_to_callable:
+            if name not in self.model_to_cache:
+                self.model_to_cache[name] = {}
 
-        # Add the last sequence if present
-        if current_seq:
-            sequence = "".join(current_seq)
-            if sequence:
-                sequences.append(sequence)
+    def __call__(self, sequences: list[str], model_name: str) -> np.ndarray:
+        sequence_to_rep = self.model_to_cache[model_name]
 
-    return sequences
+        new_sequences = [seq for seq in sequences if seq not in sequence_to_rep]
+        if len(new_sequences) > 0:
+            model = self.model_to_callable.get(model_name)
+            if model is None:
+                raise ValueError(
+                    f"New sequences found, but '{model_name}' is not callable."
+                )
 
+            new_reps = model(new_sequences)
 
-def write_to_fasta_file(
-    sequences: list[str],
-    path: str,
-    headers: Optional[list[str]] = None,
-):
-    with open(path, "w") as f:
-        for i, seq in enumerate(sequences):
-            header = headers[i] if headers else f">sequence_{i + 1}"
-            f.write(f"{header}\n")
-            f.write(f"{seq}\n")
+            for sequence, rep in zip(new_sequences, new_reps):
+                sequence_to_rep[sequence] = rep
+
+        return np.stack([sequence_to_rep[seq] for seq in sequences])
+
+    def model(self, model_name: str) -> Callable[[list[str]], np.ndarray]:
+        if model_name not in self.model_to_cache:
+            raise ValueError(
+                f"'{model_name}' is not callable nor has any pre-cached sequences."
+            )
+        return lambda sequence: self(sequence, model_name)
+
+    def add(self, model_name: str, pairs: dict[str, np.ndarray]):
+        if model_name not in self.model_to_cache:
+            self.model_to_cache[model_name] = {}
+
+        sequence_to_rep = self.model_to_cache[model_name]
+        for sequence, reps in pairs.items():
+            sequence_to_rep[sequence] = reps
+
+    def get(self) -> dict[str, dict[str, np.ndarray]]:
+        return self.model_to_cache.copy()

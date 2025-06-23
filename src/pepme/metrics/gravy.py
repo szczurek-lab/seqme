@@ -3,16 +3,16 @@ from typing import List, Literal
 import numpy as np
 import peptides
 
-from pepme.base import Metric, MetricResult
+from pepme.core import Metric, MetricResult
 
 
 class Gravy(Metric):
     def __call__(self, sequences: List[str]) -> MetricResult:
         values = [
-            peptides.Peptide(sequence).charge() / len(sequence)
+            peptides.Peptide(sequence).hydrophobicity() / len(sequence)
             for sequence in sequences
         ]
-        return MetricResult(np.mean(values), deviation=np.std(values))  # type: ignore
+        return MetricResult(np.mean(values).item(), deviation=np.std(values).item())
 
     @property
     def name(self) -> str:

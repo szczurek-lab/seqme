@@ -2,8 +2,8 @@ import unittest
 
 import pandas as pd
 
-from pepme.base import compute_metrics
-from pepme.novelty import Novelty
+from pepme.core import compute_metrics
+from pepme.metrics.novelty import Novelty
 
 
 class TestComputeMetrics(unittest.TestCase):

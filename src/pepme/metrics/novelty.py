@@ -1,6 +1,6 @@
 from typing import List, Literal, Optional
 
-from pepme.base import Metric, MetricResult
+from pepme.core import Metric, MetricResult
 
 
 class Novelty(Metric):
