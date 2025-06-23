@@ -161,7 +161,7 @@ def combine_metric_dataframes(dfs: List[pd.DataFrame]) -> pd.DataFrame:
                 combined_columns.append(col)
 
     # Reconstruct MultiIndex with original level names
-    col_index = pd.MultiIndex.from_tuples(combined_columns, names=dfs[0].columns.names)
+    col_index = pd.MultiIndex.from_tuples(combined_columns, names=dfs[0].columns.names)  # type: ignore
 
     combined_df = pd.DataFrame(index=combined_index, columns=col_index, dtype=float)
     combined_df.attrs["objective"] = combined_objectives
