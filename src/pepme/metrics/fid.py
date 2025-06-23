@@ -1,4 +1,4 @@
-from typing import Callable, List, Literal, Optional
+from typing import Callable, Literal, Optional
 
 import numpy as np
 from scipy.linalg import sqrtm  # type: ignore
@@ -22,7 +22,7 @@ class FrechetInceptionDistance(Metric):
 
         self.reference_embeddings = self.embedder(self.reference)
 
-    def __call__(self, sequences: List[str]) -> MetricResult:
+    def __call__(self, sequences: list[str]) -> MetricResult:
         seq_embeddings = self.embedder(sequences)
         fid = wasserstein_distance(seq_embeddings, self.reference_embeddings)
         return MetricResult(fid)

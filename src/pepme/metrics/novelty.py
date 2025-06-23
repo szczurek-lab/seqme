@@ -1,4 +1,4 @@
-from typing import List, Literal, Optional
+from typing import Literal, Optional
 
 from pepme.core import Metric, MetricResult
 
@@ -9,11 +9,11 @@ class Novelty(Metric):
     and returns the fraction of sequences not seen in the reference.
     """
 
-    def __init__(self, reference: List[str], reference_name: Optional[str] = None):
+    def __init__(self, reference: list[str], reference_name: Optional[str] = None):
         self.reference = set(reference)
         self.data_name = reference_name
 
-    def __call__(self, sequences: List[str]) -> MetricResult:
+    def __call__(self, sequences: list[str]) -> MetricResult:
         """
         Compute the novelty score as the proportion of input sequences
         that are not present in the reference set.

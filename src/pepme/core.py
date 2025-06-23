@@ -1,7 +1,7 @@
 import abc
 from dataclasses import dataclass
 from random import Random
-from typing import Callable, Dict, List, Literal, Optional, Union
+from typing import Callable, Literal, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,7 +18,7 @@ class MetricResult:
 
 class Metric(abc.ABC):
     @abc.abstractmethod
-    def __call__(self, sequences: List[str]) -> MetricResult:
+    def __call__(self, sequences: list[str]) -> MetricResult:
         raise NotImplementedError()
 
     @property
@@ -32,13 +32,13 @@ class Metric(abc.ABC):
         raise NotImplementedError()
 
 
-def default_metrics() -> List[Metric]:
+def default_metrics() -> list[Metric]:
     return []  # @TODO
 
 
 def compute_metrics(
-    sequences: Dict[str, List[str]],
-    metrics: Optional[List[Metric]] = None,
+    sequences: dict[str, list[str]],
+    metrics: Optional[list[Metric]] = None,
     verbose: bool = True,
 ) -> pd.DataFrame:
     """
@@ -110,12 +110,12 @@ def compute_metrics(
     return df
 
 
-def combine_metric_dataframes(dfs: List[pd.DataFrame]) -> pd.DataFrame:
+def combine_metric_dataframes(dfs: list[pd.DataFrame]) -> pd.DataFrame:
     """
     Combine multiple DataFrames with metrics results into a single DataFrame.
 
     Args:
-        dfs: List of DataFrames, each with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], and an 'objective' attribute.
+        dfs: list of DataFrames, each with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], and an 'objective' attribute.
 
     Returns:
         A single DataFrame with combined metrics, ensuring no overlapping cells and converting all values to float.
@@ -183,7 +183,7 @@ def combine_metric_dataframes(dfs: List[pd.DataFrame]) -> pd.DataFrame:
 
 def show_table(
     df: pd.DataFrame,
-    decimals: Union[int, List[int]] = 2,
+    decimals: Union[int, list[int]] = 2,
     color: str = "#68d6bc",
     missing_value: str = "-",
 ) -> Styler:
@@ -376,7 +376,7 @@ def barplot(
     fig.tight_layout()
 
 
-def random_subset(sequences: List[str], n_samples: int, seed: int = 42) -> List[str]:
+def random_subset(sequences: list[str], n_samples: int, seed: int = 42) -> list[str]:
     """
     Select a random subset of `n_samples` unique sequences with a fixed seed for reproducibility.
 

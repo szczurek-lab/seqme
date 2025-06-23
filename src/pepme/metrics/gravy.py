@@ -1,4 +1,4 @@
-from typing import List, Literal
+from typing import Literal
 
 import numpy as np
 import peptides
@@ -7,7 +7,7 @@ from pepme.core import Metric, MetricResult
 
 
 class Gravy(Metric):
-    def __call__(self, sequences: List[str]) -> MetricResult:
+    def __call__(self, sequences: list[str]) -> MetricResult:
         values = [
             peptides.Peptide(sequence).hydrophobicity() / len(sequence)
             for sequence in sequences
