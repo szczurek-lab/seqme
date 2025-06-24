@@ -1,7 +1,7 @@
 from typing import Callable, Literal, Optional
 
 import numpy as np
-from scipy.linalg import sqrtm  # type: ignore
+from scipy.linalg import sqrtm
 
 from pepme.core import Metric, MetricResult
 

@@ -1,18 +1,18 @@
 import abc
 from dataclasses import dataclass
 from random import Random
-from typing import Callable, Literal, Optional, Union
+from typing import Callable, Literal, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from pandas.io.formats.style import Styler
-from rich.progress import track
+from tqdm import tqdm
 
 
 @dataclass
 class MetricResult:
-    value: Union[float, int]
+    value: float | int
     deviation: Optional[float] = None
 
 
@@ -68,21 +68,21 @@ def compute_metrics(
         )
 
     # Prepare nested results: group -> metric -> {value, deviation}
-    nested: dict[str, dict[str, dict[str, Union[float, None]]]] = {}
-    for group_name, seqs in track(
-        sequences.items(),
-        description="Computing metrics",
-        transient=False,
-        disable=(not verbose),
-    ):
-        group_results: dict[str, dict[str, Union[float, None]]] = {}
-        for metric in metrics:
-            result: MetricResult = metric(seqs)
-            group_results[metric.name] = {
-                "value": result.value,
-                "deviation": result.deviation,
-            }
-        nested[group_name] = group_results
+    nested: dict[str, dict[str, dict[str, float | None]]] = {}
+    total = len(sequences) * len(metrics)
+    with tqdm(total=total, disable=(not verbose)) as pbar:
+        for group_name, seqs in sequences.items():
+            group_results: dict[str, dict[str, float | None]] = {}
+            for metric in metrics:
+                pbar.set_postfix(data=group_name, metric=metric.name)
+                result: MetricResult = metric(seqs)
+                group_results[metric.name] = {
+                    "value": result.value,
+                    "deviation": result.deviation,
+                }
+                pbar.update()
+
+            nested[group_name] = group_results
 
     # Convert to a DataFrame with MultiIndex columns
     # First, create a dict of DataFrames per metric
@@ -183,7 +183,7 @@ def combine_metric_dataframes(dfs: list[pd.DataFrame]) -> pd.DataFrame:
 
 def show_table(
     df: pd.DataFrame,
-    decimals: Union[int, list[int]] = 2,
+    decimals: int | list[int] = 2,
     color: str = "#68d6bc",
     missing_value: str = "-",
 ) -> Styler:
@@ -281,13 +281,13 @@ def show_table(
         n_decimals = decimals[i]
         arrow = arrows[objectives[m]]
         combined[f"{m}{arrow}"] = [
-            format_cell(v, d, n_decimals) for v, d in zip(vals, devs)
+            format_cell(v, d, n_decimals) for v, d in zip(vals, devs, strict=True)
         ]
 
     styler = combined.style
 
     # Apply cell styles per column
-    for col, metric_name in zip(combined.columns, metric_names):
+    for col, metric_name in zip(combined.columns, metric_names, strict=True):
 
         def highlight_column(col_series, metric_name=metric_name):
             return [
@@ -319,7 +319,7 @@ def barplot(
     color: str = "#68d6bc",
     x_ticks_label_rotation: float = 45,
     ylim: Optional[tuple[float, float]] = None,
-    figsize: tuple[int, int] = (5, 4),
+    figsize: tuple[int, int] = (4, 3),
     show_arrow: bool = True,
 ):
     """
@@ -426,7 +426,7 @@ class SequenceCache:
 
             new_reps = model(new_sequences)
 
-            for sequence, rep in zip(new_sequences, new_reps):
+            for sequence, rep in zip(new_sequences, new_reps, strict=True):
                 sequence_to_rep[sequence] = rep
 
         return np.stack([sequence_to_rep[seq] for seq in sequences])
