@@ -28,7 +28,7 @@ class Metric(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def objective(self) -> Literal["minimize", "maximize", "ambiguous"]:
+    def objective(self) -> Literal["minimize", "maximize"]:
         raise NotImplementedError()
 
 
@@ -221,7 +221,7 @@ def show_table(
         )
 
     metric_names = pd.unique(df.columns.get_level_values(0)).tolist()
-    arrows = {"maximize": "↑", "minimize": "↓", "ambiguous": ""}
+    arrows = {"maximize": "↑", "minimize": "↓"}
 
     # @TODO: take deviation into account
     def get_top_two_row_indices(bests: pd.Series) -> tuple[list[float], list[float]]:
@@ -256,14 +256,11 @@ def show_table(
         if objectives[m] == "maximize":
             best_cells = vals.nlargest(2, keep="all")
             best_idx[m], second_idx[m] = get_top_two_row_indices(best_cells)
-        elif objectives[m] == "minimize":
+        else:
+            if objectives[m] != "minimize":
+                raise ValueError(f"Unknown objective '{objectives[m]}' for metric '{m}")
             best_cells = vals.nsmallest(2, keep="all")
             best_idx[m], second_idx[m] = get_top_two_row_indices(best_cells)
-        else:
-            if objectives[m] != "ambiguous":
-                raise ValueError(f"Unknown objective '{objectives[m]}' for metric '{m}")
-            best_idx[m] = []
-            second_idx[m] = []
 
         def format_cell(
             val: float,
@@ -359,7 +356,7 @@ def barplot(
             lw=1,
         )
 
-    arrows = {"maximize": "↑", "minimize": "↓", "ambiguous": ""}
+    arrows = {"maximize": "↑", "minimize": "↓"}
     arrow = arrows[df.attrs["objective"][metric]]
 
     ax.set_xticks(range(len(values)))
@@ -400,7 +397,7 @@ def random_subset(sequences: list[str], n_samples: int, seed: int = 42) -> list[
     return rng.sample(sequences, n_samples)
 
 
-class SequenceCache:
+class FeatureCache:
     def __init__(
         self,
         models: Optional[dict[str, Callable[[list[str]], np.ndarray]]] = None,

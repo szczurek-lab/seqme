@@ -12,13 +12,13 @@ class FrechetInceptionDistance(Metric):
         reference: list[str],
         embedder: Callable[[list[str]], np.ndarray],
         reference_name: Optional[str] = None,
-        embedding_name: Optional[str] = None,
+        embedder_name: Optional[str] = None,
     ):
         self.reference = reference
         self.embedder = embedder
 
         self.reference_name = reference_name
-        self.embedding_name = embedding_name
+        self.embedder_name = embedder_name
 
         self.reference_embeddings = self.embedder(self.reference)
 
@@ -30,14 +30,14 @@ class FrechetInceptionDistance(Metric):
     @property
     def name(self) -> str:
         name = "FID"
-        if self.embedding_name:
-            name += f"@{self.embedding_name}"
+        if self.embedder_name:
+            name += f"@{self.embedder_name}"
         if self.reference_name:
             name += f" ({self.reference_name})"
         return name
 
     @property
-    def objective(self) -> Literal["minimize", "maximize", "ambiguous"]:
+    def objective(self) -> Literal["minimize", "maximize"]:
         return "minimize"
 
 
