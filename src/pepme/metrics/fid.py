@@ -42,7 +42,7 @@ class FrechetInceptionDistance(Metric):
 
 
 def wasserstein_distance(e1: np.ndarray, e2: np.ndarray) -> float:
-    if np.isnan(e2).any() or np.isnan(e1).any() or len(e1) == 0 or len(e2) == 0:
+    if len(e1) < 2 or len(e2) < 2:
         return float("nan")
 
     mu1, sigma1 = e1.mean(axis=0), np.cov(e1, rowvar=False)
@@ -55,7 +55,7 @@ def wasserstein_distance(e1: np.ndarray, e2: np.ndarray) -> float:
         covmean = covmean.real
 
     dist = ssdiff + np.trace(sigma1 + sigma2 - 2.0 * covmean)
-    dist = max(0.0, dist)  # numerical stability
+    dist = max(0.0, dist.item())  # numerical stability
 
     return dist
 

@@ -1,13 +1,13 @@
 # pepme
 
-todo: project description
+Metrics for benchmarking peptide generation models.
 
 ## Example usage
 ```python
 import pepme
 ...
 ```
-For more examples visit [examples](/examples) directory.
+For more examples visit [notebooks](/notebooks) directory.
 
 ## Installation
 ### 1. Install [`uv`](#tooling):
@@ -31,14 +31,14 @@ echo "export PATH=$UV_VENV_LOCATION/uv_venv/bin:$PATH" > $HOME/.$(basename $SHEL
 source $HOME/.$(basename $SHELL)rc
 pip install uv 
 ```
-The above commands automatically append `eport PATH=...` to `.bashrc` or `.zshrc` depending on your default shell. If you use different shell append the `export PATH=...` to the apropriate shell initialization script.
+The above commands automatically append `export PATH=...` to `.bashrc` or `.zshrc` depending on your default shell. If you use different shell append the `export PATH=...` to the apropriate shell initialization script.
 
-### 2. Install dependencies:
+### 2. Install dependencies
 ```shell
 uv sync
 ```
 
-### 3. Activate the virtual environment:
+### 3. Activate the virtual environment
 ```shell
 source .venv/bin/activate
 ```
@@ -49,9 +49,9 @@ pre-commit install
 ```
 
 
-# Development guide
+## Development guide
 
-## Testing
+### Testing
 Write tests in the [tests](/tests) directory. Follow the [`pytest`](#tooling) guidlines. Each file in the directory has to follow the naming convention.
 <h5 a><strong><code>tests/test_foo.py</code></strong></h5>
 
@@ -64,7 +64,7 @@ def test_bar(): # pytest recognizes it as a test
 
 Remember it is crucial to add the `test` prefix to files and functions for [`pytest`](#tooling) to work correctly.
 
-## Code checks
+### Code checks
 Use [`ruff`](#tooling) to check and format code:
 ```shell
 uv run ruff check
@@ -85,7 +85,7 @@ uv run pytest
 
 All checks are run automatically with [`pre-commit`](#tooling).
 
-## Dependencies
+### Dependencies
 To add a library dependency use `uv add`, eg.:
 ```shell
 uv add numpy
@@ -95,14 +95,14 @@ To add a development dependency use `uv add --dev`, eg.:
 uv add --dev ruff
 ```
 
-## Notebook stripping
+### Notebook stripping
 Use [`nbstripout`](#tooling) to strip notebook metadata before commiting to repository:
 ```bash
 find . -name '*.ipynb' -exec nbstripout --drop-empty-cells --keep-output {} +
 ```
 This command is run automatically with [`pre-commit`](#tooling).
 
-## Tooling
+### Tooling
 - __Project manager:__ [`uv`](https://docs.astral.sh/uv/)
 - __Linter and formatter:__ [`ruff`](https://docs.astral.sh/ruff/)
 - __Static type checking__: [`mypy`](https://mypy.readthedocs.io/en/stable/#)
