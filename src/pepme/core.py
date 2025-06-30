@@ -53,7 +53,6 @@ def compute_metrics(
         A DataFrame where each row corresponds to a sequence group (dict key)
         and columns are a MultiIndex [metric_name, {"value", "deviation"}].
     """
-
     metrics = metrics or default_metrics()
 
     if len(metrics) == 0:
@@ -104,7 +103,7 @@ def compute_metrics(
     df = df.reindex(
         columns=pd.MultiIndex.from_product(
             [[m.name for m in metrics], ["value", "deviation"]]
-        )
+        ),
     )
     df.attrs["objective"] = {m.name: m.objective for m in metrics}
     return df
@@ -216,8 +215,7 @@ def show_table(
 
     if len(decimals) != n_metrics:
         raise ValueError(
-            f"Expected {n_metrics} decimals, got {len(decimals)}. "
-            "Provide a single int or a list matching the number of metrics."
+            f"Expected {n_metrics} decimals, got {len(decimals)}. Provide a single int or a list matching the number of metrics."
         )
 
     metric_names = pd.unique(df.columns.get_level_values(0)).tolist()

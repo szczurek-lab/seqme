@@ -6,7 +6,7 @@ import numpy as np
 from pepme.metrics.fid import FID
 
 
-class TestNovelty(unittest.TestCase):
+class TestFid(unittest.TestCase):
     def test_shifted(self):
         def embedder(seqs: list[str]) -> np.ndarray:
             n_ks = [seq.count("K") for seq in seqs]
@@ -46,7 +46,7 @@ class TestNovelty(unittest.TestCase):
         def embedder(seq: list[str], n_dim: int = 3) -> np.ndarray:
             return np.zeros((len(seq), n_dim))
 
-        reference = ["KRQS"]
+        reference = ["KRQS", "AAA"]
         metric = FID(reference=reference, embedder=embedder)
 
         # Name and objective properties

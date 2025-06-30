@@ -1,7 +1,7 @@
 [project]
 name = "pepme"
 version = "0.1.0"
-description = "Add your description here"
+description = "Metrics for benchmarking peptide generation models."
 readme = "README.md"
 authors = [
     { name = "Jan Olszewski", email = "janolszewski1906@gmail.com" }
@@ -38,3 +38,7 @@ dev = [
 
 [tool.ruff.lint]
 extend-select = ["I"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
