@@ -1,7 +1,6 @@
 import unittest
 
 from pepme.metrics.js import JaccardSimilarity
-from pepme.core import MetricResult
 
 
 class TestJaccardSimilarity(unittest.TestCase):
