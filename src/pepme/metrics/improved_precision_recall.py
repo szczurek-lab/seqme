@@ -1,4 +1,3 @@
-import hashlib
 from time import time
 from typing import Callable, Literal, Optional
 
@@ -16,9 +15,10 @@ class ImprovedPrecisionRecall(Metric):
         Kynkäänniemi et al., "Improved precision and recall metric for assessing generative models", NeurIPS 2019.
     """
 
-    _lru_hash: Optional[str] = None
-    _lru_precision: Optional[float] = None
-    _lru_recall: Optional[float] = None
+    # TODO make cache work later
+    # _lru_hash: Optional[str] = None
+    # _lru_precision: Optional[float] = None
+    # _lru_recall: Optional[float] = None
 
     def __init__(
         self,
@@ -29,6 +29,7 @@ class ImprovedPrecisionRecall(Metric):
         row_batch_size: int = 10000,
         col_batch_size: int = 50000,
         num_gpus: int = 1,
+        strict: bool = True,  # strict: If True, do not allow different number of sequences in reference and evaluation embeddings as recommended by the paper authors. If False, allow different numbers but warn the user. Default is True.
     ):
         """
         Args:
@@ -47,6 +48,7 @@ class ImprovedPrecisionRecall(Metric):
         self.row_batch_size = row_batch_size
         self.col_batch_size = col_batch_size
         self.num_gpus = num_gpus
+        self.strict = strict
 
         self.reference_embeddings = self.embedder(self.reference)
         if self.reference_embeddings.shape[0] < 2:
@@ -63,35 +65,42 @@ class ImprovedPrecisionRecall(Metric):
             MetricResult containing the precision score.
         """
 
-        current_hash = hashlib.sha256(str(sequences).encode()).hexdigest()
+        # TODO Make cache work later
+        # current_hash = hashlib.sha256(str(sequences).encode()).hexdigest()
 
-        if (
-            ImprovedPrecisionRecall._lru_hash == current_hash
-            and ImprovedPrecisionRecall._lru_precision is not None
-            and ImprovedPrecisionRecall._lru_recall is not None
-        ):
-            print("Using cached results for sequences.")
-            return (
-                MetricResult(ImprovedPrecisionRecall._lru_precision)
-                if self.metric == "precision"
-                else MetricResult(ImprovedPrecisionRecall._lru_recall)
-            )
+        # if (
+        #     ImprovedPrecisionRecall._lru_hash == current_hash
+        #     and ImprovedPrecisionRecall._lru_precision is not None
+        #     and ImprovedPrecisionRecall._lru_recall is not None
+        # ):
+        #     print("Using cached results for sequences.")
+        #     return (
+        #         MetricResult(ImprovedPrecisionRecall._lru_precision)
+        #         if self.metric == "precision"
+        #         else MetricResult(ImprovedPrecisionRecall._lru_recall)
+        #     )
 
         seq_embeddings = self.embedder(sequences)
 
-        if seq_embeddings.shape[0] != self.reference_embeddings.shape[0]:
+        if (
+            seq_embeddings.shape[0] != self.reference_embeddings.shape[0]
+            and self.strict
+        ):
             raise ValueError(
                 f"Number of sequences ({seq_embeddings.shape[0]}) must match "
                 f"number of reference embeddings ({self.reference_embeddings.shape[0]})."
             )
+
+        if seq_embeddings.shape[0] == 0:
+            raise ValueError("No sequences provided for evaluation.")
 
         metrics = self.compute_improved_precision_recall(seq_embeddings)
         precision = metrics["precision"]
         recall = metrics["recall"]
 
         # ImprovedPrecisionRecall._lru_hash = current_hash
-        ImprovedPrecisionRecall._lru_precision = precision
-        ImprovedPrecisionRecall._lru_recall = recall
+        # ImprovedPrecisionRecall._lru_precision = precision
+        # ImprovedPrecisionRecall._lru_recall = recall
 
         result = MetricResult(value=precision if self.metric == "precision" else recall)
         return result
