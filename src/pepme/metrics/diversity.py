@@ -22,22 +22,23 @@ class Diversity(Metric):
                 This name will be appended to the metric name for identification.
                 Defaults to None.
         """
-        self.reference = set(reference)
+        self.reference = list(set(reference))
         self.reference_name = reference_name
 
         if len(self.reference) == 0:
             raise ValueError("References must contain at least one sample.")
 
     def __call__(self, sequences: list[str]) -> MetricResult:
-        seqs_min_levenshtein = []
-        for seq in sequences:
-            min_distances = min(self._get_levenshtein_to_references(seq))
-            seqs_min_levenshtein.append(min_distances)
+        seqs_min_levenshtein = np.array(
+            [
+                min(get_levenshtein_to_references(seq, self.reference))
+                for seq in sequences
+            ]
+        )
 
-        seqs_min_levenshtein_np = np.array(seqs_min_levenshtein)
         return MetricResult(
-            seqs_min_levenshtein_np.mean().item(),
-            seqs_min_levenshtein_np.std().item(),
+            seqs_min_levenshtein.mean().item(),
+            seqs_min_levenshtein.std().item(),
         )
 
     @property
@@ -52,9 +53,10 @@ class Diversity(Metric):
     def objective(self) -> Literal["minimize", "maximize"]:
         return "maximize"
 
-    @staticmethod
-    def _get_levenshtein(sequence_a: str, sequence_b: str) -> int:
-        return lev(sequence_a, sequence_b)
 
-    def _get_levenshtein_to_references(self, sequence: str) -> list[int]:
-        return [self._get_levenshtein(sequence, ref) for ref in self.reference]
+def get_levenshtein(sequence_a: str, sequence_b: str) -> int:
+    return lev(sequence_a, sequence_b)
+
+
+def get_levenshtein_to_references(sequence: str, references: list[str]) -> list[int]:
+    return [get_levenshtein(sequence, ref) for ref in references]
