@@ -59,7 +59,6 @@ def levenshtein_distance(sequence_a: str, sequence_b: str) -> int:
 
 
 def levenshtein_distance_to_references(
-    sequence: str,
-    references: list[str],
+    sequence: str, references: list[str]
 ) -> list[int]:
     return [levenshtein_distance(sequence, ref) for ref in references]
