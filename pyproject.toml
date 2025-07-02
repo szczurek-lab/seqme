@@ -18,6 +18,8 @@ dependencies = [
     "scipy>=1.13.1",
     "torch>=2.0",
     "tqdm>=4.67.1",
+    "Bio>=1.8.0",
+    "peptides>=0.3.4"
 ]
 
 [build-system]
