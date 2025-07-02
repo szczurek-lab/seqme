@@ -31,7 +31,7 @@ class Diversity(Metric):
     def __call__(self, sequences: list[str]) -> MetricResult:
         seqs_min_levenshtein = np.array(
             [
-                min(get_levenshtein_to_references(seq, self.reference))
+                min(levenshtein_distance_to_references(seq, self.reference))
                 for seq in sequences
             ]
         )
@@ -54,9 +54,12 @@ class Diversity(Metric):
         return "maximize"
 
 
-def get_levenshtein(sequence_a: str, sequence_b: str) -> int:
+def levenshtein_distance(sequence_a: str, sequence_b: str) -> int:
     return lev(sequence_a, sequence_b)
 
 
-def get_levenshtein_to_references(sequence: str, references: list[str]) -> list[int]:
-    return [get_levenshtein(sequence, ref) for ref in references]
+def levenshtein_distance_to_references(
+    sequence: str,
+    references: list[str],
+) -> list[int]:
+    return [levenshtein_distance(sequence, ref) for ref in references]
