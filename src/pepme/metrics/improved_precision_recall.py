@@ -25,8 +25,7 @@ class ImprovedPrecisionRecall(Metric):
         reference: list[str],
         metric: Literal["precision", "recall"],
         embedder: Callable[[list[str]], np.ndarray],
-        num_samples: Optional[int] = None,
-        nhood_sizes: Optional[list[int]] = None,
+        nhood_size: int = 3,
         row_batch_size: int = 10000,
         col_batch_size: int = 50000,
         num_gpus: int = 1,
@@ -35,20 +34,16 @@ class ImprovedPrecisionRecall(Metric):
         Args:
             reference: List of reference sequences.
             embedder: Callable that converts sequences to embeddings.
-            num_samples: Number of samples to randomly select from embeddings for evaluation.
-            nhood_sizes: Neighborhood sizes (k) to consider for k-NN.
+            nhood_size: Neighborhood size (k) to consider for k-NN.
             row_batch_size: Batch size for rows during pairwise distance computations.
             col_batch_size: Batch size for columns during pairwise distance computations.
             num_gpus: Number of GPUs to use for distance computations.
         """
-        if nhood_sizes is None:
-            nhood_sizes = [3]
 
         self.reference = reference
         self.embedder = embedder
         self.metric = metric
-        self.num_samples = num_samples
-        self.nhood_sizes = nhood_sizes
+        self.nhood_size = nhood_size
         self.row_batch_size = row_batch_size
         self.col_batch_size = col_batch_size
         self.num_gpus = num_gpus
@@ -75,6 +70,7 @@ class ImprovedPrecisionRecall(Metric):
             and ImprovedPrecisionRecall._lru_precision is not None
             and ImprovedPrecisionRecall._lru_recall is not None
         ):
+            print("Using cached results for sequences.")
             return (
                 MetricResult(ImprovedPrecisionRecall._lru_precision)
                 if self.metric == "precision"
@@ -83,20 +79,17 @@ class ImprovedPrecisionRecall(Metric):
 
         seq_embeddings = self.embedder(sequences)
 
-        if (
-            self.num_samples is not None
-            and self.num_samples > self.reference_embeddings.shape[0]
-        ):
+        if seq_embeddings.shape[0] != self.reference_embeddings.shape[0]:
             raise ValueError(
-                f"num_samples ({self.num_samples}) cannot exceed reference embeddings size "
-                f"({self.reference_embeddings.shape[0]})."
+                f"Number of sequences ({seq_embeddings.shape[0]}) must match "
+                f"number of reference embeddings ({self.reference_embeddings.shape[0]})."
             )
 
         metrics = self.compute_improved_precision_recall(seq_embeddings)
         precision = metrics["precision"]
         recall = metrics["recall"]
 
-        ImprovedPrecisionRecall._lru_hash = current_hash
+        # ImprovedPrecisionRecall._lru_hash = current_hash
         ImprovedPrecisionRecall._lru_precision = precision
         ImprovedPrecisionRecall._lru_recall = recall
 
@@ -126,22 +119,15 @@ class ImprovedPrecisionRecall(Metric):
         Returns:
             Dictionary containing precision and recall arrays.
         """
-        if self.num_samples is not None:
-            ref_samples = get_random_samples(
-                self.reference_embeddings, self.num_samples
-            )
-            eval_samples = get_random_samples(sequence_embeddings, self.num_samples)
-        else:
-            ref_samples = self.reference_embeddings
-            eval_samples = get_random_samples(
-                sequence_embeddings, self.reference_embeddings.shape[0]
-            )
 
-        metrics = self.knn_precision_recall_features(ref_samples, eval_samples)
+        metrics = self.knn_precision_recall(
+            reference_features=self.reference_embeddings,
+            eval_features=sequence_embeddings,
+        )
         print("Metrics:", metrics)
         return metrics
 
-    def knn_precision_recall_features(
+    def knn_precision_recall(
         self, reference_features: np.ndarray, eval_features: np.ndarray
     ) -> dict:
         """
@@ -161,14 +147,14 @@ class ImprovedPrecisionRecall(Metric):
             reference_features,
             row_batch_size=self.row_batch_size,
             col_batch_size=self.col_batch_size,
-            nhood_sizes=self.nhood_sizes,
+            nhood_size=self.nhood_size,
         )
         eval_manifold = ManifoldEstimator(
             distance_block,
             eval_features,
             row_batch_size=self.row_batch_size,
             col_batch_size=self.col_batch_size,
-            nhood_sizes=self.nhood_sizes,
+            nhood_size=self.nhood_size,
         )
 
         print(
@@ -263,7 +249,7 @@ class ManifoldEstimator:
         features: np.ndarray,
         row_batch_size: int = 25000,
         col_batch_size: int = 50000,
-        nhood_sizes: Optional[list[int]] = None,
+        nhood_size: int = 3,
         clamp_to_percentile: Optional[float] = None,
         eps: float = 1e-5,
     ):
@@ -273,15 +259,12 @@ class ManifoldEstimator:
             features: Reference features, shape [num_points, dim].
             row_batch_size: Batch size for rows when computing distances.
             col_batch_size: Batch size for columns when computing distances.
-            nhood_sizes: List of k values for k-NN neighborhoods.
+            nhood_size: Size of k for k-NN neighborhoods.
             clamp_to_percentile: Percentile threshold to clamp large distances.
             eps: Small epsilon to avoid division by zero.
         """
-        if nhood_sizes is None:
-            nhood_sizes = [3]
 
-        self.nhood_sizes = nhood_sizes
-        self.num_nhoods = len(nhood_sizes)
+        self.nhood_size = nhood_size
         self.eps = eps
         self.row_batch_size = row_batch_size
         self.col_batch_size = col_batch_size
@@ -292,11 +275,10 @@ class ManifoldEstimator:
 
     def _compute_local_radii(self, clamp_to_percentile: Optional[float]) -> None:
         num_points = self._features.shape[0]
-        self.D = np.zeros((num_points, self.num_nhoods), dtype=np.float32)
+        self.D = np.zeros((num_points, 1), dtype=np.float32)
         distance_batch = np.zeros((self.row_batch_size, num_points), dtype=np.float32)
 
-        max_k = max(self.nhood_sizes)
-        k_indices = np.arange(max_k + 1, dtype=np.int32)
+        k_indices = np.arange(self.nhood_size + 1, dtype=np.int32)
 
         for row_start in range(0, num_points, self.row_batch_size):
             row_end = min(row_start + self.row_batch_size, num_points)
@@ -315,7 +297,7 @@ class ManifoldEstimator:
             # Extract k-th nearest neighbor distances for each neighborhood size
             self.D[row_start:row_end] = np.partition(
                 distance_batch[: row_end - row_start], k_indices, axis=1
-            )[:, self.nhood_sizes]
+            )[:, [self.nhood_size]]
 
         if clamp_to_percentile is not None:
             max_dist = np.percentile(self.D, clamp_to_percentile, axis=0)
@@ -336,14 +318,14 @@ class ManifoldEstimator:
             return_neighbors: If True, also return nearest neighbor indices.
 
         Returns:
-            batch_predictions: Binary matrix [num_eval, num_nhoods]
+            batch_predictions: Binary matrix [num_eval, 1]
             Optionally realism scores and nearest neighbors.
         """
         num_eval = eval_features.shape[0]
         num_ref = self.D.shape[0]
 
         distance_batch = np.zeros((self.row_batch_size, num_ref), dtype=np.float32)
-        batch_predictions = np.zeros((num_eval, self.num_nhoods), dtype=np.int32)
+        batch_predictions = np.zeros((num_eval, 1), dtype=np.int32)
         realism_scores = np.zeros(num_eval, dtype=np.float32)
         nearest_indices = np.zeros(num_eval, dtype=np.int32)
 
