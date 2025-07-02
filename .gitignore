@@ -202,4 +202,7 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+__MACOSX
+.DS_Store
 .idea

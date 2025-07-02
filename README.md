@@ -12,16 +12,21 @@ For more examples visit [notebooks](/notebooks) directory.
 ## Installation
 ### 1. Install [`uv`](#tooling):
 
-#### Systemwide install 
-Run any of the following commands:
+#### (Option 1) Systemwide install 
 ```shell
 pip install uv
-curl -LsSf https://astral.sh/uv/install.sh | sh
-wget -qO- https://astral.sh/uv/install.sh | sh
 ```
+And reload the bash session.
+
+Running
+```shell
+which uv
+```
+should return path to the installed `uv` binary.
+
 If you have troubles, visit the [official site](https://docs.astral.sh/uv/getting-started/installation/) for more information or install [`uv`](#tooling) locally as described below.
 
-#### Local install for macOS (zsh) and Linux (bash) users
+#### (Option 2) Local install for macOS (zsh) and Linux (bash) users
 
 Run the following commands:
 ```shell
