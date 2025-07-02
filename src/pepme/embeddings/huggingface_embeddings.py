@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Literal, TypeVar, get_args
+from typing import Literal, get_args
 
 import numpy as np
 import torch
@@ -51,8 +51,6 @@ def compute_esm2_embeddings(
 
 
 HuggingFaceModel_OPT = Literal[ESM2_Model_OPT,]
-
-K = TypeVar("K")
 
 
 def compute_huggingface_model_embeddings(
