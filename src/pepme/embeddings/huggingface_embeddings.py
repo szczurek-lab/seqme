@@ -3,6 +3,7 @@ from typing import Literal, get_args
 import numpy as np
 import torch
 from transformers import AutoModel, AutoTokenizer
+from transformers.utils import logging
 
 from pepme.utils.engine_cfg import EngineCfg
 from pepme.utils.progress import RichProgress
@@ -16,8 +17,12 @@ class ESM2Embeddings:
     def __init__(
         self, model_name: Literal[ESM2_Model_OPT], device: str, batch_size: int
     ):
+        v = logging.get_verbosity()
+        logging.set_verbosity_error()
         self.tokenizer = AutoTokenizer.from_pretrained(f"facebook/{model_name}")
         self.model = AutoModel.from_pretrained(f"facebook/{model_name}")
+        logging.set_verbosity(v)
+
         self.batch_size = batch_size
         self.device = device
 
