@@ -15,7 +15,11 @@ ESM2_Model_OPT = Literal[
 
 class ESM2Embeddings:
     def __init__(
-        self, model_name: Literal[ESM2_Model_OPT], device: str, batch_size: int
+        self,
+        model_name: Literal[ESM2_Model_OPT],
+        device: str,
+        batch_size: int,
+        verbose: bool = False,
     ):
         v = logging.get_verbosity()
         logging.set_verbosity_error()
@@ -25,14 +29,15 @@ class ESM2Embeddings:
 
         self.batch_size = batch_size
         self.device = device
+        self.verbose = verbose
 
-    def __call__(self, sequences: list[str], *, verbose: bool = False) -> np.ndarray:
-        ret = []
+    def __call__(self, sequences: list[str]) -> np.ndarray:
+        embeddings = []
         with torch.inference_mode():
             for i in RichProgress(
                 range(0, len(sequences), self.batch_size),
                 "Computing ESM2 embeddings/BATCHES",
-                verbose=verbose,
+                verbose=self.verbose,
             ):
                 batch = sequences[i : i + self.batch_size]
                 tokens = self.tokenizer(
@@ -46,16 +51,18 @@ class ESM2Embeddings:
 
                 counts = tokens["attention_mask"].sum(dim=-1)
                 mask = tokens["attention_mask"]
-                for i, c in enumerate(counts):
-                    mask[i, c - 1] = 0
-                    mask[i, 0] = 0
+
+                batch_size = mask.size(0)
+                batch_indices = torch.arange(batch_size, device=mask.device)
+                mask[batch_indices, 0] = 0
+                mask[batch_indices, counts - 1] = 0
                 counts = counts - 2
 
                 embed = (hidden_state * mask.unsqueeze(-1)).sum(
                     dim=-2
                 ) / counts.unsqueeze(-1)
-                ret.append(embed.cpu().numpy())
-        return np.concatenate(ret)
+                embeddings.append(embed.cpu().numpy())
+        return np.concatenate(embeddings)
 
 
 HuggingFaceModel_OPT = Literal[ESM2_Model_OPT,]
