@@ -16,6 +16,7 @@ class PhysicochemicalEmbedding:
         List of property names to use. Options:
         ['charge', 'hydrophobicity', 'isoelectric_point', 'mol_weight',
          'instability_index', 'gravy', 'aliphatic_index', 'boman_index']
+        Take all by default
     scaling : str
         'none', 'minmax', or 'standard'
     ph : float
@@ -37,13 +38,17 @@ class PhysicochemicalEmbedding:
 
     def __init__(
         self,
-        properties: list[str],
+        properties: list[str] = [""],
         scaling: str = "standard",
         ph: float = 7.0,
         hydro_scale: str = "Aboderin",
     ):
         self.scaling = scaling
+        if properties == [""]:
+            properties = list(self._all_property_builders.keys())
+            
         self.property_names = properties
+        
         self.funcs: dict[str, Callable[[list[str]], np.ndarray]] = {
             name: self._all_property_builders[name](ph, hydro_scale)
             for name in properties
