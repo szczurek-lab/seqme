@@ -21,17 +21,15 @@ class ESM2Embeddings:
         self.batch_size = batch_size
         self.device = device
 
-    def __call__(
-        self,
-        proteins: list[str],
-    ) -> np.ndarray:
+    def __call__(self, sequences: list[str], *, verbose: bool = False) -> np.ndarray:
         ret = []
         with torch.inference_mode():
             for i in RichProgress(
-                range(0, len(proteins), self.batch_size),
+                range(0, len(sequences), self.batch_size),
                 "Computing ESM2 embeddings/BATCHES",
+                verbose=verbose,
             ):
-                batch = proteins[i : i + self.batch_size]
+                batch = sequences[i : i + self.batch_size]
                 tokens = self.tokenizer(
                     batch, return_tensors="pt", padding=True, truncation=False
                 )
@@ -59,7 +57,7 @@ HuggingFaceModel_OPT = Literal[ESM2_Model_OPT,]
 
 
 def compute_huggingface_model_embeddings(
-    proteins: list[str],
+    sequences: list[str],
     opt: HuggingFaceModel_OPT,
     *,
     device: str | None = None,
@@ -79,4 +77,4 @@ def compute_huggingface_model_embeddings(
     else:
         raise NotImplementedError
 
-    return encode_fn(proteins)
+    return encode_fn(sequences)
