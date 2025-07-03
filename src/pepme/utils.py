@@ -1,3 +1,4 @@
+import random
 from typing import Optional
 
 
@@ -38,3 +39,10 @@ def write_to_fasta_file(
             header = headers[i] if headers else f">sequence_{i + 1}"
             f.write(f"{header}\n")
             f.write(f"{seq}\n")
+
+
+def shuffle_sequence(sequence: str, seed: int) -> str:
+    sequence_list = list(sequence)
+    random.seed(seed)
+    random.shuffle(sequence_list)
+    return "".join(sequence_list)
