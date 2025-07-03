@@ -314,8 +314,12 @@ class ManifoldEstimator:
                 ref_batch = self._features[col_start:col_end]
 
                 distances = self._distance_block.pairwise_distances(
-                    torch.from_numpy(eval_batch).float(),
-                    torch.from_numpy(ref_batch).float(),
+                    torch.from_numpy(eval_batch).to(
+                        device=self.device, dtype=torch.float
+                    ),
+                    torch.from_numpy(ref_batch).to(
+                        device=self.device, dtype=torch.float
+                    ),
                 )
                 distance_batch[: row_end - row_start, col_start:col_end] = distances
 
