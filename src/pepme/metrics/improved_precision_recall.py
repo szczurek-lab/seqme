@@ -147,10 +147,7 @@ class ImprovedPrecisionRecall(Metric):
         Returns:
             Dictionary with keys "precision" and "recall".
         """
-        distance_block = DistanceBlock()
-
         reference_manifold = ManifoldEstimator(
-            distance_block,
             reference_features,
             row_batch_size=self.row_batch_size,
             col_batch_size=self.col_batch_size,
@@ -158,7 +155,6 @@ class ImprovedPrecisionRecall(Metric):
             device=self.device,
         )
         eval_manifold = ManifoldEstimator(
-            distance_block,
             eval_features,
             row_batch_size=self.row_batch_size,
             col_batch_size=self.col_batch_size,
@@ -177,41 +173,6 @@ def get_random_samples(array: np.ndarray, size: int) -> np.ndarray:
     return array[indices]
 
 
-def batch_pairwise_distances(U: torch.Tensor, V: torch.Tensor) -> torch.Tensor:
-    """
-    Compute pairwise squared Euclidean distances between two batches of vectors.
-
-    Args:
-        U: Tensor of shape [batch_u, dim]
-        V: Tensor of shape [batch_v, dim]
-
-    Returns:
-        Tensor of shape [batch_u, batch_v] with pairwise squared distances.
-    """
-    norm_u = torch.sum(U**2, dim=1, keepdim=True)  # [batch_u, 1]
-    norm_v = torch.sum(V**2, dim=1, keepdim=True)  # [batch_v, 1]
-
-    distances = norm_u - 2 * torch.matmul(U, V.T) + norm_v.T
-    return torch.clamp(distances, min=0.0)
-
-
-class DistanceBlock:
-    def pairwise_distances(self, U: torch.Tensor, V: torch.Tensor) -> np.ndarray:
-        """
-        Compute pairwise distances between two batches
-
-        Args:
-            U: Tensor [batch_u, dim]
-            V: Tensor [batch_v, dim]
-
-        Returns:
-            distances as numpy array [batch_u, batch_v]
-        """
-
-        D = batch_pairwise_distances(U, V)
-        return D.cpu().numpy()
-
-
 class ManifoldEstimator:
     """
     Estimates local manifolds via k-NN distances and evaluates points' inclusion in these manifolds.
@@ -219,7 +180,6 @@ class ManifoldEstimator:
 
     def __init__(
         self,
-        distance_block: DistanceBlock,
         features: np.ndarray,
         row_batch_size: int = 25000,
         col_batch_size: int = 50000,
@@ -244,7 +204,6 @@ class ManifoldEstimator:
         self.row_batch_size = row_batch_size
         self.col_batch_size = col_batch_size
         self._features = features
-        self._distance_block = distance_block
         self.device = device
 
         self._compute_local_radii(clamp_to_percentile)
@@ -264,7 +223,7 @@ class ManifoldEstimator:
                 col_end = min(col_start + self.col_batch_size, num_points)
                 col_batch = self._features[col_start:col_end]
 
-                distances = self._distance_block.pairwise_distances(
+                distances = self.pairwise_distances(
                     torch.from_numpy(row_batch).to(self.device, dtype=torch.float),
                     torch.from_numpy(col_batch).to(self.device, dtype=torch.float),
                 )
@@ -278,6 +237,23 @@ class ManifoldEstimator:
         if clamp_to_percentile is not None:
             max_dist = np.percentile(self.D, clamp_to_percentile, axis=0)
             self.D[self.D > max_dist] = 0
+
+    def pairwise_distances(self, U: torch.Tensor, V: torch.Tensor) -> np.ndarray:
+        """
+        Compute pairwise squared Euclidean distances between two batches of vectors.
+
+        Args:
+            U: Tensor of shape [batch_u, dim]
+            V: Tensor of shape [batch_v, dim]
+
+        Returns:
+            Tensor of shape [batch_u, batch_v] with pairwise squared distances.
+        """
+        norm_u = torch.sum(U**2, dim=1, keepdim=True)  # [batch_u, 1]
+        norm_v = torch.sum(V**2, dim=1, keepdim=True)  # [batch_v, 1]
+
+        distances = norm_u - 2 * torch.matmul(U, V.T) + norm_v.T
+        return torch.clamp(distances, min=0.0).cpu().numpy()
 
     def evaluate(
         self,
@@ -313,7 +289,7 @@ class ManifoldEstimator:
                 col_end = min(col_start + self.col_batch_size, num_ref)
                 ref_batch = self._features[col_start:col_end]
 
-                distances = self._distance_block.pairwise_distances(
+                distances = self.pairwise_distances(
                     torch.from_numpy(eval_batch).to(
                         device=self.device, dtype=torch.float
                     ),
