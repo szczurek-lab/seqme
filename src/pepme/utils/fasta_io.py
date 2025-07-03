@@ -43,6 +43,6 @@ def write_to_fasta_file(
 
 def shuffle_sequence(sequence: str, seed: int) -> str:
     sequence_list = list(sequence)
-    random.seed(seed)
-    random.shuffle(sequence_list)
+    rng = random.Random(seed)
+    rng.shuffle(sequence_list)
     return "".join(sequence_list)
