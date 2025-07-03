@@ -1,4 +1,3 @@
-from time import time
 from typing import Callable, Literal, Optional
 
 import numpy as np
@@ -28,7 +27,7 @@ class ImprovedPrecisionRecall(Metric):
         nhood_size: int = 3,
         row_batch_size: int = 10000,
         col_batch_size: int = 50000,
-        num_gpus: int = 1,
+        device: Literal["cpu", "cuda"] = "cpu",
         strict: bool = True,  # strict: If True, do not allow different number of sequences in reference and evaluation embeddings as recommended by the paper authors. If False, allow different numbers but warn the user. Default is True.
     ):
         """
@@ -38,7 +37,7 @@ class ImprovedPrecisionRecall(Metric):
             nhood_size: Neighborhood size (k) to consider for k-NN.
             row_batch_size: Batch size for rows during pairwise distance computations.
             col_batch_size: Batch size for columns during pairwise distance computations.
-            num_gpus: Number of GPUs to use for distance computations.
+            device: Device to use for distance computations ("cpu" or "cuda").
         """
 
         self.reference = reference
@@ -47,7 +46,7 @@ class ImprovedPrecisionRecall(Metric):
         self.nhood_size = nhood_size
         self.row_batch_size = row_batch_size
         self.col_batch_size = col_batch_size
-        self.num_gpus = num_gpus
+        self.device = device
         self.strict = strict
 
         self.reference_embeddings = self.embedder(self.reference)
@@ -133,7 +132,6 @@ class ImprovedPrecisionRecall(Metric):
             reference_features=self.reference_embeddings,
             eval_features=sequence_embeddings,
         )
-        print("Metrics:", metrics)
         return metrics
 
     def knn_precision_recall(
@@ -149,7 +147,7 @@ class ImprovedPrecisionRecall(Metric):
         Returns:
             Dictionary with keys "precision" and "recall".
         """
-        distance_block = DistanceBlock(num_gpus=self.num_gpus)
+        distance_block = DistanceBlock(device=self.device)
 
         reference_manifold = ManifoldEstimator(
             distance_block,
@@ -166,16 +164,8 @@ class ImprovedPrecisionRecall(Metric):
             nhood_size=self.nhood_size,
         )
 
-        print(
-            f"Evaluating k-NN precision and recall with {reference_features.shape[0]} reference samples..."
-        )
-        start = time()
-
         precision = reference_manifold.evaluate(eval_features).mean(axis=0)
         recall = eval_manifold.evaluate(reference_features).mean(axis=0)
-
-        print(f"Evaluation completed in {time() - start:.2f}s")
-
         return {"precision": precision, "recall": recall}
 
 
@@ -208,13 +198,8 @@ class DistanceBlock:
     Efficient pairwise distance computation with optional multi-GPU support.
     """
 
-    def __init__(self, num_gpus: int = 1):
-        self.num_gpus = num_gpus
-        self.devices = (
-            [f"cuda:{i}" for i in range(num_gpus)]
-            if num_gpus > 0 and torch.cuda.is_available()
-            else ["cpu"]
-        )
+    def __init__(self, device: Literal["cpu", "cuda"] = "cpu"):
+        self.device = device
 
     def pairwise_distances(self, U: torch.Tensor, V: torch.Tensor) -> np.ndarray:
         """
@@ -227,24 +212,8 @@ class DistanceBlock:
         Returns:
             distances as numpy array [batch_u, batch_v]
         """
-        if self.num_gpus <= 1 or not torch.cuda.is_available():
-            D = batch_pairwise_distances(U, V)
-            return D.cpu().numpy()
-
-        # Split V batch-wise across GPUs
-        V_chunks = torch.chunk(V, self.num_gpus, dim=0)
-        results = []
-
-        for i, V_chunk in enumerate(V_chunks):
-            device = self.devices[i]
-            U_device = U.to(device)
-            V_device = V_chunk.to(device)
-
-            with torch.cuda.device(device):
-                D_part = batch_pairwise_distances(U_device, V_device)
-                results.append(D_part.cpu())
-
-        return torch.cat(results, dim=1).numpy()
+        D = batch_pairwise_distances(U, V)
+        return D.cpu().numpy()
 
 
 class ManifoldEstimator:
