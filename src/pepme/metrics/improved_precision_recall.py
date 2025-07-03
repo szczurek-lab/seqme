@@ -147,7 +147,7 @@ class ImprovedPrecisionRecall(Metric):
         Returns:
             Dictionary with keys "precision" and "recall".
         """
-        distance_block = DistanceBlock(device=self.device)
+        distance_block = DistanceBlock()
 
         reference_manifold = ManifoldEstimator(
             distance_block,
@@ -155,6 +155,7 @@ class ImprovedPrecisionRecall(Metric):
             row_batch_size=self.row_batch_size,
             col_batch_size=self.col_batch_size,
             nhood_size=self.nhood_size,
+            device=self.device,
         )
         eval_manifold = ManifoldEstimator(
             distance_block,
@@ -162,6 +163,7 @@ class ImprovedPrecisionRecall(Metric):
             row_batch_size=self.row_batch_size,
             col_batch_size=self.col_batch_size,
             nhood_size=self.nhood_size,
+            device=self.device,
         )
 
         precision = reference_manifold.evaluate(eval_features).mean(axis=0)
@@ -194,16 +196,9 @@ def batch_pairwise_distances(U: torch.Tensor, V: torch.Tensor) -> torch.Tensor:
 
 
 class DistanceBlock:
-    """
-    Efficient pairwise distance computation with optional multi-GPU support.
-    """
-
-    def __init__(self, device: Literal["cpu", "cuda"] = "cpu"):
-        self.device = device
-
     def pairwise_distances(self, U: torch.Tensor, V: torch.Tensor) -> np.ndarray:
         """
-        Compute pairwise distances between two batches, splitting over GPUs if available.
+        Compute pairwise distances between two batches
 
         Args:
             U: Tensor [batch_u, dim]
@@ -212,6 +207,7 @@ class DistanceBlock:
         Returns:
             distances as numpy array [batch_u, batch_v]
         """
+
         D = batch_pairwise_distances(U, V)
         return D.cpu().numpy()
 
@@ -230,6 +226,7 @@ class ManifoldEstimator:
         nhood_size: int = 3,
         clamp_to_percentile: Optional[float] = None,
         eps: float = 1e-5,
+        device: Literal["cpu", "cuda"] = "cpu",
     ):
         """
         Args:
@@ -248,6 +245,7 @@ class ManifoldEstimator:
         self.col_batch_size = col_batch_size
         self._features = features
         self._distance_block = distance_block
+        self.device = device
 
         self._compute_local_radii(clamp_to_percentile)
 
@@ -267,8 +265,8 @@ class ManifoldEstimator:
                 col_batch = self._features[col_start:col_end]
 
                 distances = self._distance_block.pairwise_distances(
-                    torch.from_numpy(row_batch).float(),
-                    torch.from_numpy(col_batch).float(),
+                    torch.from_numpy(row_batch).to(self.device, dtype=torch.float),
+                    torch.from_numpy(col_batch).to(self.device, dtype=torch.float),
                 )
                 distance_batch[: row_end - row_start, col_start:col_end] = distances
 

@@ -69,6 +69,45 @@ class TestImprovedPrecisionRecall(unittest.TestCase):
         with self.assertRaises(ValueError):
             metric(sequences=[])
 
+    def test_precision_recall(self):
+        reference = [
+            "LVFEKKLKKTLR",
+            "MSQTLLPLYAANHVTKFEMYQSSGYR",
+            "VKKEAKKKLEERL",
+            "GLPVIRGKCITKKGLKI",
+            "VRSKKILEFGAKLSVRYLETVATGWKRT",
+            "MFHALPAAAACQRHI",
+            "TGVALSADNLFELAEKDKIIKEI",
+            "FLTILLLGAVNSV",
+            "HGALIFRRRLPKIAWGGKKFF",
+            "MVELVRLEHTRKQMIHLSGFTLFCMAQINKYT",
+        ]
+        sequences = [
+            "MLWKRRSEIILKGGARSSKILLEGAAQTK",
+            "QSLLLPDDAAKVV",
+            "LRAKRIFDIFLV",
+            "MYCLRIIKIGGVGSSKQLLCLDAIAVVIVIES",
+            "MLTLDRLFVINKEGIYCSDCRLFHIAPI",
+            "MIQCHDLVKSARRLVT",
+            "KFTFELMKVANVRKKIIHDC",
+            "RPCKIWKKLSCL",
+            "WRCEVILKKWWRLQN",
+            "ITYAGMAVFSTPLPEMAAYTVKIPELID",
+        ]
+        metric_precision = ImprovedPrecisionRecall(
+            reference=reference, embedder=aa_embedder, metric="precision", nhood_size=1
+        )
+
+        metric_recall = ImprovedPrecisionRecall(
+            reference=reference, embedder=aa_embedder, metric="recall", nhood_size=1
+        )
+
+        precision = metric_precision(sequences=sequences)
+        recall = metric_recall(sequences=sequences)
+
+        self.assertEqual(precision.value, 0.7)
+        self.assertEqual(recall.value, 0.8)
+
 
 if __name__ == "__main__":
     unittest.main()
@@ -83,3 +122,41 @@ def mock_embedder(seqs: list[str]) -> np.ndarray:
     n_ks = [seq.count("K") for seq in seqs]
     zeros = [0] * len(seqs)
     return np.array(list(zip(n_ks, zeros, strict=True)))
+
+
+def aa_embedder(seqs: list[str]) -> np.ndarray:
+    aa_to_int = {
+        "A": 0,
+        "C": 1,
+        "D": 2,
+        "E": 3,
+        "F": 4,
+        "G": 5,
+        "H": 6,
+        "I": 7,
+        "K": 8,
+        "L": 9,
+        "M": 10,
+        "N": 11,
+        "P": 12,
+        "Q": 13,
+        "R": 14,
+        "S": 15,
+        "T": 16,
+        "V": 17,
+        "W": 18,
+        "Y": 19,
+        "X": 20,  # unknown
+    }
+
+    max_len = max(len(seq) for seq in seqs)
+    batch_size = len(seqs)
+    arr = np.full(
+        (batch_size, max_len), fill_value=21, dtype=np.int32
+    )  # 21 = PAD token
+
+    for i, seq in enumerate(seqs):
+        for j, aa in enumerate(seq):
+            arr[i, j] = aa_to_int.get(aa.upper(), 20)  # unknown as 20
+
+    return arr
