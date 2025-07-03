@@ -32,7 +32,7 @@ Run the following commands:
 ```shell
 export UV_VENV_LOCATION={some path with enough storage to install Python packages}
 python3 -m venv $UV_VENV_LOCATION/uv_venv
-echo "export PATH=$UV_VENV_LOCATION/uv_venv/bin:$PATH" > $HOME/.$(basename $SHELL)rc
+echo "export PATH=$UV_VENV_LOCATION/uv_venv/bin:$PATH" >> $HOME/.$(basename $SHELL)rc
 source $HOME/.$(basename $SHELL)rc
 pip install uv 
 ```
