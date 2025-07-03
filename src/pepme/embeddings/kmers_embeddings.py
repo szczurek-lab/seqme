@@ -1,6 +1,7 @@
-import numpy as np
 import pickle
-from typing import Union, List
+from typing import List, Union
+
+import numpy as np
 
 
 class KmerFrequencyEmbedding:
@@ -54,13 +55,15 @@ class KmerFrequencyEmbedding:
         n_possible = max(len(sequence) - self.k + 1, 1)
 
         for i in range(n_possible):
-            kmer = sequence[i:i + self.k]
+            kmer = sequence[i : i + self.k]
             if kmer in self.kmer_to_idx:
                 vector[self.kmer_to_idx[kmer]] += 1
 
         return vector / n_possible
 
-    def embed(self, sequences: Union[str, List[str]]) -> Union[np.ndarray, List[np.ndarray]]:
+    def embed(
+        self, sequences: Union[str, List[str]]
+    ) -> Union[np.ndarray, List[np.ndarray]]:
         """
         Embed one or multiple peptide sequences into AMP-specific k-mer space.
 
