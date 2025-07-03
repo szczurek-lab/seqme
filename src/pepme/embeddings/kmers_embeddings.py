@@ -78,3 +78,5 @@ class KmerFrequencyEmbedding:
         if isinstance(sequences, str):
             return self._embed_one(sequences)
         return np.array([self._embed_one(seq) for seq in sequences])
+    
+    __call__ = embed
