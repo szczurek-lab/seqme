@@ -63,8 +63,8 @@ class ImprovedPrecisionRecall(Metric):
             raise ValueError("`neighborhood_size` must be greater than 0.")
 
         self.reference_embeddings = self.embedder(self.reference)
-        if self.reference_embeddings.shape[0] < 2:
-            raise ValueError("Reference embeddings must contain at least two samples.")
+        if self.reference_embeddings.shape[0] < 1:
+            raise ValueError("Reference embeddings must contain at least one samples.")
 
     def __call__(self, sequences: list[str]) -> MetricResult:
         """
@@ -77,9 +77,6 @@ class ImprovedPrecisionRecall(Metric):
             MetricResult containing the computed score.
         """
         seq_embeddings = self.embedder(sequences)
-
-        if seq_embeddings.shape[0] == 0:
-            raise ValueError("No sequences provided for evaluation.")
 
         if (
             self.strict
