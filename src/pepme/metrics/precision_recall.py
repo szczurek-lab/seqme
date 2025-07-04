@@ -22,7 +22,7 @@ class ImprovedPrecisionRecall(Metric):
         embedder: Callable[[list[str]], np.ndarray],
         *,
         reference_name: Optional[str] = None,
-        reference_percentile: Optional[float] = None,
+        reference_quantile: Optional[float] = None,
         row_batch_size: int = 10_000,
         col_batch_size: int = 10_000,
         device: Literal["cpu", "cuda"] = "cpu",
@@ -37,7 +37,7 @@ class ImprovedPrecisionRecall(Metric):
             reference: List of reference sequences to build the reference manifold.
             embedder: Function that maps sequences to embeddings.
             reference_name: Optional label appended to the metric name.
-            reference_percentile: Percentile cutoff for reference radii (defaults to using all).
+            reference_quantile: Quantile cutoff for reference radii (defaults to using all).
             row_batch_size: Number of samples per batch when computing distances by rows.
             col_batch_size: Number of samples per batch when computing distances by columns.
             device: Compute device, "cpu" or "cuda".
@@ -49,11 +49,18 @@ class ImprovedPrecisionRecall(Metric):
         self.reference = reference
 
         self.reference_name = reference_name
-        self.reference_percentile = reference_percentile
+        self.reference_quantile = reference_quantile
         self.row_batch_size = row_batch_size
         self.col_batch_size = col_batch_size
         self.device = device
         self.strict = strict
+
+        if reference_quantile is not None:
+            if reference_quantile < 0 or reference_quantile > 1:
+                raise ValueError("`reference_quantile` must be between 0 and 1.")
+
+        if self.neighborhood_size < 1:
+            raise ValueError("`neighborhood_size` must be greater than 0.")
 
         self.reference_embeddings = self.embedder(self.reference)
         if self.reference_embeddings.shape[0] < 2:
@@ -79,11 +86,7 @@ class ImprovedPrecisionRecall(Metric):
             and seq_embeddings.shape[0] != self.reference_embeddings.shape[0]
         ):
             raise ValueError(
-                f"Number of sequences ({seq_embeddings.shape[0]}) must match \
-"
-                f"number of reference embeddings ({self.reference_embeddings.shape[0]}). \
-"
-                "Set `strict=False` to disable this check."
+                f"Number of sequences ({seq_embeddings.shape[0]}) must match number of reference embeddings ({self.reference_embeddings.shape[0]}). Set `strict=False` to disable this check."
             )
 
         if self.metric == "precision":
@@ -94,7 +97,7 @@ class ImprovedPrecisionRecall(Metric):
                 row_batch_size=self.row_batch_size,
                 col_batch_size=self.col_batch_size,
                 device=self.device,
-                clamp_to_percentile=self.reference_percentile,
+                clamp_to_quantile=self.reference_quantile,
             )
         elif self.metric == "recall":
             value = compute_recall(
@@ -104,7 +107,7 @@ class ImprovedPrecisionRecall(Metric):
                 row_batch_size=self.row_batch_size,
                 col_batch_size=self.col_batch_size,
                 device=self.device,
-                clamp_to_percentile=self.reference_percentile,
+                clamp_to_quantile=self.reference_quantile,
             )
         else:
             raise ValueError(
@@ -129,7 +132,7 @@ def compute_recall(
     row_batch_size: int,
     col_batch_size: int,
     device: Literal["cpu", "cuda"],
-    clamp_to_percentile: Optional[float] = None,
+    clamp_to_quantile: Optional[float] = None,
 ) -> float:
     """
     Evaluate recall: fraction of reference manifold covered by eval embeddings.
@@ -141,7 +144,7 @@ def compute_recall(
         row_batch_size: Batch size for eval points when computing distances.
         col_batch_size: Batch size for reference points when computing distances.
         device: Compute device, "cpu" or "cuda".
-        clamp_to_percentile: Percentile cutoff for local radii in reference manifold.
+        clamp_to_quantile: Quantile cutoff for local radii in reference manifold.
 
     Returns:
         Recall value (float).
@@ -149,7 +152,7 @@ def compute_recall(
     eval_manifold = ManifoldEstimator(
         eval_embeddings,
         neighborhood_size=neighborhood_size,
-        clamp_to_percentile=clamp_to_percentile,
+        clamp_to_quantile=clamp_to_quantile,
         row_batch_size=row_batch_size,
         col_batch_size=col_batch_size,
         device=device,
@@ -164,7 +167,7 @@ def compute_precision(
     row_batch_size: int,
     col_batch_size: int,
     device: Literal["cpu", "cuda"],
-    clamp_to_percentile: Optional[float] = None,
+    clamp_to_quantile: Optional[float] = None,
 ) -> float:
     """
     Evaluate precision: fraction of eval points lying in reference manifold.
@@ -176,7 +179,7 @@ def compute_precision(
         row_batch_size: Batch size for reference points when computing distances.
         col_batch_size: Batch size for eval points when computing distances.
         device: Compute device, "cpu" or "cuda".
-        clamp_to_percentile: Percentile cutoff for local radii in reference manifold.
+        clamp_to_quantile: Quantile cutoff for local radii in reference manifold.
 
     Returns:
         Precision value (float).
@@ -184,7 +187,7 @@ def compute_precision(
     reference_manifold = ManifoldEstimator(
         reference_embeddings,
         neighborhood_size=neighborhood_size,
-        clamp_to_percentile=clamp_to_percentile,
+        clamp_to_quantile=clamp_to_quantile,
         row_batch_size=row_batch_size,
         col_batch_size=col_batch_size,
         device=device,
@@ -201,7 +204,7 @@ class ManifoldEstimator:
         self,
         features: np.ndarray,
         neighborhood_size: int,
-        clamp_to_percentile: Optional[float] = None,
+        clamp_to_quantile: Optional[float] = None,
         row_batch_size: int = 10_000,
         col_batch_size: int = 10_000,
         eps: float = 1e-5,
@@ -211,7 +214,7 @@ class ManifoldEstimator:
         Args:
             features: Data points to build the manifold, shape [N, D].
             neighborhood_size: k in k-NN.
-            clamp_to_percentile: Percentile cutoff for radii.
+            clamp_to_quantile: Quantile cutoff for radii.
             row_batch_size: Batch size for rows in distance calc.
             col_batch_size: Batch size for cols in distance calc.
             eps: Small constant to avoid division by zero in realism.
@@ -224,9 +227,9 @@ class ManifoldEstimator:
         self.features = features
         self.device = device
 
-        self._compute_local_radii(clamp_to_percentile)
+        self._compute_local_radii(clamp_to_quantile)
 
-    def _compute_local_radii(self, clamp_to_percentile: Optional[float] = None):
+    def _compute_local_radii(self, clamp_to_quantile: Optional[float] = None):
         num_points = self.features.shape[0]
         self.local_radii = np.zeros((num_points, 1), dtype=np.float32)
 
@@ -252,8 +255,8 @@ class ManifoldEstimator:
                 distance_batch[: row_end - row_start], k_idx, axis=1
             )[:, [k_idx]]
 
-        if clamp_to_percentile is not None:
-            max_dist = np.percentile(self.local_radii, clamp_to_percentile)
+        if clamp_to_quantile is not None:
+            max_dist = np.quantile(self.local_radii, clamp_to_quantile)
             self.local_radii = np.where(
                 self.local_radii <= max_dist, self.local_radii, 0
             )

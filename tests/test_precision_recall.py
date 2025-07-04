@@ -49,7 +49,7 @@ class TestImprovedPrecisionRecall(unittest.TestCase):
             neighborhood_size=1,
             row_batch_size=1,
             col_batch_size=1,
-            reference_percentile=0.6,
+            reference_quantile=0.6,
             strict=False,
         )
 
@@ -68,7 +68,7 @@ class TestImprovedPrecisionRecall(unittest.TestCase):
             neighborhood_size=2,
             row_batch_size=1,
             col_batch_size=1,
-            reference_percentile=None,
+            reference_quantile=None,
             strict=False,
         )
 
