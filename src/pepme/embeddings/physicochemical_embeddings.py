@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-import pepme.properties.physicochemical_properties as php
+import pepme.properties.physico_chemical as php
 
 
 class PhysicochemicalEmbedding:
