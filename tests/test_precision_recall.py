@@ -21,7 +21,7 @@ class TestImprovedPrecisionRecall(unittest.TestCase):
         self.assertEqual(metric.objective, "maximize")
 
         result = metric(["A" * 2, "A" * 16])
-        self.assertTrue(result.value == 0.5)
+        self.assertEqual(result.value, 0.5)
 
     def test_basic_recall(self):
         reference = ["A" * 15, "A" * 17]
@@ -38,11 +38,10 @@ class TestImprovedPrecisionRecall(unittest.TestCase):
         self.assertEqual(metric.objective, "maximize")
 
         result = metric(["A" * 2, "A" * 16])
-        self.assertTrue(result.value == 1.0)
+        self.assertEqual(result.value, 1.0)
 
-    """ # @TODO
     def test_precision_with_percentile(self):
-        reference = ["A" * 15, "A" * 17, "A" * 50]
+        reference = ["A" * 15, "A" * 17, "A" * 1]
         metric = ImprovedPrecisionRecall(
             reference=reference,
             embedder=length_mock_embedder,
@@ -50,7 +49,7 @@ class TestImprovedPrecisionRecall(unittest.TestCase):
             neighborhood_size=1,
             row_batch_size=1,
             col_batch_size=1,
-            clamp_to_percentile=0.1,
+            reference_percentile=0.6,
             strict=False,
         )
 
@@ -58,8 +57,26 @@ class TestImprovedPrecisionRecall(unittest.TestCase):
         self.assertEqual(metric.objective, "maximize")
 
         result = metric(["A" * 2, "A" * 16])
-        self.assertTrue(result.value == 0.5)
-    """
+        self.assertEqual(result.value, 0.5)
+
+    def test_precision_with_larger_neighborhood(self):
+        reference = ["A" * 15, "A" * 17, "A" * 1]
+        metric = ImprovedPrecisionRecall(
+            reference=reference,
+            embedder=length_mock_embedder,
+            metric="precision",
+            neighborhood_size=2,
+            row_batch_size=1,
+            col_batch_size=1,
+            reference_percentile=None,
+            strict=False,
+        )
+
+        self.assertEqual(metric.name, "Precision")
+        self.assertEqual(metric.objective, "maximize")
+
+        result = metric(["A" * 33, "A" * 34])
+        self.assertEqual(result.value, 0.5)
 
     def test_identical_sequences_precision(self):
         reference = ["KKAA", "KKAA", "KKKA", "KKAK"]
@@ -89,9 +106,9 @@ class TestImprovedPrecisionRecall(unittest.TestCase):
         reference = []
         with self.assertRaises(ValueError):
             metric = ImprovedPrecisionRecall(
+                neighborhood_size=1,
                 reference=reference,
                 embedder=mock_embedder,
-                neighborhood_size=3,
                 metric="precision",
             )
             metric(sequences=["KKAA", "KKAA"])
@@ -99,7 +116,7 @@ class TestImprovedPrecisionRecall(unittest.TestCase):
     def test_empty_sequences(self):
         reference = ["KKAA", "KKAA"]
         metric = ImprovedPrecisionRecall(
-            neighborhood_size=3,
+            neighborhood_size=1,
             reference=reference,
             embedder=mock_embedder,
             metric="precision",
