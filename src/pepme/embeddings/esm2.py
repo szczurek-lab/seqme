@@ -1,22 +1,21 @@
-from typing import Literal, get_args
+from typing import Literal
 
 import numpy as np
 import torch
+from tqdm import tqdm
 from transformers import AutoModel, AutoTokenizer
 from transformers.utils import logging
 
-from pepme.utils.engine_cfg import EngineCfg
-from pepme.utils.progress import RichProgress
 
-ESM2_Model_OPT = Literal[
-    "esm2_t6_8M_UR50D", "esm2_t12_35M_UR50D", "esm2_t30_150M_UR50D"
-]
-
-
-class ESM2Embeddings:
+class ESM2:
     def __init__(
         self,
-        model_name: Literal[ESM2_Model_OPT],
+        model_name: Literal[
+            "esm2_t6_8M_UR50D",
+            "esm2_t12_35M_UR50D",
+            "esm2_t30_150M_UR50D",
+            "esm2_t33_650M_UR50D",
+        ],
         device: str,
         batch_size: int,
         verbose: bool = False,
@@ -34,10 +33,9 @@ class ESM2Embeddings:
     def __call__(self, sequences: list[str]) -> np.ndarray:
         embeddings = []
         with torch.inference_mode():
-            for i in RichProgress(
+            for i in tqdm(
                 range(0, len(sequences), self.batch_size),
-                "Computing ESM2 embeddings/BATCHES",
-                verbose=self.verbose,
+                disable=not self.verbose,
             ):
                 batch = sequences[i : i + self.batch_size]
                 tokens = self.tokenizer(
@@ -63,30 +61,3 @@ class ESM2Embeddings:
                 ) / counts.unsqueeze(-1)
                 embeddings.append(embed.cpu().numpy())
         return np.concatenate(embeddings)
-
-
-HuggingFaceModel_OPT = Literal[ESM2_Model_OPT,]
-
-
-def compute_huggingface_model_embeddings(
-    sequences: list[str],
-    opt: HuggingFaceModel_OPT,
-    *,
-    device: str | None = None,
-    batch_size: int | None = None,
-) -> np.ndarray:
-    if device is None:
-        device = EngineCfg.DEVICE().type
-    if batch_size is None:
-        batch_size = EngineCfg.BATCH_DIM()
-
-    if opt in get_args(ESM2_Model_OPT):
-        encode_fn = ESM2Embeddings(
-            model_name=opt,
-            device=device,
-            batch_size=batch_size,
-        )
-    else:
-        raise NotImplementedError
-
-    return encode_fn(sequences)
