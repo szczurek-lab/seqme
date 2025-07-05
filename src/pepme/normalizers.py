@@ -30,4 +30,4 @@ class MinMaxNorm:
             min_value = values.min()
             max_value = values.max()
 
-        return (values - min_value) / (max_value - min_value)
+        return (values - min_value) / (max_value - min_value)  # type: ignore
