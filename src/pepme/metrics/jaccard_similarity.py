@@ -3,7 +3,7 @@ from typing import Literal, Optional
 from pepme.core import Metric, MetricResult
 
 
-class JaccardSimilarity(Metric):
+class KmerJaccardSimilarity(Metric):
     """
     Computes the average Jaccard similarity between each generated sequence
     and a reference corpus, based on n-grams of size `n`, using

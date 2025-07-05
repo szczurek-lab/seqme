@@ -6,8 +6,8 @@ from pepme.metrics.uniqueness import Uniqueness
 class TestUniqueness(unittest.TestCase):
     def test_name_and_objective(self):
         # With a custom name
-        metric = Uniqueness(name="Sample")
-        self.assertEqual(metric.name, "Uniqueness (Sample)")
+        metric = Uniqueness()
+        self.assertEqual(metric.name, "Uniqueness")
         self.assertEqual(metric.objective, "maximize")
 
         # Default name

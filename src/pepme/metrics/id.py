@@ -21,10 +21,10 @@ class Identity(Metric):
         Initialize the Identity metric.
 
         Args:
-            predictor (Callable[[list[str]], np.ndarray]): A function that takes a
-                list of sequences and returns a 1D array of scalar values.
-            name (str): Name of the metric.
-            objective (Literal["minimize", "maximize"]): Specifies whether lower
+            predictor: A function that takes a list of sequences
+                and returns a 1D array of scalar values.
+            name: Name of the metric.
+            objective: Specifies whether lower
                 or higher values of the metric are better.
         """
         self.predictor = predictor
@@ -39,7 +39,7 @@ class Identity(Metric):
         deviation of the resulting values.
 
         Args:
-            sequences (list[str]): List of sequences to evaluate.
+            sequences: List of sequences to evaluate.
 
         Returns:
             MetricResult: Contains two elements:

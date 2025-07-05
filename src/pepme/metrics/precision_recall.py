@@ -6,7 +6,7 @@ import torch
 from pepme.core import Metric, MetricResult
 
 
-class ImprovedPrecisionRecall(Metric):
+class PrecisionRecall(Metric):
     """
     Precision and Recall metric for evaluating generative models based on k-NN overlap.
 

@@ -17,7 +17,7 @@ class TestHypervolume(unittest.TestCase):
                 lambda seqs: p_count_aa(seqs, aa="R"),
             ],
             method="standard",
-            y_nadir=np.zeros(2),
+            nadir=np.zeros(2),
         )
 
         # Name and objective properties
@@ -35,7 +35,7 @@ class TestHypervolume(unittest.TestCase):
                 lambda seqs: p_count_aa(seqs, aa="R"),
             ],
             method="convex-hull",
-            y_nadir=np.zeros(2),
+            nadir=np.zeros(2),
         )
 
         # Name and objective properties
@@ -53,8 +53,8 @@ class TestHypervolume(unittest.TestCase):
                 lambda seqs: p_count_aa(seqs, aa="R"),
             ],
             method="standard",
-            y_nadir=np.zeros(2),
-            y_ideal=np.array([10, 10]),
+            nadir=np.zeros(2),
+            ideal=np.array([10, 10]),
         )
 
         # Name and objective properties

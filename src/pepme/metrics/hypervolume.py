@@ -17,24 +17,24 @@ class Hypervolume(Metric):
         self,
         predictors: list[Callable[[list[str]], np.ndarray]],
         method: Literal["standard", "convex-hull"] = "standard",
-        y_nadir: Optional[np.ndarray] = None,
-        y_ideal: Optional[np.ndarray] = None,
+        nadir: Optional[np.ndarray] = None,
+        ideal: Optional[np.ndarray] = None,
     ):
         """
         Args:
             predictors: List of functions that output objective values for each sequence.
             method: Which HV computation method to use ("standard" or "convex-hull").
-            y_nadir: Worst acceptable value in each objective dimension.
-            y_ideal: Best value in each objective dimension (used for normalization).
+            nadir: Worst acceptable value in each objective dimension.
+            ideal: Best value in each objective dimension (used for normalization).
         """
         self.predictors = predictors
         self.method = method
-        self.y_nadir = y_nadir if y_nadir is not None else np.zeros(len(predictors))
-        self.y_ideal = y_ideal
+        self.nadir = nadir if nadir is not None else np.zeros(len(predictors))
+        self.ideal = ideal
 
-        if self.y_nadir.shape[0] != len(predictors):
+        if self.nadir.shape[0] != len(predictors):
             raise ValueError(
-                f"Expected `y_nadir` to have {len(predictors)} elements, but only has {self.y_nadir.shape[0]} elements."
+                f"Expected `nadir` to have {len(predictors)} elements, but only has {self.nadir.shape[0]} elements."
             )
 
     def __call__(self, sequences: list[str]) -> MetricResult:
@@ -44,8 +44,8 @@ class Hypervolume(Metric):
         values = np.stack([predictor(sequences) for predictor in self.predictors]).T
         hv_value = calculate_hypervolume(
             values,
-            y_nadir=self.y_nadir,
-            y_ideal=self.y_ideal,
+            nadir=self.nadir,
+            ideal=self.ideal,
             method=self.method,
         )
         return MetricResult(hv_value)
@@ -61,8 +61,8 @@ class Hypervolume(Metric):
 
 def calculate_hypervolume(
     points: np.ndarray,
-    y_nadir: np.ndarray,
-    y_ideal: Optional[np.ndarray] = None,
+    nadir: np.ndarray,
+    ideal: Optional[np.ndarray] = None,
     method: Literal["standard", "convex-hull"] = "standard",
 ) -> float:
     """
@@ -70,34 +70,34 @@ def calculate_hypervolume(
 
     Args:
         points: Array of shape [N, D] with objective values.
-        y_nadir: Reference point (worse than or equal to all actual points).
-        y_ideal: Optional ideal point for normalization.
+        nadir: Reference point (worse than or equal to all actual points).
+        ideal: Optional ideal point for normalization.
         method: Either "standard" using pymoo, or "convex-hull" using scipy.
 
     Returns:
         Hypervolume (float)
     """
-    if points.shape[1] != y_nadir.shape[0]:
+    if points.shape[1] != nadir.shape[0]:
         raise ValueError(
             "Points must have the same number of dimensions as the reference point."
         )
 
     min_points = points.min(axis=0)
-    if (y_nadir > min_points).any():
+    if (nadir > min_points).any():
         raise ValueError(
-            f"Invalid `y_nadir`: each component must be less than or equal to the minimum value in that dimension.\n"
-            f"Provided `y_nadir`: {y_nadir}\n"
+            f"Invalid `nadir`: each component must be less than or equal to the minimum value in that dimension.\n"
+            f"Provided `nadir`: {nadir}\n"
             f"Minimum required values: {min_points}"
         )
 
     if points.shape[0] <= 1:
         return float("nan")
 
-    points = points.copy() - y_nadir
+    points = points.copy() - nadir
     ref_point = np.zeros(points.shape[1])
 
-    if y_ideal is not None:
-        points = points / (y_ideal - y_nadir)
+    if ideal is not None:
+        points = points / (ideal - nadir)
 
     # Compute hypervolume using selected method
     if method == "standard":
