@@ -183,6 +183,7 @@ def combine_metric_dataframes(dfs: list[pd.DataFrame]) -> pd.DataFrame:
 def show_table(
     df: pd.DataFrame,
     decimals: int | list[int] = 2,
+    notations: Literal["e", "f"] | list[Literal["e", "f"]] = "f",
     color: str = "#68d6bc",
     missing_value: str = "-",
 ) -> Styler:
@@ -198,6 +199,7 @@ def show_table(
         df: DataFrame with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], attributed with 'objective'.
         decimals: Decimal precision for formatting.
         color: Color for highlighting best scores.
+        notations: Whether to use scientific notation (e) or not (f).
         missing_value: str to show for cells with no metric value, i.e., cells with NaN values.
 
     Returns:
@@ -212,6 +214,7 @@ def show_table(
 
     n_metrics = df.shape[1] // 2
     decimals = [decimals] * n_metrics if isinstance(decimals, int) else decimals
+    notations = [notations] * n_metrics if isinstance(notations, str) else notations
 
     if len(decimals) != n_metrics:
         raise ValueError(
@@ -264,19 +267,23 @@ def show_table(
             val: float,
             dev: float,
             n_decimals: int,
+            notation: str,
             no_value: str = missing_value,
         ) -> str:
             if pd.isna(val):
                 return no_value
             if pd.isna(dev):
-                return f"{val:.{n_decimals}f}"
-            return f"{val:.{n_decimals}f}±{dev:.{n_decimals}f}"
+                return f"{val:.{n_decimals}{notation}}"
+            return f"{val:.{n_decimals}{notation}}±{dev:.{n_decimals}{notation}}"
 
         # Combine formatting
-        n_decimals = decimals[i]
+        decimal = decimals[i]
+        notation = notations[i]
+
         arrow = arrows[objectives[m]]
         combined[f"{m}{arrow}"] = [
-            format_cell(v, d, n_decimals) for v, d in zip(vals, devs, strict=True)
+            format_cell(val, dev, decimal, notation)
+            for val, dev in zip(vals, devs, strict=True)
         ]
 
     styler = combined.style

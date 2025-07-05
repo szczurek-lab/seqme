@@ -1,40 +1,41 @@
+import unittest
+
 import numpy as np
-import pytest
 
-from pepme.embeddings.kmers_embeddings import (
-    KmerFrequencyEmbedding,  # replace with actual module name
-)
+from pepme.embeddings.kmers import KmerFrequencyEmbedding
 
 
-@pytest.fixture
-def fake_kmer_data():
-    # Simulated AMP-specific top k-mers (as if loaded from pickle)
-    return {3: ["AKK", "KKA", "AAS", "ASL", "SLL", "LLK", "KKL", "KKK", "KLG", "LGG"]}
+class TestJaccardSimilarity(unittest.TestCase):
+    def test_single_sequence_shape(self):
+        sequences = ["AKKAASL"]
+
+        kmers = ["AKK", "KKA", "AAS", "ASL", "SLL"]
+        model = KmerFrequencyEmbedding(kmers=kmers)
+
+        embeddings = model(sequences)
+        assert embeddings.shape == (1, 5)
+
+    def test_batch_embedding_shape(self):
+        sequences = ["AKKAASL", "LLKK", "KLVFF"]
+
+        kmers = ["AKK", "KKA", "AAS", "ASL", "SLL"]
+        model = KmerFrequencyEmbedding(kmers=kmers)
+
+        embeddings = model(sequences)
+        assert embeddings.shape == (3, 5)
+
+    def test_known_kmers_counted_correctly(self):
+        sequences = ["AKKAASL"]
+
+        kmers = ["AKK", "KKA", "AAS", "ASL", "SLL"]
+        model = KmerFrequencyEmbedding(kmers=kmers)
+
+        embeddings = model(sequences)
+
+        # AKK → 1, KKA → 1, AAS → 1, ASL → 1, total = 5 → all get 1/5
+        expected_vector = np.array([1 / 5, 1 / 5, 1 / 5, 1 / 5, 0.0]).reshape(1, -1)
+        assert np.allclose(embeddings, expected_vector)
 
 
-@pytest.fixture
-def model(fake_kmer_data):
-    return KmerFrequencyEmbedding(k=3, m=5, embeddings=fake_kmer_data)
-
-
-def test_single_sequence_shape(model):
-    sequence = "AKKAASL"
-    embedding = model.embed(sequence)
-    assert embedding.shape == (5,)
-
-def test_batch_embedding_shape(model):
-    sequences = ["AKKAASL", "LLKK", "KLVFF"]
-    embeddings = model.embed(sequences)
-    assert embeddings.shape == (3, 5)
-
-
-def test_known_kmers_counted_correctly(fake_kmer_data):
-    model = KmerFrequencyEmbedding(k=3, m=5, embeddings=fake_kmer_data)
-    sequence = (
-        "AKKAASL"  # contains: AKK, KKA, KAA, AAS, ASL → AKK, KKA, AAS, ASL in vocab
-    )
-    embedding = model.embed(sequence)
-
-    # AKK → 1, KKA → 1, AAS → 1, ASL → 1, total = 5 → all get 1/5
-    expected_vector = np.array([1 / 5, 1 / 5, 1 / 5, 1 / 5, 0.0])
-    assert np.allclose(embedding, expected_vector)
+if __name__ == "__main__":
+    unittest.main()
