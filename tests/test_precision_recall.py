@@ -2,16 +2,15 @@ import unittest
 
 import numpy as np
 
-from pepme.metrics.precision_recall import PrecisionRecall
+from pepme.metrics.precision_recall import Precision, Recall
 
 
 class TestPrecisionRecall(unittest.TestCase):
     def test_basic_precision(self):
         reference = ["A" * 15, "A" * 17]
-        metric = PrecisionRecall(
+        metric = Precision(
             reference=reference,
             embedder=length_mock_embedder,
-            metric="precision",
             neighborhood_size=1,
             row_batch_size=1,
             col_batch_size=1,
@@ -25,10 +24,9 @@ class TestPrecisionRecall(unittest.TestCase):
 
     def test_basic_recall(self):
         reference = ["A" * 15, "A" * 17]
-        metric = PrecisionRecall(
+        metric = Recall(
             reference=reference,
             embedder=length_mock_embedder,
-            metric="recall",
             neighborhood_size=1,
             row_batch_size=1,
             col_batch_size=1,
@@ -42,10 +40,9 @@ class TestPrecisionRecall(unittest.TestCase):
 
     def test_precision_with_percentile(self):
         reference = ["A" * 15, "A" * 17, "A" * 1]
-        metric = PrecisionRecall(
+        metric = Precision(
             reference=reference,
             embedder=length_mock_embedder,
-            metric="precision",
             neighborhood_size=1,
             row_batch_size=1,
             col_batch_size=1,
@@ -61,10 +58,9 @@ class TestPrecisionRecall(unittest.TestCase):
 
     def test_precision_with_larger_neighborhood(self):
         reference = ["A" * 15, "A" * 17, "A" * 1]
-        metric = PrecisionRecall(
+        metric = Precision(
             reference=reference,
             embedder=length_mock_embedder,
-            metric="precision",
             neighborhood_size=2,
             row_batch_size=1,
             col_batch_size=1,
@@ -80,11 +76,10 @@ class TestPrecisionRecall(unittest.TestCase):
 
     def test_identical_sequences_precision(self):
         reference = ["KKAA", "KKAA", "KKKA", "KKAK"]
-        metric = PrecisionRecall(
+        metric = Precision(
             neighborhood_size=3,
             reference=reference,
             embedder=mock_embedder,
-            metric="precision",
         )
 
         result = metric(sequences=reference)
@@ -92,11 +87,10 @@ class TestPrecisionRecall(unittest.TestCase):
 
     def test_identical_sequences_recall(self):
         reference = ["KKAA", "KKAA", "KKKA", "KKAK"]
-        metric = PrecisionRecall(
+        metric = Recall(
             neighborhood_size=3,
             reference=reference,
             embedder=mock_embedder,
-            metric="recall",
         )
 
         result = metric(sequences=reference)
@@ -105,21 +99,19 @@ class TestPrecisionRecall(unittest.TestCase):
     def test_empty_reference(self):
         reference = []
         with self.assertRaises(ValueError):
-            metric = PrecisionRecall(
+            metric = Precision(
                 neighborhood_size=1,
                 reference=reference,
                 embedder=mock_embedder,
-                metric="precision",
             )
             metric(sequences=["KKAA", "KKAA"])
 
     def test_empty_sequences(self):
         reference = ["KKAA", "KKAA"]
-        metric = PrecisionRecall(
+        metric = Precision(
             neighborhood_size=1,
             reference=reference,
             embedder=mock_embedder,
-            metric="precision",
         )
 
         with self.assertRaises(ValueError):
@@ -150,17 +142,15 @@ class TestPrecisionRecall(unittest.TestCase):
             "WRCEVILKKWWRLQN",
             "ITYAGMAVFSTPLPEMAAYTVKIPELID",
         ]
-        metric_precision = PrecisionRecall(
+        metric_precision = Precision(
             reference=reference,
             embedder=aa_embedder,
-            metric="precision",
             neighborhood_size=1,
         )
 
-        metric_recall = PrecisionRecall(
+        metric_recall = Recall(
             reference=reference,
             embedder=aa_embedder,
-            metric="recall",
             neighborhood_size=1,
         )
 

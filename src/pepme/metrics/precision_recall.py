@@ -6,9 +6,9 @@ import torch
 from pepme.core import Metric, MetricResult
 
 
-class PrecisionRecall(Metric):
+class Precision(Metric):
     """
-    Precision and Recall metric for evaluating generative models based on k-NN overlap.
+    Precision metric for evaluating generative models based on k-NN overlap.
 
     Reference:
         Kynkäänniemi et al., "Improved precision and recall metric for assessing generative models", NeurIPS 2019.
@@ -16,7 +16,6 @@ class PrecisionRecall(Metric):
 
     def __init__(
         self,
-        metric: Literal["precision", "recall"],
         neighborhood_size: int,
         reference: list[str],
         embedder: Callable[[list[str]], np.ndarray],
@@ -43,7 +42,6 @@ class PrecisionRecall(Metric):
             device: Compute device, "cpu" or "cuda".
             strict: Enforce equal number of eval and reference samples if True.
         """
-        self.metric = metric
         self.neighborhood_size = neighborhood_size
         self.embedder = embedder
         self.reference = reference
@@ -86,36 +84,120 @@ class PrecisionRecall(Metric):
                 f"Number of sequences ({seq_embeddings.shape[0]}) must match number of reference embeddings ({self.reference_embeddings.shape[0]}). Set `strict=False` to disable this check."
             )
 
-        if self.metric == "precision":
-            value = compute_precision(
-                reference_embeddings=self.reference_embeddings,
-                eval_embeddings=seq_embeddings,
-                neighborhood_size=self.neighborhood_size,
-                row_batch_size=self.row_batch_size,
-                col_batch_size=self.col_batch_size,
-                device=self.device,
-                clamp_to_quantile=self.reference_quantile,
-            )
-        elif self.metric == "recall":
-            value = compute_recall(
-                reference_embeddings=self.reference_embeddings,
-                eval_embeddings=seq_embeddings,
-                neighborhood_size=self.neighborhood_size,
-                row_batch_size=self.row_batch_size,
-                col_batch_size=self.col_batch_size,
-                device=self.device,
-                clamp_to_quantile=self.reference_quantile,
-            )
-        else:
-            raise ValueError(
-                f"Unsupported metric: '{self.metric}'. Expected 'precision' or 'recall'."
-            )
+        value = compute_precision(
+            reference_embeddings=self.reference_embeddings,
+            eval_embeddings=seq_embeddings,
+            neighborhood_size=self.neighborhood_size,
+            row_batch_size=self.row_batch_size,
+            col_batch_size=self.col_batch_size,
+            device=self.device,
+            clamp_to_quantile=self.reference_quantile,
+        )
         return MetricResult(value)
 
     @property
     def name(self) -> str:
-        base = "Precision" if self.metric == "precision" else "Recall"
-        return f"{base} ({self.reference_name})" if self.reference_name else base
+        return (
+            f"Precision ({self.reference_name})" if self.reference_name else "Precision"
+        )
+
+    @property
+    def objective(self) -> Literal["minimize", "maximize"]:
+        return "maximize"
+
+
+class Recall(Metric):
+    """
+    Recall metric for evaluating generative models based on k-NN overlap.
+
+    Reference:
+        Kynkäänniemi et al., "Improved precision and recall metric for assessing generative models", NeurIPS 2019.
+    """
+
+    def __init__(
+        self,
+        neighborhood_size: int,
+        reference: list[str],
+        embedder: Callable[[list[str]], np.ndarray],
+        *,
+        reference_name: Optional[str] = None,
+        reference_quantile: Optional[float] = None,
+        row_batch_size: int = 10_000,
+        col_batch_size: int = 10_000,
+        device: Literal["cpu", "cuda"] = "cpu",
+        strict: bool = True,
+    ):
+        """
+        Initialize the metric.
+
+        Args:
+            metric: Which metric to compute, either "precision" or "recall".
+            neighborhood_size: Number of nearest neighbors (k) for k-NN graph.
+            reference: List of reference sequences to build the reference manifold.
+            embedder: Function that maps sequences to embeddings.
+            reference_name: Optional label appended to the metric name.
+            reference_quantile: Quantile cutoff for reference radii (defaults to using all).
+            row_batch_size: Number of samples per batch when computing distances by rows.
+            col_batch_size: Number of samples per batch when computing distances by columns.
+            device: Compute device, "cpu" or "cuda".
+            strict: Enforce equal number of eval and reference samples if True.
+        """
+        self.neighborhood_size = neighborhood_size
+        self.embedder = embedder
+        self.reference = reference
+
+        self.reference_name = reference_name
+        self.reference_quantile = reference_quantile
+        self.row_batch_size = row_batch_size
+        self.col_batch_size = col_batch_size
+        self.device = device
+        self.strict = strict
+
+        if reference_quantile is not None:
+            if reference_quantile < 0 or reference_quantile > 1:
+                raise ValueError("`reference_quantile` must be between 0 and 1.")
+
+        if self.neighborhood_size < 1:
+            raise ValueError("`neighborhood_size` must be greater than 0.")
+
+        self.reference_embeddings = self.embedder(self.reference)
+        if self.reference_embeddings.shape[0] < 1:
+            raise ValueError("Reference embeddings must contain at least one samples.")
+
+    def __call__(self, sequences: list[str]) -> MetricResult:
+        """
+        Compute precision or recall for the given evaluation sequences.
+
+        Args:
+            sequences: List of sequences to evaluate.
+
+        Returns:
+            MetricResult containing the computed score.
+        """
+        seq_embeddings = self.embedder(sequences)
+
+        if (
+            self.strict
+            and seq_embeddings.shape[0] != self.reference_embeddings.shape[0]
+        ):
+            raise ValueError(
+                f"Number of sequences ({seq_embeddings.shape[0]}) must match number of reference embeddings ({self.reference_embeddings.shape[0]}). Set `strict=False` to disable this check."
+            )
+
+        value = compute_recall(
+            reference_embeddings=self.reference_embeddings,
+            eval_embeddings=seq_embeddings,
+            neighborhood_size=self.neighborhood_size,
+            row_batch_size=self.row_batch_size,
+            col_batch_size=self.col_batch_size,
+            device=self.device,
+            clamp_to_quantile=self.reference_quantile,
+        )
+        return MetricResult(value)
+
+    @property
+    def name(self) -> str:
+        return f"Recall ({self.reference_name})" if self.reference_name else "Recall"
 
     @property
     def objective(self) -> Literal["minimize", "maximize"]:
