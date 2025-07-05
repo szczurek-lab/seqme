@@ -1,6 +1,5 @@
 import abc
 from dataclasses import dataclass
-from random import Random
 from typing import Callable, Literal, Optional
 
 import matplotlib.pyplot as plt
@@ -376,30 +375,6 @@ def barplot(
     ax.set_axisbelow(True)
 
     fig.tight_layout()
-
-
-def random_subset(sequences: list[str], n_samples: int, seed: int = 42) -> list[str]:
-    """
-    Select a random subset of `n_samples` unique sequences with a fixed seed for reproducibility.
-
-    Args:
-        sequences: The list of input sequences to sample from.
-        n_samples: The number of sequences to sample.
-        seed: The random seed to ensure deterministic behavior.
-
-    Returns:
-        A list of `n_samples` randomly sampled sequences.
-
-    Raises:
-        ValueError: If `n_samples` is greater than the number of available sequences.
-    """
-    if n_samples > len(sequences):
-        raise ValueError(
-            f"Cannot sample {n_samples} sequences from a list of length {len(sequences)}."
-        )
-
-    rng = Random(seed)
-    return rng.sample(sequences, n_samples)
 
 
 class FeatureCache:
