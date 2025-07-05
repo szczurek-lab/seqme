@@ -41,11 +41,11 @@ def write_to_fasta_file(
             f.write(f"{seq}\n")
 
 
-def shuffle_sequence(sequence: str) -> str:
-    sequence_list = list(sequence)
-    random.shuffle(sequence_list)
-    return "".join(sequence_list)
-
-
-def batch_shuffle_sequences(sequences: list[str]) -> list[str]:
-    return list(map(shuffle_sequence, sequences))
+def shuffle_sequences(sequences: list[str], seed: int = 42) -> list[str]:
+    rng = random.Random(seed)
+    shuffled = []
+    for seq in sequences:
+        chars = list(seq)
+        rng.shuffle(chars)
+        shuffled.append("".join(chars))
+    return shuffled
