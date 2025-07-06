@@ -31,13 +31,9 @@ class Metric(abc.ABC):
         raise NotImplementedError()
 
 
-def default_metrics() -> list[Metric]:
-    return []  # @TODO
-
-
 def compute_metrics(
     sequences: dict[str, list[str]],
-    metrics: Optional[list[Metric]] = None,
+    metrics: list[Metric],
     verbose: bool = True,
 ) -> pd.DataFrame:
     """
@@ -52,8 +48,6 @@ def compute_metrics(
         A DataFrame where each row corresponds to a sequence group (dict key)
         and columns are a MultiIndex [metric_name, {"value", "deviation"}].
     """
-    metrics = metrics or default_metrics()
-
     if len(metrics) == 0:
         raise ValueError("No metrics provided")
 

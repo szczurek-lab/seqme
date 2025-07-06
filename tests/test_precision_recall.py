@@ -14,9 +14,11 @@ class TestPrecisionRecall(unittest.TestCase):
             neighborhood_size=1,
             row_batch_size=1,
             col_batch_size=1,
+            embedder_name="MyEmbedder",
+            reference_name="MyReference",
         )
 
-        self.assertEqual(metric.name, "Precision")
+        self.assertEqual(metric.name, "Precision@MyEmbedder (MyReference)")
         self.assertEqual(metric.objective, "maximize")
 
         result = metric(["A" * 2, "A" * 16])
@@ -30,9 +32,11 @@ class TestPrecisionRecall(unittest.TestCase):
             neighborhood_size=1,
             row_batch_size=1,
             col_batch_size=1,
+            embedder_name="MyEmbedder",
+            reference_name="MyReference",
         )
 
-        self.assertEqual(metric.name, "Recall")
+        self.assertEqual(metric.name, "Recall@MyEmbedder (MyReference)")
         self.assertEqual(metric.objective, "maximize")
 
         result = metric(["A" * 2, "A" * 16])

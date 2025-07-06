@@ -11,7 +11,7 @@ class Precision(Metric):
     Precision metric for evaluating generative models based on k-NN overlap.
 
     Reference:
-        Kynkäänniemi et al., "Improved precision and recall metric for assessing generative models", NeurIPS 2019.
+        Kynkäänniemi et al., "Improved precision and recall metric for assessing generative models", NeurIPS 2019. (https://arxiv.org/abs/1904.06991)
     """
 
     def __init__(
@@ -20,6 +20,7 @@ class Precision(Metric):
         reference: list[str],
         embedder: Callable[[list[str]], np.ndarray],
         *,
+        embedder_name: Optional[str] = None,
         reference_name: Optional[str] = None,
         reference_quantile: Optional[float] = None,
         row_batch_size: int = 10_000,
@@ -35,6 +36,7 @@ class Precision(Metric):
             neighborhood_size: Number of nearest neighbors (k) for k-NN graph.
             reference: List of reference sequences to build the reference manifold.
             embedder: Function that maps sequences to embeddings.
+            embedder_name: Optional name for the embedder used.
             reference_name: Optional label appended to the metric name.
             reference_quantile: Quantile cutoff for reference radii (defaults to using all).
             row_batch_size: Number of samples per batch when computing distances by rows.
@@ -46,6 +48,7 @@ class Precision(Metric):
         self.embedder = embedder
         self.reference = reference
 
+        self.embedder_name = embedder_name
         self.reference_name = reference_name
         self.reference_quantile = reference_quantile
         self.row_batch_size = row_batch_size
@@ -97,9 +100,12 @@ class Precision(Metric):
 
     @property
     def name(self) -> str:
-        return (
-            f"Precision ({self.reference_name})" if self.reference_name else "Precision"
-        )
+        name = "Precision"
+        if self.embedder_name:
+            name += f"@{self.embedder_name}"
+        if self.reference_name:
+            name += f" ({self.reference_name})"
+        return name
 
     @property
     def objective(self) -> Literal["minimize", "maximize"]:
@@ -120,6 +126,7 @@ class Recall(Metric):
         reference: list[str],
         embedder: Callable[[list[str]], np.ndarray],
         *,
+        embedder_name: Optional[str] = None,
         reference_name: Optional[str] = None,
         reference_quantile: Optional[float] = None,
         row_batch_size: int = 10_000,
@@ -135,6 +142,7 @@ class Recall(Metric):
             neighborhood_size: Number of nearest neighbors (k) for k-NN graph.
             reference: List of reference sequences to build the reference manifold.
             embedder: Function that maps sequences to embeddings.
+            embedder_name: Optional name for the embedder used.
             reference_name: Optional label appended to the metric name.
             reference_quantile: Quantile cutoff for reference radii (defaults to using all).
             row_batch_size: Number of samples per batch when computing distances by rows.
@@ -146,6 +154,7 @@ class Recall(Metric):
         self.embedder = embedder
         self.reference = reference
 
+        self.embedder_name = embedder_name
         self.reference_name = reference_name
         self.reference_quantile = reference_quantile
         self.row_batch_size = row_batch_size
@@ -197,7 +206,12 @@ class Recall(Metric):
 
     @property
     def name(self) -> str:
-        return f"Recall ({self.reference_name})" if self.reference_name else "Recall"
+        name = "Recall"
+        if self.embedder_name:
+            name += f"@{self.embedder_name}"
+        if self.reference_name:
+            name += f" ({self.reference_name})"
+        return name
 
     @property
     def objective(self) -> Literal["minimize", "maximize"]:
