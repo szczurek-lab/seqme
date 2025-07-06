@@ -409,7 +409,12 @@ class FeatureCache:
             )
         return lambda sequence: self(sequence, model_name)
 
-    def add(self, model_name: str, pairs: dict[str, np.ndarray]):
+    def add_model(self, model_name: str, model: Callable[[list[str]], np.ndarray]):
+        if model_name in self.model_to_callable:
+            raise ValueError("Model already exists.")
+        self.model_to_callable[model_name] = model
+
+    def add_to_cache(self, model_name: str, pairs: dict[str, np.ndarray]):
         if model_name not in self.model_to_cache:
             self.model_to_cache[model_name] = {}
 
@@ -417,5 +422,5 @@ class FeatureCache:
         for sequence, reps in pairs.items():
             sequence_to_rep[sequence] = reps
 
-    def get(self) -> dict[str, dict[str, np.ndarray]]:
+    def get_cache(self) -> dict[str, dict[str, np.ndarray]]:
         return self.model_to_cache.copy()
