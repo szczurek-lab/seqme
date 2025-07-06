@@ -12,17 +12,17 @@ class HitRate(Metric):
 
     def __init__(
         self,
-        filter_fn: Callable[[list[str]], np.ndarray],
+        condition_fn: Callable[[list[str]], np.ndarray],
     ):
         """
         Initializes the hit‐rate metric.
 
         Args:
-            filter_fn: A function that takes a list of sequences and returns
+            condition_fn: A function that takes a list of sequences and returns
                        a boolean NumPy array of the same length, where True
                        indicates a “hit” for that sequence.
         """
-        self.mask_fn = filter_fn
+        self.condition_fn = condition_fn
 
     def __call__(self, sequences: list[str]) -> MetricResult:
         """
@@ -33,9 +33,9 @@ class HitRate(Metric):
 
         Returns:
             A MetricResult whose value is the mean of the boolean mask,
-            i.e., the proportion of sequences where filter_fn returned True.
+            i.e., the proportion of sequences where condition_fn returned True.
         """
-        valid = self.mask_fn(sequences)
+        valid = self.condition_fn(sequences)
         hit_rate = valid.mean().item()
         return MetricResult(hit_rate)
 
