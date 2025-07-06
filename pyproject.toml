@@ -20,7 +20,11 @@ dependencies = [
     "scipy>=1.13.1",
     "torch>=2.0",
     "tqdm>=4.67.1",
+    "peptides>=0.3.4",
     "transformers>=4.53.0",
+    "bio>=1.8.0",
+    "scikit-learn>=1.7.0",
+    "umap-learn>=0.5.9.post2",
 ]
 
 [build-system]
