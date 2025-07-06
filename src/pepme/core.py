@@ -1,6 +1,5 @@
 import abc
 from dataclasses import dataclass
-from random import Random
 from typing import Callable, Literal, Optional
 
 import matplotlib.pyplot as plt
@@ -32,13 +31,9 @@ class Metric(abc.ABC):
         raise NotImplementedError()
 
 
-def default_metrics() -> list[Metric]:
-    return []  # @TODO
-
-
 def compute_metrics(
     sequences: dict[str, list[str]],
-    metrics: Optional[list[Metric]] = None,
+    metrics: list[Metric],
     verbose: bool = True,
 ) -> pd.DataFrame:
     """
@@ -53,8 +48,6 @@ def compute_metrics(
         A DataFrame where each row corresponds to a sequence group (dict key)
         and columns are a MultiIndex [metric_name, {"value", "deviation"}].
     """
-    metrics = metrics or default_metrics()
-
     if len(metrics) == 0:
         raise ValueError("No metrics provided")
 
@@ -183,6 +176,7 @@ def combine_metric_dataframes(dfs: list[pd.DataFrame]) -> pd.DataFrame:
 def show_table(
     df: pd.DataFrame,
     decimals: int | list[int] = 2,
+    notations: Literal["e", "f"] | list[Literal["e", "f"]] = "f",
     color: str = "#68d6bc",
     missing_value: str = "-",
 ) -> Styler:
@@ -198,6 +192,7 @@ def show_table(
         df: DataFrame with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], attributed with 'objective'.
         decimals: Decimal precision for formatting.
         color: Color for highlighting best scores.
+        notations: Whether to use scientific notation (e) or not (f).
         missing_value: str to show for cells with no metric value, i.e., cells with NaN values.
 
     Returns:
@@ -212,6 +207,7 @@ def show_table(
 
     n_metrics = df.shape[1] // 2
     decimals = [decimals] * n_metrics if isinstance(decimals, int) else decimals
+    notations = [notations] * n_metrics if isinstance(notations, str) else notations
 
     if len(decimals) != n_metrics:
         raise ValueError(
@@ -264,19 +260,23 @@ def show_table(
             val: float,
             dev: float,
             n_decimals: int,
+            notation: str,
             no_value: str = missing_value,
         ) -> str:
             if pd.isna(val):
                 return no_value
             if pd.isna(dev):
-                return f"{val:.{n_decimals}f}"
-            return f"{val:.{n_decimals}f}±{dev:.{n_decimals}f}"
+                return f"{val:.{n_decimals}{notation}}"
+            return f"{val:.{n_decimals}{notation}}±{dev:.{n_decimals}{notation}}"
 
         # Combine formatting
-        n_decimals = decimals[i]
+        decimal = decimals[i]
+        notation = notations[i]
+
         arrow = arrows[objectives[m]]
         combined[f"{m}{arrow}"] = [
-            format_cell(v, d, n_decimals) for v, d in zip(vals, devs, strict=True)
+            format_cell(val, dev, decimal, notation)
+            for val, dev in zip(vals, devs, strict=True)
         ]
 
     styler = combined.style
@@ -369,30 +369,6 @@ def barplot(
     ax.set_axisbelow(True)
 
     fig.tight_layout()
-
-
-def random_subset(sequences: list[str], n_samples: int, seed: int = 42) -> list[str]:
-    """
-    Select a random subset of `n_samples` unique sequences with a fixed seed for reproducibility.
-
-    Args:
-        sequences: The list of input sequences to sample from.
-        n_samples: The number of sequences to sample.
-        seed: The random seed to ensure deterministic behavior.
-
-    Returns:
-        A list of `n_samples` randomly sampled sequences.
-
-    Raises:
-        ValueError: If `n_samples` is greater than the number of available sequences.
-    """
-    if n_samples > len(sequences):
-        raise ValueError(
-            f"Cannot sample {n_samples} sequences from a list of length {len(sequences)}."
-        )
-
-    rng = Random(seed)
-    return rng.sample(sequences, n_samples)
 
 
 class FeatureCache:

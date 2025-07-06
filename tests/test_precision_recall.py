@@ -1,0 +1,217 @@
+import unittest
+
+import numpy as np
+
+from pepme.metrics.precision_recall import Precision, Recall
+
+
+class TestPrecisionRecall(unittest.TestCase):
+    def test_basic_precision(self):
+        reference = ["A" * 15, "A" * 17]
+        metric = Precision(
+            reference=reference,
+            embedder=length_mock_embedder,
+            neighborhood_size=1,
+            row_batch_size=1,
+            col_batch_size=1,
+            embedder_name="MyEmbedder",
+            reference_name="MyReference",
+        )
+
+        self.assertEqual(metric.name, "Precision@MyEmbedder (MyReference)")
+        self.assertEqual(metric.objective, "maximize")
+
+        result = metric(["A" * 2, "A" * 16])
+        self.assertEqual(result.value, 0.5)
+
+    def test_basic_recall(self):
+        reference = ["A" * 15, "A" * 17]
+        metric = Recall(
+            reference=reference,
+            embedder=length_mock_embedder,
+            neighborhood_size=1,
+            row_batch_size=1,
+            col_batch_size=1,
+            embedder_name="MyEmbedder",
+            reference_name="MyReference",
+        )
+
+        self.assertEqual(metric.name, "Recall@MyEmbedder (MyReference)")
+        self.assertEqual(metric.objective, "maximize")
+
+        result = metric(["A" * 2, "A" * 16])
+        self.assertEqual(result.value, 1.0)
+
+    def test_precision_with_percentile(self):
+        reference = ["A" * 15, "A" * 17, "A" * 1]
+        metric = Precision(
+            reference=reference,
+            embedder=length_mock_embedder,
+            neighborhood_size=1,
+            row_batch_size=1,
+            col_batch_size=1,
+            reference_quantile=0.6,
+            strict=False,
+        )
+
+        self.assertEqual(metric.name, "Precision")
+        self.assertEqual(metric.objective, "maximize")
+
+        result = metric(["A" * 2, "A" * 16])
+        self.assertEqual(result.value, 0.5)
+
+    def test_precision_with_larger_neighborhood(self):
+        reference = ["A" * 15, "A" * 17, "A" * 1]
+        metric = Precision(
+            reference=reference,
+            embedder=length_mock_embedder,
+            neighborhood_size=2,
+            row_batch_size=1,
+            col_batch_size=1,
+            reference_quantile=None,
+            strict=False,
+        )
+
+        self.assertEqual(metric.name, "Precision")
+        self.assertEqual(metric.objective, "maximize")
+
+        result = metric(["A" * 33, "A" * 34])
+        self.assertEqual(result.value, 0.5)
+
+    def test_identical_sequences_precision(self):
+        reference = ["KKAA", "KKAA", "KKKA", "KKAK"]
+        metric = Precision(
+            neighborhood_size=3,
+            reference=reference,
+            embedder=mock_embedder,
+        )
+
+        result = metric(sequences=reference)
+        self.assertEqual(result.value, 1.0)
+
+    def test_identical_sequences_recall(self):
+        reference = ["KKAA", "KKAA", "KKKA", "KKAK"]
+        metric = Recall(
+            neighborhood_size=3,
+            reference=reference,
+            embedder=mock_embedder,
+        )
+
+        result = metric(sequences=reference)
+        self.assertEqual(result.value, 1.0)
+
+    def test_empty_reference(self):
+        reference = []
+        with self.assertRaises(ValueError):
+            metric = Precision(
+                neighborhood_size=1,
+                reference=reference,
+                embedder=mock_embedder,
+            )
+            metric(sequences=["KKAA", "KKAA"])
+
+    def test_empty_sequences(self):
+        reference = ["KKAA", "KKAA"]
+        metric = Precision(
+            neighborhood_size=1,
+            reference=reference,
+            embedder=mock_embedder,
+        )
+
+        with self.assertRaises(ValueError):
+            metric(sequences=[])
+
+    def test_precision_recall(self):
+        reference = [
+            "LVFEKKLKKTLR",
+            "MSQTLLPLYAANHVTKFEMYQSSGYR",
+            "VKKEAKKKLEERL",
+            "GLPVIRGKCITKKGLKI",
+            "VRSKKILEFGAKLSVRYLETVATGWKRT",
+            "MFHALPAAAACQRHI",
+            "TGVALSADNLFELAEKDKIIKEI",
+            "FLTILLLGAVNSV",
+            "HGALIFRRRLPKIAWGGKKFF",
+            "MVELVRLEHTRKQMIHLSGFTLFCMAQINKYT",
+        ]
+        sequences = [
+            "MLWKRRSEIILKGGARSSKILLEGAAQTK",
+            "QSLLLPDDAAKVV",
+            "LRAKRIFDIFLV",
+            "MYCLRIIKIGGVGSSKQLLCLDAIAVVIVIES",
+            "MLTLDRLFVINKEGIYCSDCRLFHIAPI",
+            "MIQCHDLVKSARRLVT",
+            "KFTFELMKVANVRKKIIHDC",
+            "RPCKIWKKLSCL",
+            "WRCEVILKKWWRLQN",
+            "ITYAGMAVFSTPLPEMAAYTVKIPELID",
+        ]
+        metric_precision = Precision(
+            reference=reference,
+            embedder=aa_embedder,
+            neighborhood_size=1,
+        )
+
+        metric_recall = Recall(
+            reference=reference,
+            embedder=aa_embedder,
+            neighborhood_size=1,
+        )
+
+        precision = metric_precision(sequences=sequences)
+        recall = metric_recall(sequences=sequences)
+
+        self.assertEqual(precision.value, 0.7)
+        self.assertEqual(recall.value, 0.8)
+
+
+def length_mock_embedder(sequences: list[str]) -> np.ndarray:
+    lengths = [len(sequence) for sequence in sequences]
+    return np.array(lengths).reshape(-1, 1)
+
+
+def mock_embedder(seqs: list[str]) -> np.ndarray:
+    n_ks = [seq.count("K") for seq in seqs]
+    zeros = [0] * len(seqs)
+    return np.array(list(zip(n_ks, zeros, strict=True)))
+
+
+def aa_embedder(seqs: list[str]) -> np.ndarray:
+    aa_to_int = {
+        "A": 0,
+        "C": 1,
+        "D": 2,
+        "E": 3,
+        "F": 4,
+        "G": 5,
+        "H": 6,
+        "I": 7,
+        "K": 8,
+        "L": 9,
+        "M": 10,
+        "N": 11,
+        "P": 12,
+        "Q": 13,
+        "R": 14,
+        "S": 15,
+        "T": 16,
+        "V": 17,
+        "W": 18,
+        "Y": 19,
+        "X": 20,  # unknown
+    }
+
+    max_len = max(len(seq) for seq in seqs)
+    batch_size = len(seqs)
+    arr = np.full(
+        (batch_size, max_len), fill_value=21, dtype=np.int32
+    )  # 21 = PAD token
+
+    for i, seq in enumerate(seqs):
+        for j, aa in enumerate(seq):
+            arr[i, j] = aa_to_int.get(aa.upper(), aa_to_int["X"])
+    return arr
+
+
+if __name__ == "__main__":
+    unittest.main()

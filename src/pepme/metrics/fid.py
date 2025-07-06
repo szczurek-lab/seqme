@@ -8,12 +8,15 @@ from pepme.core import Metric, MetricResult
 
 class FrechetInceptionDistance(Metric):
     """
-    Frechet Inception Distance (FID) metric compares the distribution of generated
-    embeddings against a reference distribution using the Wasserstein distance.
+    Computes the Fréchet Inception Distance (FID) between a set of generated
+    sequences and a reference dataset based on their embeddings.
 
-    References:
-        [1] Heusel et al., "GANs Trained by a Two Time-Scale Update Rule Converge to a
-        Local Nash Equilibrium"
+    This metric estimates how similar the distributions of two sets of embeddings
+    are using the 2-Wasserstein (Fréchet) distance.
+
+    Reference:
+        Heusel et al., "GANs Trained by a Two Time-Scale Update Rule Converge to a
+        Local Nash Equilibrium" (https://arxiv.org/abs/1706.08500)
     """
 
     def __init__(
@@ -24,20 +27,17 @@ class FrechetInceptionDistance(Metric):
         embedder_name: Optional[str] = None,
     ):
         """
-        Initialize the FrechetInceptionDistance metric.
+        Initializes the FID metric with a reference dataset and an embedding function.
 
         Args:
-            reference (list[str]): List of reference sequences representing real data.
-            embedder (Callable[[list[str]], np.ndarray]): Function that maps a list
-                of sequences to their embeddings. Should return a 2D array
-                of shape (num_sequences, embedding_dim).
-            reference_name (Optional[str]): Optional label for the reference data.
-                Defaults to None.
-            embedder_name (Optional[str]): Optional label for the embedder used.
-                Defaults to None.
+            reference: A list of reference sequences (e.g., real data).
+            embedder: A function that maps a list of sequences to a 2D NumPy array
+                of embeddings.
+            reference_name: Optional name for the reference dataset.
+            embedder_name: Optional name for the embedder used.
 
         Raises:
-            ValueError: If embeddings of the reference data have less than 2 samples.
+            ValueError: If fewer than 2 reference embeddings are provided.
         """
         self.reference = reference
         self.embedder = embedder
@@ -51,14 +51,13 @@ class FrechetInceptionDistance(Metric):
 
     def __call__(self, sequences: list[str]) -> MetricResult:
         """
-        Compute the FID between embeddings of the input sequences and the reference.
+        Computes the FID between the reference and the input sequences.
 
         Args:
-            sequences (list[str]): Generated sequences to evaluate.
+            sequences: A list of generated sequences to evaluate.
 
         Returns:
-            MetricResult: Contains the FID score, where lower values indicate
-                closer match to the reference distribution.
+            MetricResult containing the FID score. Lower is better.
         """
         seq_embeddings = self.embedder(sequences)
         fid = wasserstein_distance(seq_embeddings, self.reference_embeddings)
@@ -80,18 +79,17 @@ class FrechetInceptionDistance(Metric):
 
 def wasserstein_distance(e1: np.ndarray, e2: np.ndarray) -> float:
     """
-    Compute the Fréchet (Wasserstein-2) distance between two sets of embeddings.
+    Computes the Fréchet distance between two sets of embeddings.
 
-    This is given by:
-        ||mu1 - mu2||^2 + Tr(sigma1 + sigma2 - 2*(sigma1*sigma2)^{1/2}),
-    where mu and sigma are the means and covariance matrices respectively.
+    This is defined as:
+        ||μ1 - μ2||² + Tr(Σ1 + Σ2 - 2(Σ1·Σ2)^{1/2})
 
     Args:
-        e1 (np.ndarray): Embeddings of the first set, shape (N1, D).
-        e2 (np.ndarray): Embeddings of the second set, shape (N2, D).
+        e1: First set of embeddings, shape (N1, D).
+        e2: Second set of embeddings, shape (N2, D).
 
     Returns:
-        float: The Fréchet distance. Returns NaN if either set has fewer than two samples.
+        The Fréchet distance as a float. Returns NaN if either set has fewer than 2 samples.
     """
     if len(e1) < 2 or len(e2) < 2:
         return float("nan")

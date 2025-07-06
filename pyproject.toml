@@ -15,11 +15,14 @@ dependencies = [
     "pandas>=2.0",
     "peptides>=0.3.4",
     "pydantic>=2.11.7",
+    "pymoo>=0.6.1.5",
+    "python-levenshtein>=0.27.1",
     "scipy>=1.13.1",
     "torch>=2.0",
     "tqdm>=4.67.1",
     "Bio>=1.8.0",
     "peptides>=0.3.4"
+    "transformers>=4.53.0",
 ]
 
 [build-system]
