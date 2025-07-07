@@ -23,6 +23,7 @@ class ThirdPartyModel:
         repo_url: str,
         save_dir: str,
         python_bin: Optional[str] = None,
+        branch: Optional[str] = None,
     ):
         """
         Initialize and install the plugin.
@@ -33,6 +34,7 @@ class ThirdPartyModel:
             repo_url (str): Git repository URL for the plugin (prefixed with 'git+' or local path).
             save_dir (str): Directory where the virtual environment and repo will be stored.
             python_bin: Optional path to a python executable. If None, creates a venv enviroment using the exposed python executable.
+            branch: Optional branch to clone. If none, clone main branch.
 
         Raises:
             ValueError: If entry_point is not of the form 'module:func'.
@@ -49,7 +51,8 @@ class ThirdPartyModel:
         self.plugin.setup(
             plugins_root=Path(save_dir),
             repo_url=repo_url,
-            python_bin=python_bin,
+            branch=branch,
+            python_bin=Path(python_bin) if python_bin is not None else None,
         )
 
     def __call__(self, sequences: list[str], **kwargs) -> np.ndarray:
@@ -82,7 +85,8 @@ class Plugin:
         self,
         plugins_root: Path,
         repo_url: str,
-        python_bin: Optional[str] = None,
+        python_bin: Optional[Path] = None,
+        branch: Optional[str] = None,
     ):
         """
         Create a virtual environment and install the plugin from its repository.
@@ -91,6 +95,7 @@ class Plugin:
             plugins_root (Path): Root directory for plugin environments and repos.
             repo_url (str): Git repository URL for the plugin.
             python_bin: Optional path to a python executable. If None, creates a venv enviroment using the exposed python executable.
+            branch: Optional branch to clone. If none, clone main branch.
         """
         plugins_root.mkdir(parents=True, exist_ok=True)
         repo_dir = plugins_root / "repo"
@@ -107,7 +112,12 @@ class Plugin:
 
         if not repo_dir.exists():
             url = repo_url.removeprefix("git+")
-            subprocess.check_call(["git", "clone", url, str(repo_dir)])
+
+            clone_cmd = ["git", "clone", url, str(repo_dir)]
+            if branch:
+                clone_cmd += ["-b", branch, "--single-branch"]
+
+            subprocess.check_call(clone_cmd)
             subprocess.check_call(
                 [str(python_bin), "-m", "pip", "install", "-e", str(repo_dir)]
             )
