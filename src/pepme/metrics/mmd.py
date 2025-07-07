@@ -26,6 +26,7 @@ class MaximumMeanDiscrepancy(Metric):
         reference: list[str],
         embedder: Callable[[list[str]], np.ndarray],
         device: Literal["cpu", "cuda"] = "cpu",
+        strict: bool = True,
     ):
         """
         Initialize the MMD metric.
@@ -40,6 +41,10 @@ class MaximumMeanDiscrepancy(Metric):
         self.embedder = embedder
         self.reference_embeddings = self.embedder(self.reference)
         self.device = device
+        self.strict = strict
+
+        if self.reference_embeddings.shape[0] == 0:
+            raise ValueError("Reference embeddings must contain at least one sample.")
 
     def __call__(self, sequences: list[str]) -> MetricResult:
         """
@@ -51,6 +56,15 @@ class MaximumMeanDiscrepancy(Metric):
         Returns:
             MetricResult: Contains the MMD score, where lower values indicate better performance.
         """
+
+        if len(sequences) == 0:
+            raise ValueError("Sequences must contain at least one sample.")
+
+        if self.strict and len(sequences) != self.reference_embeddings.shape[0]:
+            raise ValueError(
+                f"Number of sequences ({len(sequences)}) must match the number of reference sequences ({self.reference_embeddings.shape[0]}). Set `strict=False` to disable this check."
+            )
+
         generated_embeddings = self.embedder(sequences)
 
         mmd_score = mmd(
