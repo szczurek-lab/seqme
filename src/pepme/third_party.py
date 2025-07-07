@@ -52,7 +52,7 @@ class ThirdPartyModel:
             plugins_root=Path(save_dir),
             repo_url=repo_url,
             branch=branch,
-            python_bin=Path(python_bin) if python_bin is not None else None,
+            python_bin=Path(python_bin) if python_bin else None,
         )
 
     def __call__(self, sequences: list[str], **kwargs) -> np.ndarray:
