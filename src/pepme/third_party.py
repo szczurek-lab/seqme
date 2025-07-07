@@ -34,7 +34,7 @@ class ThirdPartyModel:
             repo_url (str): Git repository URL for the plugin (prefixed with 'git+' or local path).
             save_dir (str): Directory where the virtual environment and repo will be stored.
             python_bin: Optional path to a python executable. If None, creates a venv enviroment using the exposed python executable.
-            branch: Optional branch to clone. If none, clone main branch.
+            branch: Optional branch to clone. If none, clone the whole repository.
 
         Raises:
             ValueError: If entry_point is not of the form 'module:func'.
@@ -95,7 +95,7 @@ class Plugin:
             plugins_root (Path): Root directory for plugin environments and repos.
             repo_url (str): Git repository URL for the plugin.
             python_bin: Optional path to a python executable. If None, creates a venv enviroment using the exposed python executable.
-            branch: Optional branch to clone. If none, clone main branch.
+            branch: Optional branch to clone. If none, clone the whole repository.
         """
         plugins_root.mkdir(parents=True, exist_ok=True)
         repo_dir = plugins_root / "repo"
@@ -158,7 +158,13 @@ class Plugin:
                 "pickle.dump(result, open(sys.argv[2],'wb'))"
             )
             cmd = [str(self.python_bin), "-c", code, str(in_path), str(out_path)]
-            subprocess.check_call(cmd)
+
+            try:
+                subprocess.run(cmd, capture_output=True, text=True, check=True)
+            except subprocess.CalledProcessError as e:
+                print("🔴 Subprocess failed:")
+                print(e.stderr)
+                raise
 
             # Deserialize and return output
             with open(out_path, "rb") as f:
