@@ -114,4 +114,16 @@ def wasserstein_distance(e1: np.ndarray, e2: np.ndarray) -> float:
 
 
 class FID(FrechetInceptionDistance):
+    """
+    Computes the Fréchet Inception Distance (FID) between a set of generated
+    sequences and a reference dataset based on their embeddings.
+
+    This metric estimates how similar the distributions of two sets of embeddings
+    are using the 2-Wasserstein (Fréchet) distance.
+
+    Reference:
+        Heusel et al., "GANs Trained by a Two Time-Scale Update Rule Converge to a
+        Local Nash Equilibrium" (https://arxiv.org/abs/1706.08500)
+    """
+
     pass

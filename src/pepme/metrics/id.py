@@ -59,4 +59,9 @@ class Identity(Metric):
 
 
 class ID(Identity):
+    """
+    Identity metric applies a user-provided predictor to a list of sequences
+    and returns the average and standard deviation of the predictor's outputs.
+    """
+
     pass
