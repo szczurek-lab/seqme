@@ -76,6 +76,8 @@ instance/
 docs/_build/
 docs/api/*
 !docs/api/metrics_index.rst
+!docs/api/models_index.rst
+
 
 # PyBuilder
 .pybuilder/
