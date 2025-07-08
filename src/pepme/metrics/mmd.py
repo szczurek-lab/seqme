@@ -5,11 +5,6 @@ import torch
 
 from pepme.core import Metric, MetricResult
 
-# The bandwidth parameter for the Gaussian RBF kernel. See the paper for more details.
-_SIGMA = 10
-# The following is used to make the metric more human readable. See the paper for more details.
-_SCALE = 1000
-
 
 class MaximumMeanDiscrepancy(Metric):
     """
@@ -25,6 +20,8 @@ class MaximumMeanDiscrepancy(Metric):
         self,
         reference: list[str],
         embedder: Callable[[list[str]], np.ndarray],
+        sigma: float = 10,
+        scale: float = 1000,
         device: Literal["cpu", "cuda"] = "cpu",
         strict: bool = True,
     ):
@@ -36,12 +33,22 @@ class MaximumMeanDiscrepancy(Metric):
             embedder (Callable[[list[str]], np.ndarray]): Function that maps a list
                 of sequences to their embeddings. Should return a 2D array
                 of shape (num_sequences, embedding_dim).
+            sigma (float): Bandwidth parameter for the Gaussian RBF kernel.
+                Default is 10.
+            scale (float): Scaling factor for the MMD score. Default is 1000.
+            device (Literal["cpu", "cuda"]): Device to run the computations on.
+                Default is "cpu".
+            strict (bool): If True, the number of sequences must match the number
+                of reference sequences. If False, the number of sequences can vary.
+                Default is True.
         """
         self.reference = reference
         self.embedder = embedder
         self.reference_embeddings = self.embedder(self.reference)
         self.device = device
         self.strict = strict
+        self.sigma = sigma
+        self.scale = scale
 
         if self.reference_embeddings.shape[0] == 0:
             raise ValueError("Reference embeddings must contain at least one sample.")
@@ -68,7 +75,11 @@ class MaximumMeanDiscrepancy(Metric):
         generated_embeddings = self.embedder(sequences)
 
         mmd_score = mmd(
-            generated_embeddings, self.reference_embeddings, device=self.device
+            x=generated_embeddings,
+            y=self.reference_embeddings,
+            sigma=self.sigma,
+            scale=self.scale,
+            device=self.device,
         )
 
         return MetricResult(value=mmd_score)
@@ -82,7 +93,13 @@ class MaximumMeanDiscrepancy(Metric):
         return "minimize"
 
 
-def mmd(x: np.ndarray, y: np.ndarray, device: Literal["cpu", "cuda"]) -> float:
+def mmd(
+    x: np.ndarray,
+    y: np.ndarray,
+    sigma: float,
+    scale: float,
+    device: Literal["cpu", "cuda"],
+) -> float:
     """MMD implementation.
 
     This implements the minimum-variance/biased version of the estimator described
@@ -92,51 +109,47 @@ def mmd(x: np.ndarray, y: np.ndarray, device: Literal["cpu", "cuda"]) -> float:
     minimum-variance estimate for MMD are almost identical.
 
     Args:
-      x: The first set of embeddings of shape (n, embedding_dim).
-      y: The second set of embeddings of shape (n, embedding_dim).
+        x: The first set of embeddings of shape (n, embedding_dim).
+        y: The second set of embeddings of shape (n, embedding_dim).
+        sigma: The bandwidth parameter for the Gaussian RBF kernel.
+        scale: The scaling factor for the MMD score.
+        device: The device to run the computations on, either "cpu" or "cuda".
 
     Returns:
       The MMD distance between x and y embedding sets.
     """
+
     x_tensor = torch.from_numpy(x).to(device, dtype=torch.float)
     y_tensor = torch.from_numpy(y).to(device, dtype=torch.float)
 
-    x_sqnorms = torch.diag(torch.matmul(x_tensor, x_tensor.T))
-    y_sqnorms = torch.diag(torch.matmul(y_tensor, y_tensor.T))
+    k_xx = _gaussian_kernel(x_tensor, x_tensor, sigma).mean()
+    k_xy = _gaussian_kernel(x_tensor, y_tensor, sigma).mean()
+    k_yy = _gaussian_kernel(y_tensor, y_tensor, sigma).mean()
 
-    gamma = 1 / (2 * _SIGMA**2)
-    k_xx = torch.mean(
-        torch.exp(
-            -gamma
-            * (
-                -2 * torch.matmul(x_tensor, x_tensor.T)
-                + torch.unsqueeze(x_sqnorms, 1)
-                + torch.unsqueeze(x_sqnorms, 0)
-            )
-        )
-    )
-    k_xy = torch.mean(
-        torch.exp(
-            -gamma
-            * (
-                -2 * torch.matmul(x_tensor, y_tensor.T)
-                + torch.unsqueeze(x_sqnorms, 1)
-                + torch.unsqueeze(y_sqnorms, 0)
-            )
-        )
-    )
-    k_yy = torch.mean(
-        torch.exp(
-            -gamma
-            * (
-                -2 * torch.matmul(y_tensor, y_tensor.T)
-                + torch.unsqueeze(y_sqnorms, 1)
-                + torch.unsqueeze(y_sqnorms, 0)
-            )
-        )
-    )
+    return (scale * (k_xx + k_yy - 2 * k_xy)).cpu().item()
 
-    return (_SCALE * (k_xx + k_yy - 2 * k_xy)).item()
+
+def _gaussian_kernel(x: torch.Tensor, y: torch.Tensor, sigma: float) -> torch.Tensor:
+    """Compute the Gaussian RBF kernel matrix between x and y.
+
+    Args:
+        x: Tensor of shape (n, d).
+        y: Tensor of shape (m, d).
+        sigma: Bandwidth parameter.
+
+    Returns:
+        Kernel matrix of shape (n, m).
+    """
+    gamma = 1 / (2 * sigma**2)
+
+    x_sqnorms = torch.sum(x**2, dim=1, keepdim=True)  # (n, 1)
+    y_sqnorms = torch.sum(y**2, dim=1, keepdim=True)  # (m, 1)
+
+    cross_term = torch.matmul(x, y.T)  # (n, m)
+
+    dists = x_sqnorms - 2 * cross_term + y_sqnorms.T
+
+    return torch.exp(-gamma * dists)
 
 
 class MMD(MaximumMeanDiscrepancy):
