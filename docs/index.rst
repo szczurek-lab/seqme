@@ -31,11 +31,21 @@ Quick start
 
 
 .. toctree::
-    :maxdepth: 3
-    :hidden:
+   :maxdepth: 3
+   :hidden:
+   :caption: General
 
-    installation
-    tutorials/index
-    api
-    contributing_guide
+   installation
+   tutorials/index
+   api
+   contributing_guide
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: About
+
+   GitHub <https://github.com/szczurek-lab/pepme>
+
+
 
