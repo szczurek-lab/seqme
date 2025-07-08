@@ -1,8 +1,6 @@
 API
 ###
 
-A number of examples of applying the model.
-
 .. toctree::
     :hidden:
     :maxdepth: 3

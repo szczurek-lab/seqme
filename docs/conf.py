@@ -30,7 +30,6 @@ extensions = [
     "sphinx_autodoc_typehints",  # needs to be after napoleon
     "sphinx.ext.autosummary",
     "sphinx_copybutton",
-    "sphinx_gallery.load_style",
     "nbsphinx",
 ]
 intersphinx_mapping = {

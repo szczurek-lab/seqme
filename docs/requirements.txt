@@ -13,4 +13,3 @@ sphinx-copybutton
 
 sphinx-autodoc-typehints
 myst_nb
-sphinx-gallery
