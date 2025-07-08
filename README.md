@@ -1,6 +1,8 @@
 # pepme
 
-**pepme** is a modular open-source Python package containing model-agnostic metrics for evaluating peptides.
+**pepme** is a tiny, modular and open-source Python library containing model-agnostic metrics for evaluating peptides.
+
+
 
 ## Installation
 
@@ -10,7 +12,7 @@ You need to have Python 3.10 or newer installed on your system.
 $ pip install git+https://github.com/szczurek-lab/pepme.git
 ```
 
-## Usage
+## Quick start
 
 ```python
 from pepme import compute_metrics, show_table, FeatureCache

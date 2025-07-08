@@ -1,9 +1,13 @@
 pepme
 =====
-**pepme** is a modular open-source Python package containing model-agnostic metrics for evaluating peptides.
+**pepme** is a tiny, modular and open-source Python library containing model-agnostic metrics for evaluating peptides.
+
 
 Quick start
 -----------
+
+Let's compute a few metrics on example sequences.
+
 .. code-block:: python
 
     from pepme import compute_metrics, show_table, FeatureCache

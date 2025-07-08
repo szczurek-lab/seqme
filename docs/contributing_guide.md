@@ -1,6 +1,10 @@
-# Contributions
+# Contributing
+
+Want to add new metrics, models, or other features? This guide will help you get started.
 
 ## Installation
+
+First, setup up the package for development.
 
 ### 1. Install [`uv`](#tooling):
 

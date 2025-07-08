@@ -1,6 +1,6 @@
 Models
 ######
-Models mapping sequences to embedding or property space.
+Models mapping sequences to either embedding- or property-space.
 
 Embeddings
 ----------

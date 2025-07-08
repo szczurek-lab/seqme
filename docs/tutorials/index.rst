@@ -1,8 +1,7 @@
 Tutorials
 #########
 
-
-Tutorials on using pepme for evaluating peptides.
+Tutorials on using pepme for peptide evaluation, adding new metrics, and integrating third-party models.
 
 .. toctree::
     :hidden:

@@ -1,6 +1,7 @@
 Metrics
 #######
-Types of metrics.
+
+Pepme contains three types of metrics. Those operating in sequence-, embedding-, and property-space.
 
 Sequence-based
 --------------
