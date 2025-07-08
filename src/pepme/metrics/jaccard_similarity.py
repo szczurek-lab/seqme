@@ -7,7 +7,7 @@ class KmerJaccardSimilarity(Metric):
     """
     Computes the average Jaccard similarity between each generated sequence
     and a reference corpus, based on n-grams of size `n`, using
-    |A ∩ R| / |A ∪ R|. You can choose to 'minimize' (novelty)
+    \|A ∩ R\| / \|A ∪ R\|. You can choose to 'minimize' (novelty)
     or 'maximize' (overlap) via the `objective` parameter.
     """
 

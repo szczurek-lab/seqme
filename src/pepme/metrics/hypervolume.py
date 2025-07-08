@@ -116,4 +116,9 @@ def calculate_hypervolume(
 
 
 class HV(Hypervolume):
+    """
+    Computes the hypervolume (HV) metric for multi-objective optimization.
+    Each predictor maps sequences to a numeric objective.
+    """
+
     pass

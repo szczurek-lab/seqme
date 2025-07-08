@@ -8,6 +8,8 @@ from transformers.utils import logging
 
 
 class ESM2:
+    """Computes ESM2 embeddings."""
+
     def __init__(
         self,
         model_name: Literal[

@@ -1,6 +1,6 @@
-/data/**/*.fasta
+/**/*.fasta
 *.pkl
-/data/**/*.csv
+/**/*.csv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -74,6 +74,10 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+docs/api/*
+!docs/api/metrics_index.rst
+!docs/api/models_index.rst
+
 
 # PyBuilder
 .pybuilder/
