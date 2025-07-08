@@ -1,6 +1,8 @@
 API
 ###
 
+pepme's main API.
+
 .. toctree::
     :hidden:
     :maxdepth: 3

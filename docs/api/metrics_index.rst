@@ -1,18 +1,37 @@
 Metrics
 #######
+Types of metrics.
+
+Sequence-based
+--------------
 
 .. autosummary::
     :toctree:
     :nosignatures:
 
     pepme.metrics.Diversity
-    pepme.metrics.FID
-    pepme.metrics.HitRate
-    pepme.metrics.HV
-    pepme.metrics.ID
-    pepme.metrics.KmerJaccardSimilarity
+    pepme.metrics.Uniqueness
     pepme.metrics.Novelty
+    pepme.metrics.KmerJaccardSimilarity
+
+Embedding-based
+---------------
+
+.. autosummary::
+    :toctree:
+    :nosignatures:
+
+    pepme.metrics.FID
     pepme.metrics.Precision
     pepme.metrics.Recall
-    pepme.metrics.Uniqueness
-    
+
+Property-based
+--------------
+
+.. autosummary::
+    :toctree:
+    :nosignatures:
+
+    pepme.metrics.ID
+    pepme.metrics.HitRate
+    pepme.metrics.HV

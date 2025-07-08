@@ -1,7 +1,8 @@
 Tutorials
 #########
 
-A number of tutorials of applying the model.
+
+Tutorials on using pepme for evaluating peptides.
 
 .. toctree::
     :hidden:

@@ -117,7 +117,7 @@ class Recall(Metric):
     Recall metric for evaluating generative models based on k-NN overlap.
 
     Reference:
-        Kynkäänniemi et al., "Improved precision and recall metric for assessing generative models", NeurIPS 2019.
+        Kynkäänniemi et al., "Improved precision and recall metric for assessing generative models", NeurIPS 2019. (https://arxiv.org/abs/1904.06991)
     """
 
     def __init__(
