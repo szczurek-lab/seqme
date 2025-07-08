@@ -30,8 +30,9 @@ Quick start
     :hidden:
 
     installation
-    examples/index
+    tutorials/index
     api
+    contributing_guide
 
 
 Indices and tables

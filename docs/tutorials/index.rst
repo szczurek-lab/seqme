@@ -1,7 +1,7 @@
-Examples
-########
+Tutorials
+#########
 
-A number of examples of applying the model.
+A number of tutorials of applying the model.
 
 .. toctree::
     :hidden:
