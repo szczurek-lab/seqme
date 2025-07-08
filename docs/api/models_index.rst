@@ -27,8 +27,8 @@ Properties
     pepme.models.properties.AliphaticIndex
     pepme.models.properties.BomanIndex
 
-Misc
-----
+Miscellaneous
+-------------
 .. autosummary::
     :toctree:
     :nosignatures:
