@@ -98,7 +98,10 @@ def wasserstein_distance(e1: np.ndarray, e2: np.ndarray) -> float:
     mu2, sigma2 = e2.mean(axis=0), np.cov(e2, rowvar=False)
 
     ssdiff = np.sum((mu1 - mu2) ** 2.0)
-    covmean = sqrtm(sigma1.dot(sigma2))
+    covmean, err = sqrtm(sigma1.dot(sigma2), disp=False)
+
+    if err == np.inf:
+        return float("nan")
 
     # Handle numerical issues with imaginary components
     if np.iscomplexobj(covmean):
