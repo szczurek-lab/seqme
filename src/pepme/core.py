@@ -16,18 +16,46 @@ class MetricResult:
 
 
 class Metric(abc.ABC):
+    """
+    Abstract base for metrics evaluating lists of text sequences.
+
+    Subclasses implement a callable interface to compute a score and
+    specify a name and optimization direction.
+    """
+
     @abc.abstractmethod
-    def __call__(self, sequences: list[str]) -> MetricResult:
+    def __call__(self, sequences: list[str]) -> "MetricResult":
+        """
+        Calculate the metric over provided sequences.
+
+        Args:
+            sequences: Text inputs to evaluate.
+
+        Returns:
+            An object containing the score and optional details.
+        """
         raise NotImplementedError()
 
     @property
     @abc.abstractmethod
     def name(self) -> str:
+        """
+        A short identifier for this metric, used in reporting.
+
+        Returns:
+            The metric name.
+        """
         raise NotImplementedError()
 
     @property
     @abc.abstractmethod
     def objective(self) -> Literal["minimize", "maximize"]:
+        """
+        Whether lower or higher scores indicate better performance.
+
+        Returns:
+            The optimization goal ('minimize' or 'maximize').
+        """
         raise NotImplementedError()
 
 

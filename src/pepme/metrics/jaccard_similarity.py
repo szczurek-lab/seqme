@@ -45,12 +45,14 @@ class KmerJaccardSimilarity(Metric):
 
     def __call__(self, sequences: list[str]) -> MetricResult:
         """
-        For each seq:
-          A = its n-gram set
-          R = reference n-gram set
-          denom = |A ∪ R|
-          sim   = 0 if denom == 0 else |A ∩ R| / denom
-        Returns the average sim over all sequences.
+        Computes the average Jaccard similarity between each generated sequence
+        and a reference corpus, based on n-grams of size `n`.
+
+        Args:
+            sequences: A list of generated sequences to evaluate.
+
+        Returns:
+            MetricResult containing the FID score. Lower is better.
         """
         total = len(sequences)
         if total == 0:
