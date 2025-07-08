@@ -1,6 +1,6 @@
 import unittest
 
-from pepme.metrics.jaccard_similarity import KmerJaccardSimilarity
+from pepme.metrics import KmerJaccardSimilarity
 
 
 class TestJaccardSimilarity(unittest.TestCase):

@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from pepme.metrics.diversity import Diversity
+from pepme.metrics import Diversity
 
 
 class TestDiversity(unittest.TestCase):

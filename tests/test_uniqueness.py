@@ -1,6 +1,6 @@
 import unittest
 
-from pepme.metrics.uniqueness import Uniqueness
+from pepme.metrics import Uniqueness
 
 
 class TestUniqueness(unittest.TestCase):

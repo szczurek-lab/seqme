@@ -3,7 +3,7 @@ import unittest
 
 import numpy as np
 
-from pepme.metrics.fid import FID
+from pepme.metrics import FID
 
 
 class TestFid(unittest.TestCase):

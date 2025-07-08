@@ -2,8 +2,8 @@ import unittest
 
 import numpy as np
 
-from pepme.metrics.hitrate import HitRate
-from pepme.properties.physicochemical import Charge, Gravy
+from pepme.metrics import HitRate
+from pepme.models.properties import Charge, Gravy
 
 
 class TestHitRate(unittest.TestCase):

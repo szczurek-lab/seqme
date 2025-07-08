@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from pepme.embeddings.kmers import KmerFrequencyEmbedding
+from pepme.models.embeddings import KmerFrequencyEmbedding
 
 
 class TestJaccardSimilarity(unittest.TestCase):

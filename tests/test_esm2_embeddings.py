@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from pepme.embeddings.esm2 import ESM2
+from pepme.models.embeddings import ESM2
 
 
 class TestFid(unittest.TestCase):

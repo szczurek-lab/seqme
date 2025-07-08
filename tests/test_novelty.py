@@ -1,6 +1,6 @@
 import unittest
 
-from pepme.metrics.novelty import Novelty
+from pepme.metrics import Novelty
 
 
 class TestNovelty(unittest.TestCase):

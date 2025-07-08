@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from pepme.metrics.hypervolume import HV
+from pepme.metrics import HV
 
 
 def p_count_aa(sequences: list[str], aa: str) -> np.ndarray:

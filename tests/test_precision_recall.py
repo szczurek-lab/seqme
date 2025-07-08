@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from pepme.metrics.precision_recall import Precision, Recall
+from pepme.metrics import Precision, Recall
 
 
 class TestPrecisionRecall(unittest.TestCase):
