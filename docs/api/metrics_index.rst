@@ -1,8 +1,6 @@
 Metrics
 #######
 
-A number of examples of applying the model.
-
 .. autosummary::
     :toctree:
     :nosignatures:
@@ -17,4 +15,4 @@ A number of examples of applying the model.
     pepme.metrics.Precision
     pepme.metrics.Recall
     pepme.metrics.Uniqueness
-
+    
