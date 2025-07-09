@@ -8,9 +8,14 @@ from pepme.metrics.mmd import MMD
 class TestMMD(unittest.TestCase):
     def test_shifted(self):
         reference = ["KKAA", "KKAA"]
-        metric = MMD(reference=reference, embedder=embedder)
+        metric = MMD(
+            reference=reference,
+            embedder=embedder,
+            reference_name="Random",
+            embedder_name="embedder",
+        )
 
-        self.assertEqual(metric.name, "MMD")
+        self.assertEqual(metric.name, "MMD@embedder (Random)")
         self.assertEqual(metric.objective, "minimize")
 
         result = metric(["KAAA", "KAAA"])

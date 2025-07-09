@@ -1,4 +1,4 @@
-from typing import Callable, Literal
+from typing import Callable, Literal, Optional
 
 import numpy as np
 import torch
@@ -11,9 +11,9 @@ class MaximumMeanDiscrepancy(Metric):
     Maximum Mean Discrepancy (MMD) metric.
 
     Reference:
-    Jayasumana, Sadeep, et al. "Rethinking fid: Towards a better evaluation metric for image generation."
-    Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2024.
-    (https://arxiv.org/pdf/2401.09603)
+        Jayasumana, Sadeep, et al. "Rethinking fid: Towards a better evaluation metric for image generation."
+        Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2024.
+        (https://arxiv.org/pdf/2401.09603)
     """
 
     def __init__(
@@ -24,31 +24,35 @@ class MaximumMeanDiscrepancy(Metric):
         scale: float = 1000,
         device: Literal["cpu", "cuda"] = "cpu",
         strict: bool = True,
+        reference_name: Optional[str] = None,
+        embedder_name: Optional[str] = None,
     ):
         """
         Initialize the MMD metric.
 
         Args:
-            reference (list[str]): List of reference sequences representing real data.
-            embedder (Callable[[list[str]], np.ndarray]): Function that maps a list
-                of sequences to their embeddings. Should return a 2D array
-                of shape (num_sequences, embedding_dim).
-            sigma (float): Bandwidth parameter for the Gaussian RBF kernel.
-                Default is 10.
-            scale (float): Scaling factor for the MMD score. Default is 1000.
-            device (Literal["cpu", "cuda"]): Device to run the computations on.
-                Default is "cpu".
-            strict (bool): If True, the number of sequences must match the number
-                of reference sequences. If False, the number of sequences can vary.
+            reference: List of reference sequences representing real data.
+            embedder: Function that maps a list of sequences to their embeddings.
+                Should return a 2D array of shape (num_sequences, embedding_dim).
+            sigma: Bandwidth parameter for the Gaussian RBF kernel. Default is 10.
+            scale: Scaling factor for the MMD score. Default is 1000.
+            device: Device to run the computations on. Default is "cpu".
+            strict: If True, the number of sequences must match the number of
+                reference sequences. If False, the number of sequences can vary.
                 Default is True.
+            reference_name: Optional name for the reference dataset.
+            embedder_name: Optional name for the embedder used.
         """
         self.reference = reference
         self.embedder = embedder
-        self.reference_embeddings = self.embedder(self.reference)
         self.device = device
         self.strict = strict
         self.sigma = sigma
         self.scale = scale
+        self.reference_name = reference_name
+        self.embedder_name = embedder_name
+
+        self.reference_embeddings = self.embedder(self.reference)
 
         if self.reference_embeddings.shape[0] == 0:
             raise ValueError("Reference embeddings must contain at least one sample.")
@@ -58,10 +62,10 @@ class MaximumMeanDiscrepancy(Metric):
         Compute the MMD between embeddings of the input sequences and the reference.
 
         Args:
-            sequences (list[str]): Generated sequences to evaluate.
+            sequences: Generated sequences to evaluate.
 
         Returns:
-            MetricResult: Contains the MMD score, where lower values indicate better performance.
+            MetricResult contains the MMD score, where lower values indicate better performance.
         """
 
         if len(sequences) == 0:
@@ -86,7 +90,12 @@ class MaximumMeanDiscrepancy(Metric):
 
     @property
     def name(self) -> str:
-        return "MMD"
+        name = "MMD"
+        if self.embedder_name:
+            name += f"@{self.embedder_name}"
+        if self.reference_name:
+            name += f" ({self.reference_name})"
+        return name
 
     @property
     def objective(self) -> Literal["minimize", "maximize"]:
@@ -122,35 +131,52 @@ def mmd(
     x_tensor = torch.from_numpy(x).to(device, dtype=torch.float)
     y_tensor = torch.from_numpy(y).to(device, dtype=torch.float)
 
-    k_xx = _gaussian_kernel(x_tensor, x_tensor, sigma).mean()
-    k_xy = _gaussian_kernel(x_tensor, y_tensor, sigma).mean()
-    k_yy = _gaussian_kernel(y_tensor, y_tensor, sigma).mean()
+    x_sq = (x_tensor**2).sum(dim=1)
+    y_sq = (y_tensor**2).sum(dim=1)
+
+    gamma = 1 / (2 * sigma**2)
+    k_xx = torch.mean(
+        torch.exp(
+            -gamma
+            * (
+                -2 * torch.matmul(x_tensor, x_tensor.T)
+                + torch.unsqueeze(x_sq, 1)
+                + torch.unsqueeze(x_sq, 0)
+            )
+        )
+    )
+    k_xy = torch.mean(
+        torch.exp(
+            -gamma
+            * (
+                -2 * torch.matmul(x_tensor, y_tensor.T)
+                + torch.unsqueeze(x_sq, 1)
+                + torch.unsqueeze(y_sq, 0)
+            )
+        )
+    )
+    k_yy = torch.mean(
+        torch.exp(
+            -gamma
+            * (
+                -2 * torch.matmul(y_tensor, y_tensor.T)
+                + torch.unsqueeze(y_sq, 1)
+                + torch.unsqueeze(y_sq, 0)
+            )
+        )
+    )
 
     return (scale * (k_xx + k_yy - 2 * k_xy)).cpu().item()
 
 
-def _gaussian_kernel(x: torch.Tensor, y: torch.Tensor, sigma: float) -> torch.Tensor:
-    """Compute the Gaussian RBF kernel matrix between x and y.
-
-    Args:
-        x: Tensor of shape (n, d).
-        y: Tensor of shape (m, d).
-        sigma: Bandwidth parameter.
-
-    Returns:
-        Kernel matrix of shape (n, m).
-    """
-    gamma = 1 / (2 * sigma**2)
-
-    x_sqnorms = torch.sum(x**2, dim=1, keepdim=True)  # (n, 1)
-    y_sqnorms = torch.sum(y**2, dim=1, keepdim=True)  # (m, 1)
-
-    cross_term = torch.matmul(x, y.T)  # (n, m)
-
-    dists = x_sqnorms - 2 * cross_term + y_sqnorms.T
-
-    return torch.exp(-gamma * dists)
-
-
 class MMD(MaximumMeanDiscrepancy):
+    """
+    Maximum Mean Discrepancy (MMD) metric.
+
+    Reference:
+        Jayasumana, Sadeep, et al. "Rethinking fid: Towards a better evaluation metric for image generation."
+        Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2024.
+        (https://arxiv.org/pdf/2401.09603)
+    """
+
     pass
