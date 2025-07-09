@@ -1,10 +1,10 @@
-from typing import Literal, Optional
+from typing import Literal
 
 from pepme.core import Metric, MetricResult
 
 
 class KmerJaccardSimilarity(Metric):
-    """
+    r"""
     Computes the average Jaccard similarity between each generated sequence
     and a reference corpus, based on n-grams of size `n`, using
     \|A ∩ R\| / \|A ∪ R\|. You can choose to 'minimize' (novelty)
@@ -17,7 +17,7 @@ class KmerJaccardSimilarity(Metric):
         n: int,
         *,
         objective: Literal["minimize", "maximize"] = "minimize",
-        reference_name: Optional[str] = None,
+        reference_name: str | None = None,
     ):
         """
         Args:

@@ -42,13 +42,8 @@ class ESM2:
                 disable=not self.verbose,
             ):
                 batch = sequences[i : i + self.batch_size]
-                tokens = self.tokenizer(
-                    batch, return_tensors="pt", padding=True, truncation=False
-                )
-                tokens = {
-                    k: v.to(self.device) if isinstance(v, torch.Tensor) else v
-                    for k, v in tokens.items()
-                }
+                tokens = self.tokenizer(batch, return_tensors="pt", padding=True, truncation=False)
+                tokens = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in tokens.items()}
                 hidden_state = self.model(**tokens).last_hidden_state
 
                 counts = tokens["attention_mask"].sum(dim=-1)
@@ -60,8 +55,6 @@ class ESM2:
                 mask[batch_indices, counts - 1] = 0
                 counts = counts - 2
 
-                embed = (hidden_state * mask.unsqueeze(-1)).sum(
-                    dim=-2
-                ) / counts.unsqueeze(-1)
+                embed = (hidden_state * mask.unsqueeze(-1)).sum(dim=-2) / counts.unsqueeze(-1)
                 embeddings.append(embed.cpu().numpy())
         return np.concatenate(embeddings)

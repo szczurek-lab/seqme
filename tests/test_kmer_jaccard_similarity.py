@@ -14,9 +14,7 @@ class TestJaccardSimilarity(unittest.TestCase):
     def test_name_with_reference_name_and_objective_override(self):
         # Custom reference_name and overriding objective to "maximize"
         reference = ["ABC"]
-        metric = KmerJaccardSimilarity(
-            reference=reference, n=3, objective="maximize", reference_name="SampleRef"
-        )
+        metric = KmerJaccardSimilarity(reference=reference, n=3, objective="maximize", reference_name="SampleRef")
         self.assertEqual(metric.name, "Jaccard-3 (SampleRef)")
         self.assertEqual(metric.objective, "maximize")
 

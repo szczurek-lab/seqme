@@ -203,9 +203,7 @@ def aa_embedder(seqs: list[str]) -> np.ndarray:
 
     max_len = max(len(seq) for seq in seqs)
     batch_size = len(seqs)
-    arr = np.full(
-        (batch_size, max_len), fill_value=21, dtype=np.int32
-    )  # 21 = PAD token
+    arr = np.full((batch_size, max_len), fill_value=21, dtype=np.int32)  # 21 = PAD token
 
     for i, seq in enumerate(seqs):
         for j, aa in enumerate(seq):

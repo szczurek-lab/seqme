@@ -1,12 +1,11 @@
 import random
-from typing import Optional
 
 
 def read_fasta_file(path: str) -> list[str]:
     sequences: list[str] = []
     current_seq: list[str] = []
 
-    with open(path, "r") as file:
+    with open(path) as file:
         for line in file:
             line = line.strip()
             if not line:
@@ -32,7 +31,7 @@ def read_fasta_file(path: str) -> list[str]:
 def write_to_fasta_file(
     sequences: list[str],
     path: str,
-    headers: Optional[list[str]] = None,
+    headers: list[str] | None = None,
 ):
     with open(path, "w") as f:
         for i, seq in enumerate(sequences):
@@ -67,9 +66,7 @@ def random_subset(sequences: list[str], n_samples: int, seed: int = 42) -> list[
         ValueError: If `n_samples` is greater than the number of available sequences.
     """
     if n_samples > len(sequences):
-        raise ValueError(
-            f"Cannot sample {n_samples} sequences from a list of length {len(sequences)}."
-        )
+        raise ValueError(f"Cannot sample {n_samples} sequences from a list of length {len(sequences)}.")
 
     rng = random.Random(seed)
     return rng.sample(sequences, n_samples)

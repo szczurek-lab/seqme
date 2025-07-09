@@ -1,4 +1,4 @@
-from typing import Callable, Optional
+from collections.abc import Callable
 
 import numpy as np
 
@@ -7,8 +7,8 @@ class MinMaxNorm:
     def __init__(
         self,
         predictor: Callable[[list[str]], np.ndarray],
-        min_value: Optional[float] = None,
-        max_value: Optional[float] = None,
+        min_value: float | None = None,
+        max_value: float | None = None,
     ):
         self.predictor = predictor
 
@@ -20,9 +20,7 @@ class MinMaxNorm:
 
         if (self.min_value is not None) or (self.max_value is not None):
             if None in (self.min_value, self.max_value):
-                raise ValueError(
-                    "Both min_value and max_value must be set if one is set."
-                )
+                raise ValueError("Both min_value and max_value must be set if one is set.")
 
             min_value = self.min_value
             max_value = self.max_value

@@ -1,4 +1,4 @@
-from typing import Literal, Optional
+from typing import Literal
 
 from pepme.core import Metric, MetricResult
 
@@ -9,7 +9,7 @@ class Novelty(Metric):
     and returns the fraction of sequences not seen in the reference.
     """
 
-    def __init__(self, reference: list[str], reference_name: Optional[str] = None):
+    def __init__(self, reference: list[str], reference_name: str | None = None):
         """
         Initialize the Novelty metric with a reference corpus.
 

@@ -1,4 +1,4 @@
-from typing import Literal, Optional
+from typing import Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -16,7 +16,7 @@ def hist(
     alpha: float = 1.0,
     edgecolor: str = "black",
     linewidth: float = 1.0,
-    ax: Optional[Axes] = None,
+    ax: Axes | None = None,
 ):
     arr = np.asarray(data).ravel()
     if arr.size == 0:
@@ -59,7 +59,7 @@ def kde(
     num_points: int = 200,
     linewidth: float = 1.0,
     alpha: float = 0.8,
-    ax: Optional[Axes] = None,
+    ax: Axes | None = None,
 ):
     arr = np.asarray(data).ravel()
     if arr.size == 0:
@@ -102,7 +102,7 @@ def violin(
     alpha: float = 0.8,
     show_means: bool = False,
     show_medians: bool = True,
-    ax: Optional[Axes] = None,
+    ax: Axes | None = None,
 ):
     """
     Draws a vertical violin plot (boxplot-like but keeps the full KDE shape).

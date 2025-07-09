@@ -1,4 +1,4 @@
-from typing import Literal, Optional
+from typing import Literal
 
 import numpy as np
 from Levenshtein import distance as lev
@@ -8,17 +8,17 @@ from pepme.core import Metric, MetricResult
 
 class Diversity(Metric):
     """
-    Diversity metric computes the fraction of sequences not in the reference set.
+    Diversity metric computes the average minimum pairwise distance between the sequences and the reference set.
     """
 
-    def __init__(self, reference: list[str], reference_name: Optional[str] = None):
+    def __init__(self, reference: list[str], reference_name: str | None = None):
         """
         Initialize the Diversity metric with a reference corpus.
 
         Args:
-            reference (list[str]): A list of reference sequences against which
+            reference: A list of reference sequences against which
                 generated sequences will be compared.
-            reference_name (Optional[str]): An optional label for the reference data.
+            reference_name: An optional label for the reference data.
                 This name will be appended to the metric name for identification.
                 Defaults to None.
         """
@@ -30,10 +30,7 @@ class Diversity(Metric):
 
     def __call__(self, sequences: list[str]) -> MetricResult:
         seqs_min_levenshtein = np.array(
-            [
-                min(levenshtein_distance_to_references(seq, self.reference))
-                for seq in sequences
-            ]
+            [min(levenshtein_distance_to_references(seq, self.reference)) for seq in sequences]
         )
 
         return MetricResult(
@@ -43,11 +40,7 @@ class Diversity(Metric):
 
     @property
     def name(self) -> str:
-        return (
-            "Diversity"
-            if self.reference_name is None
-            else f"Diversity ({self.reference_name})"
-        )
+        return "Diversity" if self.reference_name is None else f"Diversity ({self.reference_name})"
 
     @property
     def objective(self) -> Literal["minimize", "maximize"]:
@@ -58,7 +51,5 @@ def levenshtein_distance(sequence_a: str, sequence_b: str) -> int:
     return lev(sequence_a, sequence_b)
 
 
-def levenshtein_distance_to_references(
-    sequence: str, references: list[str]
-) -> list[int]:
+def levenshtein_distance_to_references(sequence: str, references: list[str]) -> list[int]:
     return [levenshtein_distance(sequence, ref) for ref in references]

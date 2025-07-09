@@ -1,4 +1,5 @@
-from typing import Callable, Literal, Optional
+from collections.abc import Callable
+from typing import Literal
 
 import numpy as np
 from scipy.linalg import sqrtm
@@ -23,8 +24,8 @@ class FrechetInceptionDistance(Metric):
         self,
         reference: list[str],
         embedder: Callable[[list[str]], np.ndarray],
-        reference_name: Optional[str] = None,
-        embedder_name: Optional[str] = None,
+        reference_name: str | None = None,
+        embedder_name: str | None = None,
     ):
         """
         Initializes the FID metric with a reference dataset and an embedding function.

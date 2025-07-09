@@ -22,9 +22,7 @@ class KmerFrequencyEmbedding:
         """
         Embed a list of sequences as k-mer frequency vectors.
         """
-        return np.array(
-            [self._embed(seq, self.kmer_to_idx, self.k) for seq in sequences]
-        )
+        return np.array([self._embed(seq, self.kmer_to_idx, self.k) for seq in sequences])
 
     def _embed(self, sequence: str, kmer_to_idx: dict[str, int], k: int) -> np.ndarray:
         """

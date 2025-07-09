@@ -1,4 +1,5 @@
-from typing import Callable, Literal, Optional
+from collections.abc import Callable
+from typing import Literal
 
 import numpy as np
 import torch
@@ -20,9 +21,9 @@ class Precision(Metric):
         reference: list[str],
         embedder: Callable[[list[str]], np.ndarray],
         *,
-        embedder_name: Optional[str] = None,
-        reference_name: Optional[str] = None,
-        reference_quantile: Optional[float] = None,
+        embedder_name: str | None = None,
+        reference_name: str | None = None,
+        reference_quantile: float | None = None,
         row_batch_size: int = 10_000,
         col_batch_size: int = 10_000,
         device: Literal["cpu", "cuda"] = "cpu",
@@ -79,10 +80,7 @@ class Precision(Metric):
         """
         seq_embeddings = self.embedder(sequences)
 
-        if (
-            self.strict
-            and seq_embeddings.shape[0] != self.reference_embeddings.shape[0]
-        ):
+        if self.strict and seq_embeddings.shape[0] != self.reference_embeddings.shape[0]:
             raise ValueError(
                 f"Number of sequences ({seq_embeddings.shape[0]}) must match number of reference embeddings ({self.reference_embeddings.shape[0]}). Set `strict=False` to disable this check."
             )
@@ -126,16 +124,15 @@ class Recall(Metric):
         reference: list[str],
         embedder: Callable[[list[str]], np.ndarray],
         *,
-        embedder_name: Optional[str] = None,
-        reference_name: Optional[str] = None,
-        reference_quantile: Optional[float] = None,
+        embedder_name: str | None = None,
+        reference_name: str | None = None,
+        reference_quantile: float | None = None,
         row_batch_size: int = 10_000,
         col_batch_size: int = 10_000,
         device: Literal["cpu", "cuda"] = "cpu",
         strict: bool = True,
     ):
-        """
-        Initialize the metric.
+        """Initialize the metric.
 
         Args:
             metric: Which metric to compute, either "precision" or "recall".
@@ -174,8 +171,7 @@ class Recall(Metric):
             raise ValueError("Reference embeddings must contain at least one samples.")
 
     def __call__(self, sequences: list[str]) -> MetricResult:
-        """
-        Compute precision or recall for the given evaluation sequences.
+        """Compute precision or recall for the given evaluation sequences.
 
         Args:
             sequences: List of sequences to evaluate.
@@ -185,10 +181,7 @@ class Recall(Metric):
         """
         seq_embeddings = self.embedder(sequences)
 
-        if (
-            self.strict
-            and seq_embeddings.shape[0] != self.reference_embeddings.shape[0]
-        ):
+        if self.strict and seq_embeddings.shape[0] != self.reference_embeddings.shape[0]:
             raise ValueError(
                 f"Number of sequences ({seq_embeddings.shape[0]}) must match number of reference embeddings ({self.reference_embeddings.shape[0]}). Set `strict=False` to disable this check."
             )
@@ -225,10 +218,9 @@ def compute_recall(
     row_batch_size: int,
     col_batch_size: int,
     device: Literal["cpu", "cuda"],
-    clamp_to_quantile: Optional[float] = None,
+    clamp_to_quantile: float | None = None,
 ) -> float:
-    """
-    Evaluate recall: fraction of reference manifold covered by eval embeddings.
+    """Evaluate recall: fraction of reference manifold covered by eval embeddings.
 
     Args:
         reference_embeddings: Array of reference points, shape [N_ref, D].
@@ -260,10 +252,9 @@ def compute_precision(
     row_batch_size: int,
     col_batch_size: int,
     device: Literal["cpu", "cuda"],
-    clamp_to_quantile: Optional[float] = None,
+    clamp_to_quantile: float | None = None,
 ) -> float:
-    """
-    Evaluate precision: fraction of eval points lying in reference manifold.
+    """Evaluate precision: fraction of eval points lying in reference manifold.
 
     Args:
         reference_embeddings: Array of reference points, shape [N_ref, D].
@@ -289,15 +280,13 @@ def compute_precision(
 
 
 class ManifoldEstimator:
-    """
-    Estimates local manifold radii and evaluates sample inclusion via k-NN distances.
-    """
+    """Estimates local manifold radii and evaluates sample inclusion via k-NN distances."""
 
     def __init__(
         self,
         features: np.ndarray,
         neighborhood_size: int,
-        clamp_to_quantile: Optional[float] = None,
+        clamp_to_quantile: float | None = None,
         row_batch_size: int = 10_000,
         col_batch_size: int = 10_000,
         eps: float = 1e-5,
@@ -322,7 +311,7 @@ class ManifoldEstimator:
 
         self._compute_local_radii(clamp_to_quantile)
 
-    def _compute_local_radii(self, clamp_to_quantile: Optional[float] = None):
+    def _compute_local_radii(self, clamp_to_quantile: float | None = None):
         num_points = self.features.shape[0]
         self.local_radii = np.zeros((num_points, 1), dtype=np.float32)
 
@@ -344,15 +333,13 @@ class ManifoldEstimator:
                 distance_batch[: row_end - row_start, col_start:col_end] = dist
 
             # k-th neighbor distance per point
-            self.local_radii[row_start:row_end] = np.partition(
-                distance_batch[: row_end - row_start], k_idx, axis=1
-            )[:, [k_idx]]
+            self.local_radii[row_start:row_end] = np.partition(distance_batch[: row_end - row_start], k_idx, axis=1)[
+                :, [k_idx]
+            ]
 
         if clamp_to_quantile is not None:
             max_dist = np.quantile(self.local_radii, clamp_to_quantile)
-            self.local_radii = np.where(
-                self.local_radii <= max_dist, self.local_radii, 0
-            )
+            self.local_radii = np.where(self.local_radii <= max_dist, self.local_radii, 0)
 
     def evaluate(
         self,
@@ -389,9 +376,7 @@ class ManifoldEstimator:
                 ref = self.features[col_start:col_end]
 
                 dist = pairwise_euclidean_distances(
-                    torch.from_numpy(eval_batch).to(
-                        device=self.device, dtype=torch.float
-                    ),
+                    torch.from_numpy(eval_batch).to(device=self.device, dtype=torch.float),
                     torch.from_numpy(ref).to(device=self.device, dtype=torch.float),
                 )
                 distances[: row_end - row_start, col_start:col_end] = dist
@@ -404,9 +389,7 @@ class ManifoldEstimator:
                 self.local_radii[:, 0] / (distances[: row_end - row_start] + self.eps),
                 axis=1,
             )
-            neighbor_indices[row_start:row_end] = np.argmin(
-                distances[: row_end - row_start], axis=1
-            )
+            neighbor_indices[row_start:row_end] = np.argmin(distances[: row_end - row_start], axis=1)
 
         results = [on_manifold]
         if return_realism:

@@ -1,4 +1,5 @@
-from typing import Callable, Literal, Optional
+from collections.abc import Callable
+from typing import Literal
 
 import numpy as np
 import pymoo.indicators.hv as hv  # type: ignore
@@ -17,8 +18,8 @@ class Hypervolume(Metric):
         self,
         predictors: list[Callable[[list[str]], np.ndarray]],
         method: Literal["standard", "convex-hull"] = "standard",
-        nadir: Optional[np.ndarray] = None,
-        ideal: Optional[np.ndarray] = None,
+        nadir: np.ndarray | None = None,
+        ideal: np.ndarray | None = None,
     ):
         """
         Args:
@@ -62,7 +63,7 @@ class Hypervolume(Metric):
 def calculate_hypervolume(
     points: np.ndarray,
     nadir: np.ndarray,
-    ideal: Optional[np.ndarray] = None,
+    ideal: np.ndarray | None = None,
     method: Literal["standard", "convex-hull"] = "standard",
 ) -> float:
     """
@@ -78,9 +79,7 @@ def calculate_hypervolume(
         Hypervolume (float)
     """
     if points.shape[1] != nadir.shape[0]:
-        raise ValueError(
-            "Points must have the same number of dimensions as the reference point."
-        )
+        raise ValueError("Points must have the same number of dimensions as the reference point.")
 
     min_points = points.min(axis=0)
     if (nadir > min_points).any():

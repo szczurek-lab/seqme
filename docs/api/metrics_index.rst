@@ -23,6 +23,7 @@ Embedding-based
     :nosignatures:
 
     pepme.metrics.FID
+    pepme.metrics.MMD
     pepme.metrics.Precision
     pepme.metrics.Recall
 

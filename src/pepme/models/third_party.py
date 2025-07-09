@@ -3,7 +3,7 @@ import subprocess
 import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 
@@ -22,8 +22,8 @@ class ThirdPartyModel:
         entry_point: str,
         repo_url: str,
         save_dir: str,
-        python_bin: Optional[str] = None,
-        branch: Optional[str] = None,
+        python_bin: str | None = None,
+        branch: str | None = None,
     ):
         """
         Initialize and install the plugin.
@@ -41,8 +41,8 @@ class ThirdPartyModel:
         """
         try:
             module, func = entry_point.split(":", 1)
-        except ValueError:
-            raise ValueError("entry_point must be of the form 'module:func'")
+        except ValueError as err:
+            raise ValueError("entry_point must be of the form 'module:func'") from err
 
         self.module = module
         self.func = func
@@ -85,8 +85,8 @@ class Plugin:
         self,
         plugins_root: Path,
         repo_url: str,
-        python_bin: Optional[Path] = None,
-        branch: Optional[str] = None,
+        python_bin: Path | None = None,
+        branch: str | None = None,
     ):
         """
         Create a virtual environment and install the plugin from its repository.
@@ -106,9 +106,7 @@ class Plugin:
 
             if not env_dir.exists():
                 subprocess.check_call([sys.executable, "-m", "venv", str(env_dir)])
-                subprocess.check_call(
-                    [str(python_bin), "-m", "pip", "install", "--upgrade", "pip"]
-                )
+                subprocess.check_call([str(python_bin), "-m", "pip", "install", "--upgrade", "pip"])
 
         if not repo_dir.exists():
             url = repo_url.removeprefix("git+")
@@ -118,9 +116,7 @@ class Plugin:
                 clone_cmd += ["-b", branch, "--single-branch"]
 
             subprocess.check_call(clone_cmd)
-            subprocess.check_call(
-                [str(python_bin), "-m", "pip", "install", "-e", str(repo_dir)]
-            )
+            subprocess.check_call([str(python_bin), "-m", "pip", "install", "-e", str(repo_dir)])
 
         self.python_bin = python_bin
 

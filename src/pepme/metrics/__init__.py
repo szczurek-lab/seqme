@@ -4,6 +4,7 @@ from pepme.metrics.hitrate import HitRate
 from pepme.metrics.hypervolume import HV
 from pepme.metrics.id import ID
 from pepme.metrics.jaccard_similarity import KmerJaccardSimilarity
+from pepme.metrics.mmd import MMD
 from pepme.metrics.novelty import Novelty
 from pepme.metrics.precision_recall import Precision, Recall
 from pepme.metrics.uniqueness import Uniqueness
@@ -15,6 +16,7 @@ __all__ = [
     "HV",
     "ID",
     "KmerJaccardSimilarity",
+    "MMD",
     "Novelty",
     "Precision",
     "Recall",

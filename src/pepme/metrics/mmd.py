@@ -1,4 +1,5 @@
-from typing import Callable, Literal, Optional
+from collections.abc import Callable
+from typing import Literal
 
 import numpy as np
 import torch
@@ -24,8 +25,8 @@ class MaximumMeanDiscrepancy(Metric):
         scale: float = 1000,
         device: Literal["cpu", "cuda"] = "cpu",
         strict: bool = True,
-        reference_name: Optional[str] = None,
-        embedder_name: Optional[str] = None,
+        reference_name: str | None = None,
+        embedder_name: str | None = None,
     ):
         """
         Initialize the MMD metric.
@@ -137,32 +138,17 @@ def mmd(
     gamma = 1 / (2 * sigma**2)
     k_xx = torch.mean(
         torch.exp(
-            -gamma
-            * (
-                -2 * torch.matmul(x_tensor, x_tensor.T)
-                + torch.unsqueeze(x_sq, 1)
-                + torch.unsqueeze(x_sq, 0)
-            )
+            -gamma * (-2 * torch.matmul(x_tensor, x_tensor.T) + torch.unsqueeze(x_sq, 1) + torch.unsqueeze(x_sq, 0))
         )
     )
     k_xy = torch.mean(
         torch.exp(
-            -gamma
-            * (
-                -2 * torch.matmul(x_tensor, y_tensor.T)
-                + torch.unsqueeze(x_sq, 1)
-                + torch.unsqueeze(y_sq, 0)
-            )
+            -gamma * (-2 * torch.matmul(x_tensor, y_tensor.T) + torch.unsqueeze(x_sq, 1) + torch.unsqueeze(y_sq, 0))
         )
     )
     k_yy = torch.mean(
         torch.exp(
-            -gamma
-            * (
-                -2 * torch.matmul(y_tensor, y_tensor.T)
-                + torch.unsqueeze(y_sq, 1)
-                + torch.unsqueeze(y_sq, 0)
-            )
+            -gamma * (-2 * torch.matmul(y_tensor, y_tensor.T) + torch.unsqueeze(y_sq, 1) + torch.unsqueeze(y_sq, 0))
         )
     )
 

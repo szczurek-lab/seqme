@@ -13,9 +13,7 @@ class Charge:
         self.ph = ph
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
-        return np.array(
-            [ProteinAnalysis(seq).charge_at_pH(self.ph) for seq in sequences]
-        )
+        return np.array([ProteinAnalysis(seq).charge_at_pH(self.ph) for seq in sequences])
 
 
 class Hydrophobicity:
@@ -23,9 +21,7 @@ class Hydrophobicity:
         self.scale = scale
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
-        return np.array(
-            [Peptide(seq).hydrophobicity(scale=self.scale) for seq in sequences]
-        )
+        return np.array([Peptide(seq).hydrophobicity(scale=self.scale) for seq in sequences])
 
 
 class IsoelectricPoint:

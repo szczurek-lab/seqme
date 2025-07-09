@@ -1,6 +1,7 @@
 import abc
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Literal, Optional
+from typing import Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -12,7 +13,7 @@ from tqdm import tqdm
 @dataclass
 class MetricResult:
     value: float | int
-    deviation: Optional[float] = None
+    deviation: float | None = None
 
 
 class Metric(abc.ABC):
@@ -24,7 +25,7 @@ class Metric(abc.ABC):
     """
 
     @abc.abstractmethod
-    def __call__(self, sequences: list[str]) -> "MetricResult":
+    def __call__(self, sequences: list[str]) -> MetricResult:
         """
         Calculate the metric over provided sequences.
 
@@ -122,9 +123,7 @@ def compute_metrics(
     df = pd.concat(df_parts, axis=1)
     # Ensure order matches input metrics
     df = df.reindex(
-        columns=pd.MultiIndex.from_product(
-            [[m.name for m in metrics], ["value", "deviation"]]
-        ),
+        columns=pd.MultiIndex.from_product([[m.name for m in metrics], ["value", "deviation"]]),
     )
     df.attrs["objective"] = {m.name: m.objective for m in metrics}
     return df
@@ -163,9 +162,7 @@ def combine_metric_dataframes(dfs: list[pd.DataFrame]) -> pd.DataFrame:
         # Merge objectives
         for key, value in df.attrs["objective"].items():
             if key in combined_objectives and combined_objectives[key] != value:
-                raise ValueError(
-                    f"Conflicting objective for metric '{key}': {combined_objectives[key]} vs {value}"
-                )
+                raise ValueError(f"Conflicting objective for metric '{key}': {combined_objectives[key]} vs {value}")
             combined_objectives[key] = value
 
         # Index order
@@ -227,9 +224,7 @@ def show_table(
         Styler: pandas Styler object.
     """
     if "objective" not in df.attrs:
-        raise ValueError(
-            "DataFrame must have an 'objective' attribute. Use `compute_metrics` to create the DataFrame."
-        )
+        raise ValueError("DataFrame must have an 'objective' attribute. Use `compute_metrics` to create the DataFrame.")
 
     objectives = df.attrs["objective"]
 
@@ -303,8 +298,7 @@ def show_table(
 
         arrow = arrows[objectives[m]]
         combined[f"{m}{arrow}"] = [
-            format_cell(val, dev, decimal, notation)
-            for val, dev in zip(vals, devs, strict=True)
+            format_cell(val, dev, decimal, notation) for val, dev in zip(vals, devs, strict=True)
         ]
 
     styler = combined.style
@@ -341,7 +335,7 @@ def barplot(
     metric: str,
     color: str = "#68d6bc",
     x_ticks_label_rotation: float = 45,
-    ylim: Optional[tuple[float, float]] = None,
+    ylim: tuple[float, float] | None = None,
     figsize: tuple[int, int] = (4, 3),
     show_arrow: bool = True,
 ):
@@ -400,11 +394,25 @@ def barplot(
 
 
 class FeatureCache:
+    """
+    Caches model-generated feature representations for sequences.
+
+    Allows storing and retrieving embeddings per model to avoid
+    recomputation, with support for adding models and precomputed values.
+    """
+
     def __init__(
         self,
-        models: Optional[dict[str, Callable[[list[str]], np.ndarray]]] = None,
-        init_cache: Optional[dict[str, dict[str, np.ndarray]]] = None,
+        models: dict[str, Callable[[list[str]], np.ndarray]] | None = None,
+        init_cache: dict[str, dict[str, np.ndarray]] | None = None,
     ):
+        """
+        Initialize the cache with optional models and precomputed representations.
+
+        Args:
+            models: Mapping from model name to callable for generating embeddings.
+            init_cache: Initial cache of embeddings by model and sequence.
+        """
         self.model_to_callable = models.copy() if models else {}
         self.model_to_cache = init_cache.copy() if init_cache else {}
 
@@ -413,15 +421,25 @@ class FeatureCache:
                 self.model_to_cache[name] = {}
 
     def __call__(self, sequences: list[str], model_name: str) -> np.ndarray:
+        """
+        Return embeddings for the given sequences using the specified model.
+
+        Uncached sequences are computed and stored automatically.
+
+        Args:
+            sequences: List of input texts.
+            model_name: Name of the model to use.
+
+        Returns:
+            Array of embeddings in the same order as input.
+        """
         sequence_to_rep = self.model_to_cache[model_name]
 
         new_sequences = [seq for seq in sequences if seq not in sequence_to_rep]
         if len(new_sequences) > 0:
             model = self.model_to_callable.get(model_name)
             if model is None:
-                raise ValueError(
-                    f"New sequences found, but '{model_name}' is not callable."
-                )
+                raise ValueError(f"New sequences found, but '{model_name}' is not callable.")
 
             new_reps = model(new_sequences)
 
@@ -431,18 +449,35 @@ class FeatureCache:
         return np.stack([sequence_to_rep[seq] for seq in sequences])
 
     def model(self, model_name: str) -> Callable[[list[str]], np.ndarray]:
+        """
+        Return a callable interface for a given model name.
+
+        Raises:
+            ValueError: If the model is unknown.
+        """
         if model_name not in self.model_to_cache:
-            raise ValueError(
-                f"'{model_name}' is not callable nor has any pre-cached sequences."
-            )
+            raise ValueError(f"'{model_name}' is not callable nor has any pre-cached sequences.")
         return lambda sequence: self(sequence, model_name)
 
     def add_model(self, model_name: str, model: Callable[[list[str]], np.ndarray]):
+        """
+        Add a new model to the cache.
+
+        Raises:
+            ValueError: If the model already exists.
+        """
         if model_name in self.model_to_callable:
             raise ValueError("Model already exists.")
         self.model_to_callable[model_name] = model
 
     def add_to_cache(self, model_name: str, pairs: dict[str, np.ndarray]):
+        """
+        Add precomputed embeddings to the cache.
+
+        Args:
+            model_name: The model the embeddings belong to.
+            pairs: Mapping from text to embedding.
+        """
         if model_name not in self.model_to_cache:
             self.model_to_cache[model_name] = {}
 
@@ -451,4 +486,10 @@ class FeatureCache:
             sequence_to_rep[sequence] = reps
 
     def get_cache(self) -> dict[str, dict[str, np.ndarray]]:
+        """
+        Return a copy of the current cache.
+
+        Returns:
+            A nested dictionary of cached embeddings.
+        """
         return self.model_to_cache.copy()

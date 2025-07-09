@@ -1,5 +1,3 @@
-from typing import Optional
-
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.axes import Axes
@@ -12,7 +10,8 @@ def plot_pca(
     data: list[np.ndarray],
     names: list[str],
     colors: list[str],
-    ax: Optional[Axes] = None,
+    title: str | None = None,
+    ax: Axes | None = None,
     figsize: tuple[int, int] = (4, 3),
     point_size: int = 20,
     alpha: float = 0.6,
@@ -33,6 +32,7 @@ def plot_pca(
         colors,
         xlabel="PC 1",
         ylabel="PC 2",
+        title=title,
         ax=ax,
         point_size=point_size,
         alpha=alpha,
@@ -45,7 +45,8 @@ def plot_tsne(
     data: list[np.ndarray],
     names: list[str],
     colors: list[str],
-    ax: Optional[Axes] = None,
+    title: str | None = None,
+    ax: Axes | None = None,
     figsize: tuple[int, int] = (4, 3),
     point_size: int = 20,
     alpha: float = 0.6,
@@ -64,6 +65,7 @@ def plot_tsne(
         colors,
         xlabel="t-SNE 1",
         ylabel="t-SNE 2",
+        title=title,
         ax=ax,
         point_size=point_size,
         alpha=alpha,
@@ -76,7 +78,8 @@ def plot_umap(
     data: list[np.ndarray],
     names: list[str],
     colors: list[str],
-    ax: Optional[Axes] = None,
+    title: str | None = None,
+    ax: Axes | None = None,
     figsize: tuple[int, int] = (4, 3),
     point_size: int = 20,
     alpha: float = 0.6,
@@ -95,6 +98,7 @@ def plot_umap(
         colors,
         xlabel="UMAP 1",
         ylabel="UMAP 2",
+        title=title,
         ax=ax,
         point_size=point_size,
         alpha=alpha,
@@ -112,9 +116,7 @@ def _prepare_data_groups(data_groups: list[np.ndarray]) -> tuple[np.ndarray, lis
     for arr in data_groups:
         X = np.asarray(arr)
         if X.ndim != 2:
-            raise ValueError(
-                "Each group must be a 2D array of shape (n_samples, n_features)."
-            )
+            raise ValueError("Each group must be a 2D array of shape (n_samples, n_features).")
         processed.append(X)
         lengths.append(X.shape[0])
     combined = np.vstack(processed)
@@ -129,6 +131,7 @@ def _plot_reduction(
     colors: list[str],
     xlabel: str,
     ylabel: str,
+    title: str | None,
     ax: Axes,
     point_size: int,
     alpha: float,
@@ -142,7 +145,7 @@ def _plot_reduction(
     X2 = reducer.fit_transform(X_all)
     segments = np.split(X2, splits)
 
-    for seg, name, color in zip(segments, names, colors):
+    for seg, name, color in zip(segments, names, colors, strict=False):
         ax.scatter(
             seg[:, 0],
             seg[:, 1],
@@ -160,3 +163,6 @@ def _plot_reduction(
     ax.set_yticks([])
     ax.set_axisbelow(True)
     ax.grid(True, linestyle="--", linewidth=0.5, alpha=0.5)
+
+    if title is not None:
+        ax.set_title(title)

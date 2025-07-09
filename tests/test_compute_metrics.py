@@ -16,9 +16,7 @@ class TestComputeMetrics(unittest.TestCase):
         self.assertEqual(df.shape, (1, 2))
         self.assertEqual(df.attrs["objective"], {"Novelty": "maximize"})
         self.assertEqual(df.index.tolist(), ["my_model"])
-        self.assertEqual(
-            df.columns.tolist(), [("Novelty", "value"), ("Novelty", "deviation")]
-        )
+        self.assertEqual(df.columns.tolist(), [("Novelty", "value"), ("Novelty", "deviation")])
         self.assertAlmostEqual(df.at["my_model", ("Novelty", "value")], 2.0 / 3.0)
         self.assertTrue(pd.isna(df.at["my_model", ("Novelty", "deviation")]))
 
