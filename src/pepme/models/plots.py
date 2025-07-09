@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.axes import Axes
 from scipy.stats import gaussian_kde
-from sklearn.decomposition import PCA  # type: ignore
-from sklearn.manifold import TSNE  # type: ignore
-from umap import UMAP  # type: ignore
+from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
+from umap import UMAP
 
 
 def plot_hist(
@@ -21,6 +21,25 @@ def plot_hist(
     linewidth: float = 1.0,
     ax: Axes | None = None,
 ):
+    """
+    Plot a histogram from array-like input.
+
+    Args:
+        data: Input values to plot.
+        xlabel: Label for the x-axis.
+        color: Fill color for the bars.
+        ytype: Whether to show 'frequency' or 'density'.
+        figsize: Size of the figure (if no Axes provided).
+        bins: Number of histogram bins.
+        alpha: Transparency level of the bars.
+        edgecolor: Color of the bar edges.
+        linewidth: Width of the bar edges.
+        ax: Optional matplotlib Axes to plot on.
+
+    Raises:
+        ValueError: If the input array is empty.
+    """
+
     arr = np.asarray(data).ravel()
     if arr.size == 0:
         raise ValueError("Input array is empty.")
@@ -64,6 +83,23 @@ def plot_kde(
     alpha: float = 0.8,
     ax: Axes | None = None,
 ):
+    """
+    Plot a kernel density estimate (KDE) from array-like input.
+
+    Args:
+        data: Input values to estimate density from.
+        xlabel: Label for the x-axis.
+        color: Fill color under the KDE curve.
+        figsize: Size of the figure (if no Axes provided).
+        bw_method: Bandwidth method for the KDE (passed to scipy).
+        num_points: Number of points to evaluate the KDE on.
+        linewidth: Width of the KDE curve line.
+        alpha: Transparency level for the curve and fill.
+        ax: Optional matplotlib Axes to plot on.
+
+    Raises:
+        ValueError: If the input array is empty.
+    """
     arr = np.asarray(data).ravel()
     if arr.size == 0:
         raise ValueError("Input array is empty.")
@@ -108,10 +144,26 @@ def plot_violin(
     ax: Axes | None = None,
 ):
     """
-    Draws a vertical violin plot (boxplot-like but keeps the full KDE shape).
+    Plot a violin plot from array-like input.
 
-    If `ax` is provided, draws into that Axes; otherwise creates its own figure.
+    Args:
+        data: Input values to visualize.
+        xlabel: Label for the x-axis.
+        color: Fill color for the violin body.
+        figsize: Size of the figure (if no Axes provided).
+        bw_method: Bandwidth method for KDE (passed to matplotlib).
+        widths: Width of the violin body.
+        edge_color: Outline color of the violin.
+        linewidth: Width of the violin edge lines.
+        alpha: Transparency of the fill color.
+        show_means: Whether to show the mean marker.
+        show_medians: Whether to show the median marker.
+        ax: Optional matplotlib Axes to plot on.
+
+    Raises:
+        ValueError: If the input array is empty.
     """
+
     arr = np.asarray(data).ravel()
     if arr.size == 0:
         raise ValueError("Input array is empty.")
@@ -164,8 +216,20 @@ def plot_pca(
     seed: int = 42,
 ):
     """
-    Plots PCA of one or multiple groups on the same axes.
+    Plot a 2D PCA projection of multiple sets of vectors.
+
+    Args:
+        data: List of arrays, each containing vectors to embed.
+        names: Labels corresponding to each set in data.
+        colors: Colors for each group of points.
+        title: Optional plot title.
+        ax: Optional matplotlib Axes to plot on.
+        figsize: Size of the figure (if no Axes provided).
+        point_size: Size of scatter points.
+        alpha: Transparency of points.
+        seed: Random seed for reproducibility.
     """
+
     if ax is None:
         fig, ax = plt.subplots(figsize=figsize)
 
@@ -199,8 +263,20 @@ def plot_tsne(
     seed: int = 42,
 ):
     """
-    Plots t-SNE of one or multiple groups on the same axes.
+    Plot a 2D t-SNE projection of multiple sets of vectors.
+
+    Args:
+        data: List of arrays, each containing vectors to embed.
+        names: Labels corresponding to each set in data.
+        colors: Colors for each group of points.
+        title: Optional plot title.
+        ax: Optional matplotlib Axes to plot on.
+        figsize: Size of the figure (if no Axes provided).
+        point_size: Size of scatter points.
+        alpha: Transparency of points.
+        seed: Random seed for reproducibility.
     """
+
     if ax is None:
         fig, ax = plt.subplots(figsize=figsize)
     reducer = TSNE(n_components=2, random_state=seed, init="pca", learning_rate="auto")
@@ -232,7 +308,18 @@ def plot_umap(
     seed: int = 42,
 ):
     """
-    Plots UMAP of one or multiple groups on the same axes.
+    Plot a 2D UMAP projection of multiple sets of vectors.
+
+    Args:
+        data: List of arrays, each containing vectors to embed.
+        names: Labels corresponding to each set in data.
+        colors: Colors for each group of points.
+        title: Optional plot title.
+        ax: Optional matplotlib Axes to plot on.
+        figsize: Size of the figure (if no Axes provided).
+        point_size: Size of scatter points.
+        alpha: Transparency of points.
+        seed: Random seed for reproducibility.
     """
     if ax is None:
         fig, ax = plt.subplots(figsize=figsize)
