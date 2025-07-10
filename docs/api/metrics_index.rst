@@ -37,3 +37,13 @@ Property-based
     pepme.metrics.ID
     pepme.metrics.HitRate
     pepme.metrics.HV
+
+
+Miscellaneous
+-------------
+.. autosummary::
+    :toctree:
+    :nosignatures:
+
+    pepme.metrics.Count
+    pepme.metrics.Fold
