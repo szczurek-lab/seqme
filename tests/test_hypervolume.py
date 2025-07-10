@@ -21,7 +21,7 @@ class TestHypervolume(unittest.TestCase):
         )
 
         # Name and objective properties
-        self.assertEqual(metric.name, "HV")
+        self.assertEqual(metric.name, "HV-2")
         self.assertEqual(metric.objective, "maximize")
 
         result = metric(["KKKK", "RRR", "KKKKRRR"])
@@ -39,7 +39,7 @@ class TestHypervolume(unittest.TestCase):
         )
 
         # Name and objective properties
-        self.assertEqual(metric.name, "HV (convex-hull)")
+        self.assertEqual(metric.name, "HV-2 (convex-hull)")
         self.assertEqual(metric.objective, "maximize")
 
         result = metric(["KKKK", "RRR"])
@@ -55,6 +55,7 @@ class TestHypervolume(unittest.TestCase):
             method="standard",
             nadir=np.zeros(2),
             ideal=np.array([10, 10]),
+            include_objective_count_in_name=False,
         )
 
         # Name and objective properties

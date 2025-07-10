@@ -20,6 +20,7 @@ class Hypervolume(Metric):
         method: Literal["standard", "convex-hull"] = "standard",
         nadir: np.ndarray | None = None,
         ideal: np.ndarray | None = None,
+        include_objective_count_in_name: bool = True,
     ):
         """
         Args:
@@ -27,11 +28,13 @@ class Hypervolume(Metric):
             method: Which HV computation method to use ("standard" or "convex-hull").
             nadir: Worst acceptable value in each objective dimension.
             ideal: Best value in each objective dimension (used for normalization).
+            include_objective_count_in_name: Whether to append the number of objectives to the metric's name.
         """
         self.predictors = predictors
         self.method = method
         self.nadir = nadir if nadir is not None else np.zeros(len(predictors))
         self.ideal = ideal
+        self.include_objective_count_in_name = include_objective_count_in_name
 
         if self.nadir.shape[0] != len(predictors):
             raise ValueError(
@@ -53,7 +56,12 @@ class Hypervolume(Metric):
 
     @property
     def name(self) -> str:
-        return "HV" if self.method == "standard" else "HV (convex-hull)"
+        name = "HV"
+        if self.include_objective_count_in_name:
+            name += f"-{len(self.predictors)}"
+        if self.method == "convex-hull":
+            name += " (convex-hull)"
+        return name
 
     @property
     def objective(self) -> Literal["minimize", "maximize"]:
