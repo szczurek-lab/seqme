@@ -205,7 +205,7 @@ def plot_violin(
 
 
 def plot_pca(
-    data: list[np.ndarray],
+    embeddings: list[np.ndarray],
     names: list[str],
     colors: list[str],
     title: str | None = None,
@@ -219,7 +219,7 @@ def plot_pca(
     Plot a 2D PCA projection of multiple sets of vectors.
 
     Args:
-        data: List of arrays, each containing vectors to embed.
+        embeddings: List of arrays, each containing vectors to embed.
         names: Labels corresponding to each set in data.
         colors: Colors for each group of points.
         title: Optional plot title.
@@ -235,9 +235,12 @@ def plot_pca(
 
     reducer = PCA(n_components=2, random_state=seed)
 
+    X_all, splits = _prepare_data_groups(embeddings)
+    X2 = reducer.fit_transform(X_all)
+    segments = np.split(X2, splits)
+
     _plot_reduction(
-        reducer,
-        data,
+        segments,
         names,
         colors,
         xlabel="PC 1",
@@ -252,7 +255,7 @@ def plot_pca(
 
 
 def plot_tsne(
-    data: list[np.ndarray],
+    embeddings: list[np.ndarray],
     names: list[str],
     colors: list[str],
     title: str | None = None,
@@ -266,7 +269,7 @@ def plot_tsne(
     Plot a 2D t-SNE projection of multiple sets of vectors.
 
     Args:
-        data: List of arrays, each containing vectors to embed.
+        embeddings: List of arrays, each containing vectors to embed.
         names: Labels corresponding to each set in data.
         colors: Colors for each group of points.
         title: Optional plot title.
@@ -279,10 +282,15 @@ def plot_tsne(
 
     if ax is None:
         fig, ax = plt.subplots(figsize=figsize)
+
     reducer = TSNE(n_components=2, random_state=seed, init="pca", learning_rate="auto")
+
+    X_all, splits = _prepare_data_groups(embeddings)
+    X2 = reducer.fit_transform(X_all)
+    segments = np.split(X2, splits)
+
     _plot_reduction(
-        reducer,
-        data,
+        segments,
         names,
         colors,
         xlabel="t-SNE 1",
@@ -297,7 +305,7 @@ def plot_tsne(
 
 
 def plot_umap(
-    data: list[np.ndarray],
+    embeddings: list[np.ndarray],
     names: list[str],
     colors: list[str],
     title: str | None = None,
@@ -311,7 +319,7 @@ def plot_umap(
     Plot a 2D UMAP projection of multiple sets of vectors.
 
     Args:
-        data: List of arrays, each containing vectors to embed.
+        embeddings: List of arrays, each containing vectors to embed.
         names: Labels corresponding to each set in data.
         colors: Colors for each group of points.
         title: Optional plot title.
@@ -323,10 +331,15 @@ def plot_umap(
     """
     if ax is None:
         fig, ax = plt.subplots(figsize=figsize)
+
     reducer = UMAP(n_components=2, random_state=seed)
+
+    X_all, splits = _prepare_data_groups(embeddings)
+    X2 = reducer.fit_transform(X_all)
+    segments = np.split(X2, splits)
+
     _plot_reduction(
-        reducer,
-        data,
+        segments,
         names,
         colors,
         xlabel="UMAP 1",
@@ -358,8 +371,7 @@ def _prepare_data_groups(data_groups: list[np.ndarray]) -> tuple[np.ndarray, lis
 
 
 def _plot_reduction(
-    reducer,
-    data: list[np.ndarray],
+    segments: list[np.ndarray],
     names: list[str],
     colors: list[str],
     xlabel: str,
@@ -369,14 +381,8 @@ def _plot_reduction(
     point_size: int,
     alpha: float,
 ):
-    # Normalize data_groups to list
-    data_groups = data
-    if len(names) != len(data_groups) or len(colors) != len(data_groups):
+    if len(names) != len(segments) or len(colors) != len(segments):
         raise ValueError("`names` and `colors` must match number of groups.")
-
-    X_all, splits = _prepare_data_groups(data_groups)
-    X2 = reducer.fit_transform(X_all)
-    segments = np.split(X2, splits)
 
     for seg, name, color in zip(segments, names, colors, strict=False):
         ax.scatter(
