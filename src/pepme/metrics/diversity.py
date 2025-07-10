@@ -1,7 +1,7 @@
 from typing import Literal
 
 import numpy as np
-from Levenshtein import distance as lev
+import pylev
 
 from pepme.core import Metric, MetricResult
 
@@ -48,7 +48,7 @@ class Diversity(Metric):
 
 
 def levenshtein_distance(sequence_a: str, sequence_b: str) -> int:
-    return lev(sequence_a, sequence_b)
+    return pylev.levenshtein(sequence_a, sequence_b)
 
 
 def levenshtein_distance_to_references(sequence: str, references: list[str]) -> list[int]:

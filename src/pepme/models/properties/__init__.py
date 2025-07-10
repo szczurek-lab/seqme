@@ -1,5 +1,6 @@
 from pepme.models.properties.physicochemical import (
     AliphaticIndex,
+    Aromaticity,
     BomanIndex,
     Charge,
     Gravy,
@@ -11,6 +12,7 @@ from pepme.models.properties.physicochemical import (
 
 __all__ = [
     "AliphaticIndex",
+    "Aromaticity",
     "BomanIndex",
     "Charge",
     "Gravy",
