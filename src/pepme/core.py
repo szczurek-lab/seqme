@@ -205,13 +205,14 @@ def show_table(
     color: str = "#68d6bc",
     missing_value: str = "-",
 ) -> Styler:
-    """
+    """Plots a table for metric dataframe.
+
     Render a styled DataFrame that:
-    - Combines 'value' and 'deviation' into "value ± deviation".
-    - Highlights the best metric per column with color.
-    - Underlines the second-best metric per column.
-    - Arrows indicate maximize (↑) or minimize (↓).
-    - Vertical divider between columns.
+        - Combines 'value' and 'deviation' into "value ± deviation".
+        - Highlights the best metric per column with color.
+        - Underlines the second-best metric per column.
+        - Arrows indicate maximize (↑) or minimize (↓).
+        - Vertical divider between columns.
 
     Args:
         df: DataFrame with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], attributed with 'objective'.
