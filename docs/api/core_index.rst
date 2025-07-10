@@ -9,3 +9,4 @@ Core
     pepme.combine_metric_dataframes
     pepme.show_table
     pepme.FeatureCache
+    pepme.barplot
