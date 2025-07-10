@@ -9,44 +9,36 @@ from pepme.core import Metric, MetricResult
 
 class Authenticity(Metric):
     """
-    Authenticity: Proportion of authentic gen samples
+    Authenticity: Proportion of authentic generated samples.
 
     Reference:
-        Adlam, Ben, Charles Weill, and Amol Kapoor.
-        "Investigating under and overfitting in wasserstein generative adversarial networks." (2019).
-        (https://arxiv.org/pdf/1910.14137)
+        Alaa et al., "How Faithful is your Synthetic Data? Sample-level Metrics for Evaluating and Auditing Generative Models." (2022). (https://arxiv.org/pdf/1910.14137)
     """
 
     def __init__(
         self,
-        reference: list[str],
+        train_set: list[str],
         embedder: Callable[[list[str]], np.ndarray],
-        strict: bool = True,
-        reference_name: str | None = None,
         embedder_name: str | None = None,
+        strict: bool = True,
     ):
         """
         Initialize the Authenticity metric.
 
         Args:
-            reference: List of reference sequences representing real data.
-            embedder: Function that maps a list of sequences to their embeddings.
-                Should return a 2D array of shape (num_sequences, embedding_dim).
-            strict: If True, the number of sequences must match the number of
-                reference sequences. If False, the number of sequences can vary.
-                Default is True.
-            reference_name: Optional name for the reference dataset.
+            train_set: List of sequences used to train the generative model.
+            embedder: A function that maps a list of sequences to a 2D NumPy array of embeddings.
             embedder_name: Optional name for the embedder used.
+            strict: Enforce equal number of eval and train samples if True.
         """
-        self.reference = reference
+        self.train_set = train_set
         self.embedder = embedder
-        self.strict = strict
-        self.reference_name = reference_name
         self.embedder_name = embedder_name
+        self.strict = strict
 
-        self.reference_embeddings = self.embedder(self.reference)
+        self.train_set_embeddings = self.embedder(self.train_set)
 
-        if self.reference_embeddings.shape[0] == 0:
+        if self.train_set_embeddings.shape[0] == 0:
             raise ValueError("Reference embeddings must contain at least one sample.")
 
     def __call__(self, sequences: list[str]) -> MetricResult:
@@ -63,27 +55,25 @@ class Authenticity(Metric):
         if len(sequences) == 0:
             raise ValueError("Sequences must contain at least one sample.")
 
-        if self.strict and len(sequences) != self.reference_embeddings.shape[0]:
+        if self.strict and len(sequences) != self.train_set_embeddings.shape[0]:
             raise ValueError(
-                f"Number of sequences ({len(sequences)}) must match the number of reference sequences ({self.reference_embeddings.shape[0]}). Set `strict=False` to disable this check."
+                f"Number of sequences ({len(sequences)}) must match the number of sequences in the training set ({self.train_set_embeddings.shape[0]}). Set `strict=False` to disable this check."
             )
 
-        generated_embeddings = self.embedder(sequences)
+        embeddings = self.embedder(sequences)
 
-        mmd_score = compute_authenticity(
-            real_data=self.reference_embeddings,
-            synthetic_data=generated_embeddings,
+        auth_score = compute_authenticity(
+            real_data=self.train_set_embeddings,
+            synthetic_data=embeddings,
         )
 
-        return MetricResult(value=mmd_score)
+        return MetricResult(value=auth_score)
 
     @property
     def name(self) -> str:
         name = "Authenticity"
         if self.embedder_name:
             name += f"@{self.embedder_name}"
-        if self.reference_name:
-            name += f" ({self.reference_name})"
         return name
 
     @property
@@ -93,46 +83,33 @@ class Authenticity(Metric):
 
 def compute_authenticity(real_data: np.ndarray, synthetic_data: np.ndarray) -> float:
     """
-    Computes the authenticity metric:
-    Fraction of cases where the nearest neighbor distance among real data
-    (excluding self) at the closest synthetic neighbor's index is less than
-    the distance from each real point to its closest synthetic point.
+    Computes the authenticity metric, defined as one minus the fraction of synthetic samples closer to training data than any other training sample.
 
     Args:
-        real_data (np.ndarray or torch.Tensor): [num_real, dim] real data points.
-        synthetic_data (np.ndarray or torch.Tensor): [num_synth, dim] synthetic data points.
+        real_data: Embeddings of the real data.
+        synthetic_data: Embeddings of the synthetic data.
 
     Returns:
-        float: authenticity score in [0, 1].
+        Authenticity score in [0, 1].
 
     """
+    knn_real = NearestNeighbors(n_neighbors=1, n_jobs=-1).fit(real_data)
 
-    # Compute distances from each real point to its nearest neighbor in real data (excluding self)
-    nbrs_real = NearestNeighbors(n_neighbors=2, n_jobs=-1, p=2).fit(real_data)
-    real_to_real, _ = nbrs_real.kneighbors(real_data)
-    real_to_real = real_to_real[:, 1]  # exclude self
+    dist_synth_to_real, closest_real_per_synth_idx = knn_real.kneighbors(synthetic_data)
+    dist_real_to_real, _ = knn_real.kneighbors()
 
-    # Compute distances from each real point to its closest synthetic point
-    nbrs_synth = NearestNeighbors(n_neighbors=1, n_jobs=-1, p=2).fit(synthetic_data)
-    real_to_synth, real_to_synth_args = nbrs_synth.kneighbors(real_data)
-    real_to_synth = real_to_synth.squeeze()
-    real_to_synth_args = real_to_synth_args.squeeze()
-
-    # Authenticity computation
-    authen = real_to_real[real_to_synth_args] < real_to_synth
-    authenticity = np.mean(authen)
+    auth_mask = dist_synth_to_real > dist_real_to_real[closest_real_per_synth_idx.squeeze(axis=-1)]
+    authenticity = np.mean(auth_mask)
 
     return authenticity
 
 
-class AuthPCT(Authenticity):
+class AuthPct(Authenticity):
     """
-    Authenticity: Proportion of authentic gen samples
+    Authenticity: Proportion of authentic generated samples.
 
     Reference:
-        Adlam, Ben, Charles Weill, and Amol Kapoor.
-        "Investigating under and overfitting in wasserstein generative adversarial networks." (2019).
-        (https://arxiv.org/pdf/1910.14137)
+        Alaa et al., "How Faithful is your Synthetic Data? Sample-level Metrics for Evaluating and Auditing Generative Models." (2022). (https://arxiv.org/pdf/1910.14137)
     """
 
     pass

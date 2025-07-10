@@ -32,8 +32,7 @@ class FrechetInceptionDistance(Metric):
 
         Args:
             reference: A list of reference sequences (e.g., real data).
-            embedder: A function that maps a list of sequences to a 2D NumPy array
-                of embeddings.
+            embedder: A function that maps a list of sequences to a 2D NumPy array of embeddings.
             reference_name: Optional name for the reference dataset.
             embedder_name: Optional name for the embedder used.
 
