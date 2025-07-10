@@ -126,7 +126,7 @@ def mmd(
         device: The device to run the computations on, either "cpu" or "cuda".
 
     Returns:
-      The MMD distance between x and y embedding sets.
+        The MMD distance between x and y embedding sets.
     """
 
     x_tensor = torch.from_numpy(x).to(device, dtype=torch.float)
