@@ -49,3 +49,7 @@ def embedder(seqs: list[str]) -> np.ndarray:
     n_ks = [seq.count("K") for seq in seqs]
     zeros = [0] * len(seqs)
     return np.array(list(zip(n_ks, zeros, strict=True)))
+
+
+if __name__ == "__main__":
+    unittest.main()
