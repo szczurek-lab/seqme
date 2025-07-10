@@ -206,8 +206,9 @@ def plot_violin(
 
 def plot_pca(
     embeddings: list[np.ndarray],
-    names: list[str],
-    colors: list[str],
+    names: list[str] | None = None,
+    colors: list[str] | None = None,
+    property_values: np.ndarray | None = None,
     title: str | None = None,
     ax: Axes | None = None,
     figsize: tuple[int, int] = (4, 3),
@@ -222,6 +223,7 @@ def plot_pca(
         embeddings: List of arrays, each containing vectors to embed.
         names: Labels corresponding to each set in data.
         colors: Colors for each group of points.
+        property_values: Continuous values to color points by (for a single group).
         title: Optional plot title.
         ax: Optional matplotlib Axes to plot on.
         figsize: Size of the figure (if no Axes provided).
@@ -243,6 +245,7 @@ def plot_pca(
         segments,
         names,
         colors,
+        property_values=property_values,
         xlabel="PC 1",
         ylabel="PC 2",
         title=title,
@@ -256,8 +259,9 @@ def plot_pca(
 
 def plot_tsne(
     embeddings: list[np.ndarray],
-    names: list[str],
-    colors: list[str],
+    names: list[str] | None = None,
+    colors: list[str] | None = None,
+    property_values: np.ndarray | None = None,
     title: str | None = None,
     ax: Axes | None = None,
     figsize: tuple[int, int] = (4, 3),
@@ -272,6 +276,7 @@ def plot_tsne(
         embeddings: List of arrays, each containing vectors to embed.
         names: Labels corresponding to each set in data.
         colors: Colors for each group of points.
+        property_values: Continuous values to color points by (for a single group).
         title: Optional plot title.
         ax: Optional matplotlib Axes to plot on.
         figsize: Size of the figure (if no Axes provided).
@@ -293,6 +298,7 @@ def plot_tsne(
         segments,
         names,
         colors,
+        property_values,
         xlabel="t-SNE 1",
         ylabel="t-SNE 2",
         title=title,
@@ -306,8 +312,9 @@ def plot_tsne(
 
 def plot_umap(
     embeddings: list[np.ndarray],
-    names: list[str],
-    colors: list[str],
+    names: list[str] | None = None,
+    colors: list[str] | None = None,
+    property_values: np.ndarray | None = None,
     title: str | None = None,
     ax: Axes | None = None,
     figsize: tuple[int, int] = (4, 3),
@@ -322,6 +329,7 @@ def plot_umap(
         embeddings: List of arrays, each containing vectors to embed.
         names: Labels corresponding to each set in data.
         colors: Colors for each group of points.
+        property_values: Continuous values to color points by (for a single group).
         title: Optional plot title.
         ax: Optional matplotlib Axes to plot on.
         figsize: Size of the figure (if no Axes provided).
@@ -342,6 +350,7 @@ def plot_umap(
         segments,
         names,
         colors,
+        property_values,
         xlabel="UMAP 1",
         ylabel="UMAP 2",
         title=title,
@@ -374,6 +383,7 @@ def _plot_reduction(
     segments: list[np.ndarray],
     names: list[str],
     colors: list[str],
+    property_values: np.ndarray,
     xlabel: str,
     ylabel: str,
     title: str | None,
@@ -381,23 +391,44 @@ def _plot_reduction(
     point_size: int,
     alpha: float,
 ):
-    if len(names) != len(segments) or len(colors) != len(segments):
-        raise ValueError("`names` and `colors` must match number of groups.")
+    if property_values is not None:
+        if (names is not None) or (colors is not None):
+            raise ValueError("`names` and `colors` must be None when `property_values` is not None.")
 
-    for seg, name, color in zip(segments, names, colors, strict=False):
-        ax.scatter(
-            seg[:, 0],
-            seg[:, 1],
-            label=name,
-            c=color,
+        if len(segments) != 1:
+            raise ValueError("Property coloring is only supported for a single segment")
+
+        sc = ax.scatter(
+            segments[0][:, 0],
+            segments[0][:, 1],
+            label=None,
+            c=property_values,
             s=point_size,
             alpha=alpha,
             edgecolor="black",
             linewidth=0.4,
         )
+        ax.figure.colorbar(sc, ax=ax)
+    else:
+        for i, seg in enumerate(segments):
+            color = colors[i] if colors is not None else None
+            name = names[i] if names is not None else None
+            ax.scatter(
+                seg[:, 0],
+                seg[:, 1],
+                label=name,
+                c=color,
+                s=point_size,
+                alpha=alpha,
+                edgecolor="black",
+                linewidth=0.4,
+            )
+        if names is not None:
+            ax.legend(frameon=True)
+
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
-    ax.legend(frameon=True)
+
     ax.set_xticks([])
     ax.set_yticks([])
     ax.set_axisbelow(True)
