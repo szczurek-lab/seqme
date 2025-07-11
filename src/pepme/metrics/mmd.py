@@ -24,7 +24,6 @@ class MaximumMeanDiscrepancy(Metric):
         sigma: float = 10,
         scale: float = 1000,
         device: str = "cpu",
-        strict: bool = True,
         reference_name: str | None = None,
         embedder_name: str | None = None,
     ):
@@ -38,16 +37,12 @@ class MaximumMeanDiscrepancy(Metric):
             sigma: Bandwidth parameter for the Gaussian RBF kernel. Default is 10.
             scale: Scaling factor for the MMD score. Default is 1000.
             device: Device to run the computations on. Default is "cpu".
-            strict: If True, the number of sequences must match the number of
-                reference sequences. If False, the number of sequences can vary.
-                Default is True.
             reference_name: Optional name for the reference dataset.
             embedder_name: Optional name for the embedder used.
         """
         self.reference = reference
         self.embedder = embedder
         self.device = device
-        self.strict = strict
         self.sigma = sigma
         self.scale = scale
         self.reference_name = reference_name
@@ -71,11 +66,6 @@ class MaximumMeanDiscrepancy(Metric):
 
         if len(sequences) == 0:
             raise ValueError("Sequences must contain at least one sample.")
-
-        if self.strict and len(sequences) != self.reference_embeddings.shape[0]:
-            raise ValueError(
-                f"Number of sequences ({len(sequences)}) must match the number of reference sequences ({self.reference_embeddings.shape[0]}). Set `strict=False` to disable this check."
-            )
 
         generated_embeddings = self.embedder(sequences)
 
