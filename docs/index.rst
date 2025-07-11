@@ -1,6 +1,6 @@
 pepme
 =====
-**pepme** is a tiny, modular and open-source Python library containing model-agnostic metrics for evaluating peptides.
+**pepme** is a modular and highly extendable python library containing model-agnostic metrics for evaluating peptides.
 
 
 Quick start
@@ -11,8 +11,8 @@ Let's compute a few metrics on example sequences.
 .. code-block:: python
 
     from pepme import compute_metrics, show_table, FeatureCache
-    from pepme.metrics import Uniqueness, Novelty, FID
-    from pepme.models.embeddings import ESM2
+    from pepme.metrics import Uniqueness, Novelty, FBD
+    from pepme.models.embeddings import Esm2
 
     sequences = {
         "Random": ["MKQW", "RKSPL"],
@@ -21,13 +21,13 @@ Let's compute a few metrics on example sequences.
     }
 
     cache = FeatureCache(
-        models={"esm2": ESM2(model_name="esm2_t6_8M_UR50D", batch_size=256, device="cpu")}
+        models={"esm2": Esm2(model_name="facebook/esm2_t6_8M_UR50D", batch_size=256, device="cpu")}
     )
 
     metrics = [
         Uniqueness(),
         Novelty(reference=sequences["UniProt"], reference_name="UniProt"),
-        FID(reference=sequences["Random"], embedder=cache.model("esm2")),
+        FBD(reference=sequences["Random"], embedder=cache.model("esm2")),
     ]
 
     df = compute_metrics(sequences, metrics)

@@ -1,46 +1,43 @@
-import unittest
-
 import numpy as np
+import pytest
 
 from pepme.metrics import Diversity
 
 
-class TestDiversity(unittest.TestCase):
-    def test_compute_metric(self):
-        reference = ["AAA", "BBBB", "CCCCC"]
-        metric = Diversity(reference=reference, reference_name="Random")
+def test_compute_metric():
+    reference = ["AAA", "BBBB", "CCCCC"]
+    metric = Diversity(reference=reference, reference_name="Random")
 
-        # Name and objective properties
-        self.assertEqual(metric.name, "Diversity (Random)")
-        self.assertEqual(metric.objective, "maximize")
+    # Name and objective
+    assert metric.name == "Diversity (Random)"
+    assert metric.objective == "maximize"
 
-        result = metric(["AA", "BB", "CCCCD"])
+    # Compute on a sample set
+    result = metric(["AA", "BB", "CCCCD"])
 
-        minimum_distances = np.array([1, 2, 1])
+    # Manually compute expected min-distances
+    minimum_distances = np.array([1, 2, 1])
 
-        self.assertAlmostEqual(result.value, minimum_distances.mean())
-        self.assertAlmostEqual(result.deviation, minimum_distances.std())
-
-    def test_single_sequence(self):
-        reference = ["AAA", "BBBB", "CCCCC"]
-        metric = Diversity(reference=reference, reference_name="Random2")
-
-        # Name and objective properties
-        self.assertEqual(metric.name, "Diversity (Random2)")
-        self.assertEqual(metric.objective, "maximize")
-
-        result = metric(["AAA"])
-
-        self.assertAlmostEqual(result.value, 0.0)
-        self.assertAlmostEqual(result.deviation, 0.0)
-
-    def test_empty_reference(self):
-        with self.assertRaises(Exception) as context:
-            Diversity(reference=[])
-            self.assertTrue(
-                "References must contain at least one sample." in context.exception,
-            )
+    # Compare value and deviation
+    assert result.value == pytest.approx(minimum_distances.mean())
+    assert result.deviation == pytest.approx(minimum_distances.std())
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_single_sequence():
+    reference = ["AAA", "BBBB", "CCCCC"]
+    metric = Diversity(reference=reference, reference_name="Random2")
+
+    # Name and objective
+    assert metric.name == "Diversity (Random2)"
+    assert metric.objective == "maximize"
+
+    # Only one input sequence → zero diversity
+    result = metric(["AAA"])
+    assert result.value == pytest.approx(0.0)
+    assert result.deviation == pytest.approx(0.0)
+
+
+def test_empty_reference_raises():
+    # Must provide at least one reference sequence
+    with pytest.raises(Exception, match=r"References must contain at least one sample\."):
+        Diversity(reference=[])

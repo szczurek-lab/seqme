@@ -23,7 +23,7 @@ class MaximumMeanDiscrepancy(Metric):
         embedder: Callable[[list[str]], np.ndarray],
         sigma: float = 10,
         scale: float = 1000,
-        device: Literal["cpu", "cuda"] = "cpu",
+        device: str = "cpu",
         strict: bool = True,
         reference_name: str | None = None,
         embedder_name: str | None = None,
@@ -108,7 +108,7 @@ def mmd(
     y: np.ndarray,
     sigma: float,
     scale: float,
-    device: Literal["cpu", "cuda"],
+    device: str,
 ) -> float:
     """MMD implementation.
 
@@ -123,7 +123,7 @@ def mmd(
         y: The second set of embeddings of shape (n, embedding_dim).
         sigma: The bandwidth parameter for the Gaussian RBF kernel.
         scale: The scaling factor for the MMD score.
-        device: The device to run the computations on, either "cpu" or "cuda".
+        device: The device to run the computations on.
 
     Returns:
         The MMD distance between x and y embedding sets.

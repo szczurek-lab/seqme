@@ -7,9 +7,9 @@ from scipy.linalg import sqrtm
 from pepme.core import Metric, MetricResult
 
 
-class FrechetInceptionDistance(Metric):
+class FrechetBiologicalDistance(Metric):
     """
-    Computes the Fréchet Inception Distance (FID) between a set of generated
+    Computes the Fréchet Biological Distance (FBD) between a set of generated
     sequences and a reference dataset based on their embeddings.
 
     This metric estimates how similar the distributions of two sets of embeddings
@@ -28,7 +28,7 @@ class FrechetInceptionDistance(Metric):
         embedder_name: str | None = None,
     ):
         """
-        Initializes the FID metric with a reference dataset and an embedding function.
+        Initializes the FBD metric with a reference dataset and an embedding function.
 
         Args:
             reference: A list of reference sequences (e.g., real data).
@@ -51,21 +51,21 @@ class FrechetInceptionDistance(Metric):
 
     def __call__(self, sequences: list[str]) -> MetricResult:
         """
-        Computes the FID between the reference and the input sequences.
+        Computes the FBD between the reference and the input sequences.
 
         Args:
             sequences: A list of generated sequences to evaluate.
 
         Returns:
-            MetricResult containing the FID score. Lower is better.
+            MetricResult containing the FBD score. Lower is better.
         """
         seq_embeddings = self.embedder(sequences)
-        fid = wasserstein_distance(seq_embeddings, self.reference_embeddings)
-        return MetricResult(fid)
+        dist = wasserstein_distance(seq_embeddings, self.reference_embeddings)
+        return MetricResult(dist)
 
     @property
     def name(self) -> str:
-        name = "FID"
+        name = "FBD"
         if self.embedder_name:
             name += f"@{self.embedder_name}"
         if self.reference_name:
@@ -113,9 +113,9 @@ def wasserstein_distance(e1: np.ndarray, e2: np.ndarray) -> float:
     return dist
 
 
-class FID(FrechetInceptionDistance):
+class FBD(FrechetBiologicalDistance):
     """
-    Computes the Fréchet Inception Distance (FID) between a set of generated
+    Computes the Fréchet Biological Distance (FBD) between a set of generated
     sequences and a reference dataset based on their embeddings.
 
     This metric estimates how similar the distributions of two sets of embeddings

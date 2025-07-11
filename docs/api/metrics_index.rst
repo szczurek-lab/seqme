@@ -22,10 +22,11 @@ Embedding-based
     :toctree:
     :nosignatures:
 
-    pepme.metrics.FID
+    pepme.metrics.FBD
     pepme.metrics.MMD
     pepme.metrics.Precision
     pepme.metrics.Recall
+    pepme.metrics.AuthPct
 
 Property-based
 --------------

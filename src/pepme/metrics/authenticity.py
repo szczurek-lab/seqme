@@ -9,7 +9,7 @@ from pepme.core import Metric, MetricResult
 
 class Authenticity(Metric):
     """
-    Authenticity: Proportion of authentic generated samples.
+    Proportion of authentic generated samples.
 
     Reference:
         Alaa et al., "How Faithful is your Synthetic Data? Sample-level Metrics for Evaluating and Auditing Generative Models." (2022). (https://arxiv.org/pdf/1910.14137)
@@ -106,7 +106,7 @@ def compute_authenticity(real_data: np.ndarray, synthetic_data: np.ndarray) -> f
 
 class AuthPct(Authenticity):
     """
-    Authenticity: Proportion of authentic generated samples.
+    Proportion of authentic generated samples.
 
     Reference:
         Alaa et al., "How Faithful is your Synthetic Data? Sample-level Metrics for Evaluating and Auditing Generative Models." (2022). (https://arxiv.org/pdf/1910.14137)

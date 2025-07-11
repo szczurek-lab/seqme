@@ -8,7 +8,7 @@ Embeddings
     :toctree:
     :nosignatures:
 
-    pepme.models.embeddings.ESM2
+    pepme.models.embeddings.Esm2
     pepme.models.embeddings.KmerFrequencyEmbedding
     pepme.models.embeddings.PropertyEmbedding
 

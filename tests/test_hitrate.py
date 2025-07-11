@@ -1,27 +1,20 @@
-import unittest
-
 import numpy as np
 
 from pepme.metrics import HitRate
 from pepme.models.properties import Charge, Gravy
 
 
-class TestHitRate(unittest.TestCase):
-    def test_hitrate(self):
-        def condition_fn(sequences: list[str]) -> np.ndarray:
-            charges = Charge()(sequences)
-            gravys = Gravy()(sequences)
-            return (charges > 2.0) & (charges < 3.0) & (gravys > -1.0) & (gravys < 0.0)
+def test_hitrate():
+    def condition_fn(sequences: list[str]) -> np.ndarray:
+        charges = Charge()(sequences)
+        gravys = Gravy()(sequences)
+        return (charges > 2.0) & (charges < 3.0) & (gravys > -1.0) & (gravys < 0.0)
 
-        metric = HitRate(condition_fn=condition_fn)
+    metric = HitRate(condition_fn=condition_fn)
 
-        # Name and objective properties
-        self.assertEqual(metric.name, "Hit-rate")
-        self.assertEqual(metric.objective, "maximize")
+    # Name and objective properties
+    assert metric.name == "Hit-rate"
+    assert metric.objective == "maximize"
 
-        result = metric(["KKKPVAAA", "KARA"])
-        self.assertEqual(result.value, 0.5)
-
-
-if __name__ == "__main__":
-    unittest.main()
+    result = metric(["KKKPVAAA", "KARA"])
+    assert result.value == 0.5

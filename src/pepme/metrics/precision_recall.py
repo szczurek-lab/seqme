@@ -26,7 +26,7 @@ class Precision(Metric):
         reference_quantile: float | None = None,
         row_batch_size: int = 10_000,
         col_batch_size: int = 10_000,
-        device: Literal["cpu", "cuda"] = "cpu",
+        device: str = "cpu",
         strict: bool = True,
     ):
         """
@@ -42,7 +42,7 @@ class Precision(Metric):
             reference_quantile: Quantile cutoff for reference radii (defaults to using all).
             row_batch_size: Number of samples per batch when computing distances by rows.
             col_batch_size: Number of samples per batch when computing distances by columns.
-            device: Compute device, "cpu" or "cuda".
+            device: Compute device, e.g., "cpu" or "cuda".
             strict: Enforce equal number of eval and reference samples if True.
         """
         self.neighborhood_size = neighborhood_size
@@ -129,7 +129,7 @@ class Recall(Metric):
         reference_quantile: float | None = None,
         row_batch_size: int = 10_000,
         col_batch_size: int = 10_000,
-        device: Literal["cpu", "cuda"] = "cpu",
+        device: str = "cpu",
         strict: bool = True,
     ):
         """Initialize the metric.
@@ -144,7 +144,7 @@ class Recall(Metric):
             reference_quantile: Quantile cutoff for reference radii (defaults to using all).
             row_batch_size: Number of samples per batch when computing distances by rows.
             col_batch_size: Number of samples per batch when computing distances by columns.
-            device: Compute device, "cpu" or "cuda".
+            device: Compute device, e.g., "cpu" or "cuda".
             strict: Enforce equal number of eval and reference samples if True.
         """
         self.neighborhood_size = neighborhood_size
@@ -217,7 +217,7 @@ def compute_recall(
     neighborhood_size: int,
     row_batch_size: int,
     col_batch_size: int,
-    device: Literal["cpu", "cuda"],
+    device: str,
     clamp_to_quantile: float | None = None,
 ) -> float:
     """Evaluate recall: fraction of reference manifold covered by eval embeddings.
@@ -228,7 +228,7 @@ def compute_recall(
         neighborhood_size: Number of neighbors (k) in k-NN.
         row_batch_size: Batch size for eval points when computing distances.
         col_batch_size: Batch size for reference points when computing distances.
-        device: Compute device, "cpu" or "cuda".
+        device: Compute device, e.g., "cpu" or "cuda".
         clamp_to_quantile: Quantile cutoff for local radii in reference manifold.
 
     Returns:
@@ -251,7 +251,7 @@ def compute_precision(
     neighborhood_size: int,
     row_batch_size: int,
     col_batch_size: int,
-    device: Literal["cpu", "cuda"],
+    device: str,
     clamp_to_quantile: float | None = None,
 ) -> float:
     """Evaluate precision: fraction of eval points lying in reference manifold.
@@ -262,7 +262,7 @@ def compute_precision(
         neighborhood_size: Number of neighbors (k) in k-NN.
         row_batch_size: Batch size for reference points when computing distances.
         col_batch_size: Batch size for eval points when computing distances.
-        device: Compute device, "cpu" or "cuda".
+        device: Compute device, e.g., "cpu" or "cuda".
         clamp_to_quantile: Quantile cutoff for local radii in reference manifold.
 
     Returns:
@@ -290,7 +290,7 @@ class ManifoldEstimator:
         row_batch_size: int = 10_000,
         col_batch_size: int = 10_000,
         eps: float = 1e-5,
-        device: Literal["cpu", "cuda"] = "cpu",
+        device: str = "cpu",
     ):
         """
         Args:
@@ -300,7 +300,7 @@ class ManifoldEstimator:
             row_batch_size: Batch size for rows in distance calc.
             col_batch_size: Batch size for cols in distance calc.
             eps: Small constant to avoid division by zero in realism.
-            device: Compute device, "cpu" or "cuda".
+            device: Compute device, e.g., "cpu" or "cuda".
         """
         self.neighborhood_size = neighborhood_size
         self.eps = eps
