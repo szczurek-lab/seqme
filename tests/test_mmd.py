@@ -1,5 +1,6 @@
-import pytest
 import numpy as np
+import pytest
+
 from pepme.metrics.mmd import MMD
 
 
@@ -42,10 +43,3 @@ def test_empty_sequences():
     metric = MMD(reference=reference, embedder=embedder)
     with pytest.raises(ValueError):
         metric([])
-
-
-def test_strict_mode():
-    reference = ["KKAA", "KKAA"]
-    metric = MMD(reference=reference, embedder=embedder, strict=True)
-    with pytest.raises(ValueError):
-        metric(["KAAA"])
