@@ -8,7 +8,7 @@ def biased_model(model, offset: float):
     return lambda seqs: model(seqs) + offset
 
 
-def test_ensemble_weighted():
+def test_ensemble_equal():
     sequences = ["KKK", "KKKK", "KKKKK"]
 
     ensemble = Ensemble([Charge(), biased_model(Charge(), offset=1)])
