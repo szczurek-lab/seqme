@@ -19,7 +19,7 @@ dependencies = [
     "torch>=2.0",
     "tqdm>=4.67.1",
     "transformers>=4.53.0",
-    "scikit-learn>=1.7.0",
+    "scikit-learn<1.7.0",
     "umap-learn>=0.5.9.post2",
     "pandoc>=2.4",
     "modlamp>=4.3.2",
