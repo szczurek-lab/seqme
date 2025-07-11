@@ -35,5 +35,6 @@ Miscellaneous
     :nosignatures:
 
     pepme.models.third_party.ThirdPartyModel
+    pepme.models.properties.Ensemble
     pepme.models.normalizers.MinMaxNorm
 
