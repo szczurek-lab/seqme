@@ -1,168 +1,177 @@
-import unittest
-
 import numpy as np
+import pytest
 
 from pepme.metrics import Precision, Recall
 
 
-class TestPrecisionRecall(unittest.TestCase):
-    def test_basic_precision(self):
-        reference = ["A" * 15, "A" * 17]
-        metric = Precision(
-            reference=reference,
-            embedder=length_mock_embedder,
-            neighborhood_size=1,
-            row_batch_size=1,
-            col_batch_size=1,
-            embedder_name="MyEmbedder",
-            reference_name="MyReference",
-        )
+def test_basic_precision():
+    reference = ["A" * 15, "A" * 17]
+    metric = Precision(
+        reference=reference,
+        embedder=length_mock_embedder,
+        neighborhood_size=1,
+        row_batch_size=1,
+        col_batch_size=1,
+        embedder_name="MyEmbedder",
+        reference_name="MyReference",
+    )
 
-        self.assertEqual(metric.name, "Precision@MyEmbedder (MyReference)")
-        self.assertEqual(metric.objective, "maximize")
+    assert metric.name == "Precision@MyEmbedder (MyReference)"
+    assert metric.objective == "maximize"
 
-        result = metric(["A" * 2, "A" * 16])
-        self.assertEqual(result.value, 0.5)
+    result = metric(["A" * 2, "A" * 16])
+    assert result.value == 0.5
 
-    def test_basic_recall(self):
-        reference = ["A" * 15, "A" * 17]
-        metric = Recall(
-            reference=reference,
-            embedder=length_mock_embedder,
-            neighborhood_size=1,
-            row_batch_size=1,
-            col_batch_size=1,
-            embedder_name="MyEmbedder",
-            reference_name="MyReference",
-        )
 
-        self.assertEqual(metric.name, "Recall@MyEmbedder (MyReference)")
-        self.assertEqual(metric.objective, "maximize")
+def test_basic_recall():
+    reference = ["A" * 15, "A" * 17]
+    metric = Recall(
+        reference=reference,
+        embedder=length_mock_embedder,
+        neighborhood_size=1,
+        row_batch_size=1,
+        col_batch_size=1,
+        embedder_name="MyEmbedder",
+        reference_name="MyReference",
+    )
 
-        result = metric(["A" * 2, "A" * 16])
-        self.assertEqual(result.value, 1.0)
+    assert metric.name == "Recall@MyEmbedder (MyReference)"
+    assert metric.objective == "maximize"
 
-    def test_precision_with_percentile(self):
-        reference = ["A" * 15, "A" * 17, "A" * 1]
-        metric = Precision(
-            reference=reference,
-            embedder=length_mock_embedder,
-            neighborhood_size=1,
-            row_batch_size=1,
-            col_batch_size=1,
-            reference_quantile=0.6,
-            strict=False,
-        )
+    result = metric(["A" * 2, "A" * 16])
+    assert result.value == 1.0
 
-        self.assertEqual(metric.name, "Precision")
-        self.assertEqual(metric.objective, "maximize")
 
-        result = metric(["A" * 2, "A" * 16])
-        self.assertEqual(result.value, 0.5)
+def test_precision_with_percentile():
+    reference = ["A" * 15, "A" * 17, "A" * 1]
+    metric = Precision(
+        reference=reference,
+        embedder=length_mock_embedder,
+        neighborhood_size=1,
+        row_batch_size=1,
+        col_batch_size=1,
+        reference_quantile=0.6,
+        strict=False,
+    )
 
-    def test_precision_with_larger_neighborhood(self):
-        reference = ["A" * 15, "A" * 17, "A" * 1]
-        metric = Precision(
-            reference=reference,
-            embedder=length_mock_embedder,
-            neighborhood_size=2,
-            row_batch_size=1,
-            col_batch_size=1,
-            reference_quantile=None,
-            strict=False,
-        )
+    assert metric.name == "Precision"
+    assert metric.objective == "maximize"
 
-        self.assertEqual(metric.name, "Precision")
-        self.assertEqual(metric.objective, "maximize")
+    result = metric(["A" * 2, "A" * 16])
+    assert result.value == 0.5
 
-        result = metric(["A" * 33, "A" * 34])
-        self.assertEqual(result.value, 0.5)
 
-    def test_identical_sequences_precision(self):
-        reference = ["KKAA", "KKAA", "KKKA", "KKAK"]
-        metric = Precision(
-            neighborhood_size=3,
-            reference=reference,
-            embedder=mock_embedder,
-        )
+def test_precision_with_larger_neighborhood():
+    reference = ["A" * 15, "A" * 17, "A" * 1]
+    metric = Precision(
+        reference=reference,
+        embedder=length_mock_embedder,
+        neighborhood_size=2,
+        row_batch_size=1,
+        col_batch_size=1,
+        reference_quantile=None,
+        strict=False,
+    )
 
-        result = metric(sequences=reference)
-        self.assertEqual(result.value, 1.0)
+    assert metric.name == "Precision"
+    assert metric.objective == "maximize"
 
-    def test_identical_sequences_recall(self):
-        reference = ["KKAA", "KKAA", "KKKA", "KKAK"]
-        metric = Recall(
-            neighborhood_size=3,
-            reference=reference,
-            embedder=mock_embedder,
-        )
+    result = metric(["A" * 33, "A" * 34])
+    assert result.value == 0.5
 
-        result = metric(sequences=reference)
-        self.assertEqual(result.value, 1.0)
 
-    def test_empty_reference(self):
-        reference = []
-        with self.assertRaises(ValueError):
-            metric = Precision(
-                neighborhood_size=1,
-                reference=reference,
-                embedder=mock_embedder,
-            )
-            metric(sequences=["KKAA", "KKAA"])
+def test_identical_sequences_precision():
+    reference = ["KKAA", "KKAA", "KKKA", "KKAK"]
+    metric = Precision(
+        neighborhood_size=3,
+        reference=reference,
+        embedder=mock_embedder,
+    )
 
-    def test_empty_sequences(self):
-        reference = ["KKAA", "KKAA"]
+    result = metric(sequences=reference)
+    assert result.value == 1.0
+
+
+def test_identical_sequences_recall():
+    reference = ["KKAA", "KKAA", "KKKA", "KKAK"]
+    metric = Recall(
+        neighborhood_size=3,
+        reference=reference,
+        embedder=mock_embedder,
+    )
+
+    result = metric(sequences=reference)
+    assert result.value == 1.0
+
+
+def test_empty_reference():
+    reference = []
+    with pytest.raises(ValueError):
         metric = Precision(
             neighborhood_size=1,
             reference=reference,
             embedder=mock_embedder,
         )
+        metric(sequences=["KKAA", "KKAA"])
 
-        with self.assertRaises(ValueError):
-            metric(sequences=[])
 
-    def test_precision_recall(self):
-        reference = [
-            "LVFEKKLKKTLR",
-            "MSQTLLPLYAANHVTKFEMYQSSGYR",
-            "VKKEAKKKLEERL",
-            "GLPVIRGKCITKKGLKI",
-            "VRSKKILEFGAKLSVRYLETVATGWKRT",
-            "MFHALPAAAACQRHI",
-            "TGVALSADNLFELAEKDKIIKEI",
-            "FLTILLLGAVNSV",
-            "HGALIFRRRLPKIAWGGKKFF",
-            "MVELVRLEHTRKQMIHLSGFTLFCMAQINKYT",
-        ]
-        sequences = [
-            "MLWKRRSEIILKGGARSSKILLEGAAQTK",
-            "QSLLLPDDAAKVV",
-            "LRAKRIFDIFLV",
-            "MYCLRIIKIGGVGSSKQLLCLDAIAVVIVIES",
-            "MLTLDRLFVINKEGIYCSDCRLFHIAPI",
-            "MIQCHDLVKSARRLVT",
-            "KFTFELMKVANVRKKIIHDC",
-            "RPCKIWKKLSCL",
-            "WRCEVILKKWWRLQN",
-            "ITYAGMAVFSTPLPEMAAYTVKIPELID",
-        ]
-        metric_precision = Precision(
-            reference=reference,
-            embedder=aa_embedder,
-            neighborhood_size=1,
-        )
+def test_empty_sequences():
+    reference = ["KKAA", "KKAA"]
+    metric = Precision(
+        neighborhood_size=1,
+        reference=reference,
+        embedder=mock_embedder,
+    )
 
-        metric_recall = Recall(
-            reference=reference,
-            embedder=aa_embedder,
-            neighborhood_size=1,
-        )
+    with pytest.raises(ValueError):
+        metric(sequences=[])
 
-        precision = metric_precision(sequences=sequences)
-        recall = metric_recall(sequences=sequences)
 
-        self.assertEqual(precision.value, 0.7)
-        self.assertEqual(recall.value, 0.8)
+def test_precision_recall():
+    reference = [
+        "LVFEKKLKKTLR",
+        "MSQTLLPLYAANHVTKFEMYQSSGYR",
+        "VKKEAKKKLEERL",
+        "GLPVIRGKCITKKGLKI",
+        "VRSKKILEFGAKLSVRYLETVATGWKRT",
+        "MFHALPAAAACQRHI",
+        "TGVALSADNLFELAEKDKIIKEI",
+        "FLTILLLGAVNSV",
+        "HGALIFRRRLPKIAWGGKKFF",
+        "MVELVRLEHTRKQMIHLSGFTLFCMAQINKYT",
+    ]
+    sequences = [
+        "MLWKRRSEIILKGGARSSKILLEGAAQTK",
+        "QSLLLPDDAAKVV",
+        "LRAKRIFDIFLV",
+        "MYCLRIIKIGGVGSSKQLLCLDAIAVVIVIES",
+        "MLTLDRLFVINKEGIYCSDCRLFHIAPI",
+        "MIQCHDLVKSARRLVT",
+        "KFTFELMKVANVRKKIIHDC",
+        "RPCKIWKKLSCL",
+        "WRCEVILKKWWRLQN",
+        "ITYAGMAVFSTPLPEMAAYTVKIPELID",
+    ]
+    metric_precision = Precision(
+        reference=reference,
+        embedder=aa_embedder,
+        neighborhood_size=1,
+    )
+
+    metric_recall = Recall(
+        reference=reference,
+        embedder=aa_embedder,
+        neighborhood_size=1,
+    )
+
+    precision = metric_precision(sequences=sequences)
+    recall = metric_recall(sequences=sequences)
+
+    assert precision.value == 0.7
+    assert recall.value == 0.8
+
+
+# -------------------- Embedders --------------------
 
 
 def length_mock_embedder(sequences: list[str]) -> np.ndarray:
@@ -198,18 +207,14 @@ def aa_embedder(seqs: list[str]) -> np.ndarray:
         "V": 17,
         "W": 18,
         "Y": 19,
-        "X": 20,  # unknown
+        "X": 20,
     }
 
     max_len = max(len(seq) for seq in seqs)
     batch_size = len(seqs)
-    arr = np.full((batch_size, max_len), fill_value=21, dtype=np.int32)  # 21 = PAD token
+    arr = np.full((batch_size, max_len), 21, dtype=np.int32)  # 21 = PAD
 
     for i, seq in enumerate(seqs):
         for j, aa in enumerate(seq):
             arr[i, j] = aa_to_int.get(aa.upper(), aa_to_int["X"])
     return arr
-
-
-if __name__ == "__main__":
-    unittest.main()

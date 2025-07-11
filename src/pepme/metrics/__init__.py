@@ -1,7 +1,7 @@
 from pepme.metrics.authenticity import AuthPct
 from pepme.metrics.count import Count
 from pepme.metrics.diversity import Diversity
-from pepme.metrics.fid import FID
+from pepme.metrics.fbd import FBD
 from pepme.metrics.fold import Fold
 from pepme.metrics.hitrate import HitRate
 from pepme.metrics.hypervolume import HV
@@ -16,7 +16,7 @@ __all__ = [
     "AuthPct",
     "Count",
     "Diversity",
-    "FID",
+    "FBD",
     "Fold",
     "HitRate",
     "HV",

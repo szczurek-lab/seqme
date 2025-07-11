@@ -1,41 +1,32 @@
-import unittest
-
 import numpy as np
+import pytest
 
 from pepme.models.embeddings import KmerFrequencyEmbedding
 
 
-class TestJaccardSimilarity(unittest.TestCase):
-    def test_single_sequence_shape(self):
-        sequences = ["AKKAASL"]
+def test_single_sequence_shape():
+    sequences = ["AKKAASL"]
+    kmers = ["AKK", "KKA", "AAS", "ASL", "SLL"]
+    model = KmerFrequencyEmbedding(kmers=kmers)
 
-        kmers = ["AKK", "KKA", "AAS", "ASL", "SLL"]
-        model = KmerFrequencyEmbedding(kmers=kmers)
-
-        embeddings = model(sequences)
-        assert embeddings.shape == (1, 5)
-
-    def test_batch_embedding_shape(self):
-        sequences = ["AKKAASL", "LLKK", "KLVFF"]
-
-        kmers = ["AKK", "KKA", "AAS", "ASL", "SLL"]
-        model = KmerFrequencyEmbedding(kmers=kmers)
-
-        embeddings = model(sequences)
-        assert embeddings.shape == (3, 5)
-
-    def test_known_kmers_counted_correctly(self):
-        sequences = ["AKKAASL"]
-
-        kmers = ["AKK", "KKA", "AAS", "ASL", "SLL"]
-        model = KmerFrequencyEmbedding(kmers=kmers)
-
-        embeddings = model(sequences)
-
-        # AKK → 1, KKA → 1, AAS → 1, ASL → 1, total = 5 → all get 1/5
-        expected_vector = np.array([1 / 5, 1 / 5, 1 / 5, 1 / 5, 0.0]).reshape(1, -1)
-        assert np.allclose(embeddings, expected_vector)
+    embeddings = model(sequences)
+    assert embeddings.shape == (1, 5)
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_batch_embedding_shape():
+    sequences = ["AKKAASL", "LLKK", "KLVFF"]
+    kmers = ["AKK", "KKA", "AAS", "ASL", "SLL"]
+    model = KmerFrequencyEmbedding(kmers=kmers)
+
+    embeddings = model(sequences)
+    assert embeddings.shape == (3, 5)
+
+
+def test_known_kmers_counted_correctly():
+    sequences = ["AKKAASL"]
+    kmers = ["AKK", "KKA", "AAS", "ASL", "SLL"]
+    model = KmerFrequencyEmbedding(kmers=kmers)
+    embeddings = model(sequences)
+    # AKK → 1, KKA → 1, AAS → 1, ASL → 1, SLL → 0; normalized by total 5 occurrences
+    expected_vector = np.array([[1 / 5, 1 / 5, 1 / 5, 1 / 5, 0.0]])
+    assert np.allclose(embeddings, expected_vector)

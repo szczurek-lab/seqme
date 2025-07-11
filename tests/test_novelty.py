@@ -1,31 +1,22 @@
-import unittest
+import pytest
 
 from pepme.metrics import Novelty
 
 
-class TestNovelty(unittest.TestCase):
-    def test_compute_metric(self):
-        # Given a small reference set
-        reference = ["KRQS", "KKPRA", "KKKR"]
-        metric = Novelty(reference=reference, reference_name="Random")
+def test_compute_metric():
+    reference = ["KRQS", "KKPRA", "KKKR"]
+    metric = Novelty(reference=reference, reference_name="Random")
 
-        # Name and objective properties
-        self.assertEqual(metric.name, "Novelty (Random)")
-        self.assertEqual(metric.objective, "maximize")
+    assert metric.name == "Novelty (Random)"
+    assert metric.objective == "maximize"
 
-        # Compute novelty: one seen ("KRQS"), one novel ("KA") => 1/2
-        result = metric(["KRQS", "KA"])
-        self.assertAlmostEqual(result.value, 0.5)
-        # No defined value range
-        self.assertIsNone(result.deviation)
-
-    def test_empty_sequences(self):
-        # When no sequences are provided, novelty should be 0.0
-        metric = Novelty(reference=["A", "B"])
-        result = metric([])
-        self.assertEqual(result.value, 0.0)
-        self.assertIsNone(result.deviation)
+    result = metric(["KRQS", "KA"])  # "KRQS" seen, "KA" novel → 1 novel out of 2
+    assert result.value == pytest.approx(0.5)
+    assert result.deviation is None
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_empty_sequences():
+    metric = Novelty(reference=["A", "B"])
+    result = metric([])
+    assert result.value == 0.0
+    assert result.deviation is None

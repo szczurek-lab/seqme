@@ -1,70 +1,70 @@
-import unittest
+import pytest
 
 from pepme.metrics import Count, Fold
 
 
-class TestFold(unittest.TestCase):
-    def test_k_fold(self):
-        metric = Fold(metric=Count(), k=2)
-        self.assertEqual(metric.name, "Count")
-        self.assertEqual(metric.objective, "maximize")
+def test_k_fold():
+    metric = Fold(metric=Count(), k=2)
+    assert metric.name == "Count"
+    assert metric.objective == "maximize"
 
-        sequences = ["AA", "AAA", "AAAA", "AAA", "AAAAAA"]
-        result = metric(sequences)
-        self.assertEqual(result.value, 2.5)
-        self.assertEqual(result.deviation, 0.5)
-
-    def test_k_larger_than_sequence_count(self):
-        metric = Fold(metric=Count(), k=20)
-        self.assertEqual(metric.name, "Count")
-        self.assertEqual(metric.objective, "maximize")
-
-        sequences = ["AA", "AAA", "AAAA", "AAA", "AAAAAA"]
-
-        with self.assertRaisesRegex(ValueError, "^Cannot split into 20 folds with only 5 sequences.$"):
-            metric(sequences)
-
-    def test_split_size(self):
-        metric = Fold(metric=Count(), split_size=2)
-        self.assertEqual(metric.name, "Count")
-        self.assertEqual(metric.objective, "maximize")
-
-        sequences = ["AA", "AAA", "AAAA", "AAA", "AAAAAA"]
-        result = metric(sequences)
-        self.assertEqual(result.value, 5 / 3)
-        self.assertAlmostEqual(result.deviation, 0.471405, places=6)
-
-    def test_large_split_size(self):
-        metric = Fold(metric=Count(), split_size=20)
-        self.assertEqual(metric.name, "Count")
-        self.assertEqual(metric.objective, "maximize")
-
-        sequences = ["AA", "AAA", "AAAA", "AAA", "AAAAAA"]
-        result = metric(sequences)
-        self.assertEqual(result.value, 5)
-        self.assertEqual(result.deviation, 0)
-
-    def test_large_split_size_drop_last(self):
-        metric = Fold(metric=Count(), split_size=20, drop_last=True)
-        self.assertEqual(metric.name, "Count")
-        self.assertEqual(metric.objective, "maximize")
-
-        sequences = ["AA", "AAA", "AAAA", "AAA", "AAAAAA"]
-        with self.assertRaisesRegex(
-            ValueError, "^With drop_last=True, cannot form any fold of size 20 from 5 sequences.$"
-        ):
-            metric(sequences)
-
-    def test_split_size_drop_last(self):
-        metric = Fold(metric=Count(), split_size=2, drop_last=True)
-        self.assertEqual(metric.name, "Count")
-        self.assertEqual(metric.objective, "maximize")
-
-        sequences = ["AA", "AAA", "AAAA", "AAA", "AAAAAA"]
-        result = metric(sequences)
-        self.assertEqual(result.value, 2)
-        self.assertEqual(result.deviation, 0)
+    sequences = ["AA", "AAA", "AAAA", "AAA", "AAAAAA"]
+    result = metric(sequences)
+    assert result.value == 2.5
+    assert result.deviation == 0.5
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_k_larger_than_sequence_count():
+    metric = Fold(metric=Count(), k=20)
+    assert metric.name == "Count"
+    assert metric.objective == "maximize"
+
+    sequences = ["AA", "AAA", "AAAA", "AAA", "AAAAAA"]
+    with pytest.raises(ValueError, match=r"^Cannot split into 20 folds with only 5 sequences\.$"):
+        metric(sequences)
+
+
+def test_split_size():
+    metric = Fold(metric=Count(), split_size=2)
+    assert metric.name == "Count"
+    assert metric.objective == "maximize"
+
+    sequences = ["AA", "AAA", "AAAA", "AAA", "AAAAAA"]
+    result = metric(sequences)
+    # total count is 5, split into chunks of 2 → [2,2,1] → mean=5/3, std≈0.471405
+    assert result.value == pytest.approx(5 / 3)
+    assert result.deviation == pytest.approx(0.471405, abs=1e-6)
+
+
+def test_large_split_size():
+    metric = Fold(metric=Count(), split_size=20)
+    assert metric.name == "Count"
+    assert metric.objective == "maximize"
+
+    sequences = ["AA", "AAA", "AAAA", "AAA", "AAAAAA"]
+    result = metric(sequences)
+    # split_size > n_seqs → single fold of all sequences
+    assert result.value == 5
+    assert result.deviation == 0
+
+
+def test_large_split_size_drop_last():
+    metric = Fold(metric=Count(), split_size=20, drop_last=True)
+    assert metric.name == "Count"
+    assert metric.objective == "maximize"
+
+    sequences = ["AA", "AAA", "AAAA", "AAA", "AAAAAA"]
+    with pytest.raises(ValueError, match=r"^With drop_last=True, cannot form any fold of size 20 from 5 sequences\.$"):
+        metric(sequences)
+
+
+def test_split_size_drop_last():
+    metric = Fold(metric=Count(), split_size=2, drop_last=True)
+    assert metric.name == "Count"
+    assert metric.objective == "maximize"
+
+    sequences = ["AA", "AAA", "AAAA", "AAA", "AAAAAA"]
+    result = metric(sequences)
+    # drop_last=True, sizes: [2,2] (1 leftover dropped) → mean=2, std=0
+    assert result.value == 2
+    assert result.deviation == 0

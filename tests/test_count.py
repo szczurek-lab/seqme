@@ -1,19 +1,14 @@
-import unittest
-
 from pepme.metrics import Count
 
 
-class TestFold(unittest.TestCase):
-    def test_count(self):
-        metric = Count()
-        self.assertEqual(metric.name, "Count")
-        self.assertEqual(metric.objective, "maximize")
-
-        sequences = ["AAA", "BBBB", "CCCCC"]
-        result = metric(sequences)
-
-        self.assertEqual(result.value, 3)
+def test_count_properties():
+    metric = Count()
+    assert metric.name == "Count"
+    assert metric.objective == "maximize"
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_count_value():
+    metric = Count()
+    sequences = ["AAA", "BBBB", "CCCCC"]
+    result = metric(sequences)
+    assert result.value == 3

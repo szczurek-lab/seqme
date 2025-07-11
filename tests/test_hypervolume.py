@@ -1,6 +1,5 @@
-import unittest
-
 import numpy as np
+import pytest
 
 from pepme.metrics import HV
 
@@ -9,63 +8,60 @@ def p_count_aa(sequences: list[str], aa: str) -> np.ndarray:
     return np.array([sequence.count(aa) for sequence in sequences])
 
 
-class TestHypervolume(unittest.TestCase):
-    def test_standard(self):
-        metric = HV(
-            predictors=[
-                lambda seqs: p_count_aa(seqs, aa="K"),
-                lambda seqs: p_count_aa(seqs, aa="R"),
-            ],
-            method="standard",
-            nadir=np.zeros(2),
-        )
+def test_standard_hv():
+    metric = HV(
+        predictors=[
+            lambda seqs: p_count_aa(seqs, aa="K"),
+            lambda seqs: p_count_aa(seqs, aa="R"),
+        ],
+        method="standard",
+        nadir=np.zeros(2),
+    )
 
-        # Name and objective properties
-        self.assertEqual(metric.name, "HV-2")
-        self.assertEqual(metric.objective, "maximize")
+    # Name and objective properties
+    assert metric.name == "HV-2"
+    assert metric.objective == "maximize"
 
-        result = metric(["KKKK", "RRR", "KKKKRRR"])
-        self.assertAlmostEqual(result.value, 12)
-        self.assertIsNone(result.deviation)
-
-    def test_convex_hull(self):
-        metric = HV(
-            predictors=[
-                lambda seqs: p_count_aa(seqs, aa="K"),
-                lambda seqs: p_count_aa(seqs, aa="R"),
-            ],
-            method="convex-hull",
-            nadir=np.zeros(2),
-        )
-
-        # Name and objective properties
-        self.assertEqual(metric.name, "HV-2 (convex-hull)")
-        self.assertEqual(metric.objective, "maximize")
-
-        result = metric(["KKKK", "RRR"])
-        self.assertAlmostEqual(result.value, 6)
-        self.assertIsNone(result.deviation)
-
-    def test_standard_with_ideal(self):
-        metric = HV(
-            predictors=[
-                lambda seqs: p_count_aa(seqs, aa="K"),
-                lambda seqs: p_count_aa(seqs, aa="R"),
-            ],
-            method="standard",
-            nadir=np.zeros(2),
-            ideal=np.array([10, 10]),
-            include_objective_count_in_name=False,
-        )
-
-        # Name and objective properties
-        self.assertEqual(metric.name, "HV")
-        self.assertEqual(metric.objective, "maximize")
-
-        result = metric(["RRR", "KKKK", "KKKKRRR"])
-        self.assertAlmostEqual(result.value, 0.12)
-        self.assertIsNone(result.deviation)
+    result = metric(["KKKK", "RRR", "KKKKRRR"])
+    assert result.value == pytest.approx(12)
+    assert result.deviation is None
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_convex_hull_hv():
+    metric = HV(
+        predictors=[
+            lambda seqs: p_count_aa(seqs, aa="K"),
+            lambda seqs: p_count_aa(seqs, aa="R"),
+        ],
+        method="convex-hull",
+        nadir=np.zeros(2),
+    )
+
+    # Name and objective properties
+    assert metric.name == "HV-2 (convex-hull)"
+    assert metric.objective == "maximize"
+
+    result = metric(["KKKK", "RRR"])
+    assert result.value == pytest.approx(6)
+    assert result.deviation is None
+
+
+def test_standard_with_ideal_hv():
+    metric = HV(
+        predictors=[
+            lambda seqs: p_count_aa(seqs, aa="K"),
+            lambda seqs: p_count_aa(seqs, aa="R"),
+        ],
+        method="standard",
+        nadir=np.zeros(2),
+        ideal=np.array([10, 10]),
+        include_objective_count_in_name=False,
+    )
+
+    # Name and objective properties
+    assert metric.name == "HV"
+    assert metric.objective == "maximize"
+
+    result = metric(["RRR", "KKKK", "KKKKRRR"])
+    assert result.value == pytest.approx(0.12)
+    assert result.deviation is None

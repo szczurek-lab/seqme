@@ -52,7 +52,7 @@ class KmerJaccardSimilarity(Metric):
             sequences: A list of generated sequences to evaluate.
 
         Returns:
-            MetricResult containing the FID score. Lower is better.
+            MetricResult containing the Jaccard similarity.
         """
         total = len(sequences)
         if total == 0:

@@ -1,40 +1,28 @@
-import unittest
+import pytest
 
 from pepme.metrics import Uniqueness
 
 
-class TestUniqueness(unittest.TestCase):
-    def test_name_and_objective(self):
-        # With a custom name
-        metric = Uniqueness()
-        self.assertEqual(metric.name, "Uniqueness")
-        self.assertEqual(metric.objective, "maximize")
-
-        # Default name
-        default_metric = Uniqueness()
-        self.assertEqual(default_metric.name, "Uniqueness")
-        self.assertEqual(default_metric.objective, "maximize")
-
-    def test_compute_metric(self):
-        metric = Uniqueness()
-
-        # Sequences: ["A","B","A","C"] → 3 unique out of 4 → 0.75
-        result = metric(["A", "B", "A", "C"])
-        self.assertAlmostEqual(result.value, 0.75)
-        self.assertIsNone(result.deviation)
-
-        # All duplicates: ["X","X","X"] → 1 unique out of 3 → ~0.3333
-        result = metric(["X", "X", "X"])
-        self.assertAlmostEqual(result.value, 1 / 3)
-        self.assertIsNone(result.deviation)
-
-    def test_empty_sequences(self):
-        # When no sequences are provided, uniqueness should be 0.0
-        metric = Uniqueness()
-        result = metric([])
-        self.assertEqual(result.value, 0.0)
-        self.assertIsNone(result.deviation)
+def test_name_and_objective():
+    metric = Uniqueness()
+    assert metric.name == "Uniqueness"
+    assert metric.objective == "maximize"
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_compute_metric():
+    metric = Uniqueness()
+
+    result = metric(["A", "B", "A", "C"])
+    assert result.value == 0.75
+    assert result.deviation is None
+
+    result = metric(["X", "X", "X"])
+    assert result.value == pytest.approx(1 / 3)
+    assert result.deviation is None
+
+
+def test_empty_sequences():
+    metric = Uniqueness()
+    result = metric([])
+    assert result.value == 0.0
+    assert result.deviation is None
