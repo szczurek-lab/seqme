@@ -1,3 +1,4 @@
+from pepme.models.properties.ensemble import Ensemble
 from pepme.models.properties.physicochemical import (
     AliphaticIndex,
     Aromaticity,
@@ -11,6 +12,7 @@ from pepme.models.properties.physicochemical import (
 )
 
 __all__ = [
+    "Ensemble",
     "AliphaticIndex",
     "Aromaticity",
     "BomanIndex",
