@@ -55,11 +55,17 @@ All checks are run automatically with [`pre-commit`](#tooling).
 
 Use [`nbstripout`](#tooling) to strip notebook metadata before commiting to repository:
 
-```bash
+```shell
 find . -name '*.ipynb' -exec nbstripout --drop-empty-cells --keep-output {} +
 ```
 
 This command is run automatically with [`pre-commit`](#tooling).
+
+### Building sphinx docs
+```shell
+cd docs
+make clean & make html
+```
 
 ### Tooling
 
