@@ -1,6 +1,6 @@
 # Contributing
 
-Want to add new metrics, models, or other features? This guide will help you get started.
+Want to add new metrics, models, or other features to **pepme**? This guide will help you get started.
 
 ## Installation
 
