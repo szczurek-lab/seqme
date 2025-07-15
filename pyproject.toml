@@ -16,7 +16,6 @@ dependencies = [
     "matplotlib>=3.9.4",
     "numpy>=2.0",
     "pandas>=2.0",
-    "pydantic>=2.11.7",
     "pymoo>=0.6.1.5",
     "scipy>=1.13.1",
     "torch>=2.0",
@@ -24,7 +23,6 @@ dependencies = [
     "transformers>=4.53.0",
     "scikit-learn>=1.7.0",
     "umap-learn>=0.5.9.post2",
-    "pandoc>=2.4",
     "modlamp>=4.3.2",
     "pylev>=1.4.0",
 ]
@@ -38,7 +36,6 @@ doc = [
     "nbsphinx",
     "myst-parser",
     "myst_nb",
-    "pandoc",
     "scanpydoc",
     "sphinx-book-theme",
     "sphinx-copybutton",
