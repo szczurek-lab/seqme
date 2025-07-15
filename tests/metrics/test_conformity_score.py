@@ -1,6 +1,6 @@
 import unittest
 import random
-from pepme.properties.gravy import Gravy
+from pepme.models.properties import Gravy
 from pepme.metrics.conformity_score import ConformityScore
 
 
