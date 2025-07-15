@@ -1,5 +1,5 @@
 <p align="left">
-    <img src="docs/_static/logo_title.svg" alt="pepme logo" width="25%">
+    <img src="docs/_static/logo_title.svg" alt="pepme logo" width="30%">
 </p>
 
 **pepme** is a modular and highly extendable python library containing model-agnostic metrics for evaluating peptides.
