@@ -3,46 +3,35 @@ repos:
     hooks:
       - id: mypy
         name: mypy
-        entry: uv run mypy -p pepme --disable-error-code=import-untyped
+        entry: mypy -p pepme
         language: system
         always_run: true
         pass_filenames: false
-      - id: uv-lock
-        name: uv-lock
-        entry: uv lock
-        language: system
-        always_run: true
-        pass_filenames: false
-      - id: uv-export
-        name: uv-export
-        entry: uv export
-        language: system
-        always_run: true
-        pass_filenames: false
+
       - id: ruff-check
         name: ruff-check
-        entry: uv run ruff check src/pepme --fix
+        entry: ruff check src/pepme --fix
         language: system
         always_run: true
         pass_filenames: false
+
       - id: ruff-format
         name: ruff-format
-        entry: uv run ruff format
+        entry: ruff format
         language: system
         always_run: true
         pass_filenames: false
+
       - id: pytest
         name: pytest
-        entry: uv run pytest
+        entry: pytest
         language: system
         always_run: true
         pass_filenames: false
+
       - id: nbstripout
         name: nbstripout
         entry: find . -name '*.ipynb' -exec nbstripout --drop-empty-cells --keep-output {} +
         language: system
         always_run: true
         pass_filenames: false
-      
-      
-      
