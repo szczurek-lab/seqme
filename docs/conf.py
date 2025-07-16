@@ -7,8 +7,8 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "pepme"
-copyright = "2025, TODO"
-author = "TODO"
+copyright = "2025, Rasmus Møller-Larsen"
+author = "Rasmus Møller-Larsen"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -63,6 +63,8 @@ templates_path = ["_templates"]
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_title = "pepme"
 html_theme = "scanpydoc"  # "sphinx_rtd_theme"
+html_title = "pepme"
 html_static_path = ["_static"]
+html_logo = "_static/logo.svg"
+html_show_sphinx = False

@@ -46,5 +46,5 @@ Miscellaneous
     :toctree:
     :nosignatures:
 
-    pepme.metrics.Count
     pepme.metrics.Fold
+    pepme.metrics.Count
