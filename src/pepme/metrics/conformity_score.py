@@ -19,7 +19,7 @@ class ConformityScore(Metric):
         descriptors: list[Callable[[list[str]], np.ndarray]],
         n_splits: int = 5,
         kde_bandwidth: float = 0.2,
-        random_state: int = 0,
+        seed: int | None = 0,
         reference_name: str | None = None,
     ):
         """
@@ -32,7 +32,7 @@ class ConformityScore(Metric):
                 take a list of sequences and return a 1D NumPy array of features.
             n_splits: Number of cross-validation folds for KDE.
             kde_bandwidth: Bandwidth parameter for the Gaussian KDE.
-            random_state: Seed for KFold shuffling.
+            seed: Seed for KFold shuffling.
             reference_name: Optional name for the reference dataset.
         """
         if n_splits < 2:
@@ -46,7 +46,7 @@ class ConformityScore(Metric):
         kf = KFold(
             n_splits=n_splits,
             shuffle=True,
-            random_state=random_state,
+            random_state=seed,
         )
         self.ref_log_prob_per_split = [
             self._fit_and_score_reference(
@@ -65,8 +65,8 @@ class ConformityScore(Metric):
             MetricResult: Contains the mean and standard deviation of the conformity
                 scores across all folds.
         """
-        generated_arr = self._sequences_to_desc_array(sequences)  # (n_gen, n_descs)
-        conformity_scores = self._compute_conformity_score(generated_arr)
+        seqs_descriptors = self._sequences_to_desc_array(sequences)  # (n_gen, n_descs)
+        conformity_scores = self._compute_conformity_score(seqs_descriptors)
         return MetricResult(float(np.mean(conformity_scores)), float(np.std(conformity_scores)))
 
     def _sequences_to_desc_array(self, sequences: list[str]) -> np.ndarray:
@@ -92,7 +92,7 @@ class ConformityScore(Metric):
 
     @property
     def name(self) -> str:
-        return "Conformity score" if self.reference_name is None else f"Conformity score {self.reference_name}"
+        return "Conformity score" if self.reference_name is None else f"Conformity score ({self.reference_name})"
 
     @property
     def objective(self) -> Literal["minimize", "maximize"]:
