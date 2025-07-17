@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from pepme.models.concatenate import Charge, Ensemble
+from pepme.models import Charge, Ensemble
 
 
 def biased_model(model, offset: float):

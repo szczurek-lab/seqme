@@ -116,12 +116,12 @@ class Esm2:
         input_ids = inputs["input_ids"].to(self.device)
         attention_mask = inputs["attention_mask"].to(self.device)
 
-        batch_size, lengths = input_ids.size()
+        B, L = input_ids.size()
 
-        total_loglik = torch.zeros(batch_size, device=self.device)
+        total_loglik = torch.zeros(B, device=self.device)
         lengths = attention_mask.sum(dim=1)
 
-        valid_positions = [pos for pos in range(lengths) if attention_mask[:, pos].any()]
+        valid_positions = [pos for pos in range(L) if attention_mask[:, pos].any()]
 
         # Utility to chunk a list into size‐<=mask_size
         def chunked(lst, n):
@@ -146,7 +146,7 @@ class Esm2:
             for pos in pos_chunk:
                 real = attention_mask[:, pos] == 1
                 true_ids = input_ids[:, pos]
-                pos_logps = log_probs[torch.arange(batch_size, device=self.device), pos, true_ids]
+                pos_logps = log_probs[torch.arange(B, device=self.device), pos, true_ids]
                 total_loglik[real] += pos_logps[real]
 
         pppls = torch.exp(-total_loglik / lengths).cpu().numpy()
