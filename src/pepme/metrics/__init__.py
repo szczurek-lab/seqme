@@ -1,4 +1,5 @@
 from pepme.metrics.authenticity import AuthPct
+from pepme.metrics.conformity_score import ConformityScore
 from pepme.metrics.count import Count
 from pepme.metrics.diversity import Diversity
 from pepme.metrics.fbd import FBD
@@ -14,6 +15,7 @@ from pepme.metrics.uniqueness import Uniqueness
 
 __all__ = [
     "AuthPct",
+    "ConformityScore",
     "Count",
     "Diversity",
     "FBD",
