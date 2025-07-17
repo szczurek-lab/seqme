@@ -3,7 +3,7 @@ from collections.abc import Callable
 import numpy as np
 
 
-class PropertyEmbedding:
+class Concatenate:
     """
     Combines scalar-valued predictors into a property-based embedding.
     Each predictor maps a list of sequences to a 1D NumPy array.
