@@ -2,8 +2,8 @@ from collections.abc import Callable
 from typing import Literal
 
 import numpy as np
-from sklearn.model_selection import KFold
-from sklearn.neighbors import KernelDensity
+from sklearn.model_selection import KFold  # type: ignore[import-untyped]
+from sklearn.neighbors import KernelDensity  # type: ignore[import-untyped]
 
 from pepme.core import Metric, MetricResult
 
@@ -26,15 +26,17 @@ class ConformityScore(Metric):
         Initialize the ConformityScore metric.
 
         Args:
-            reference (list[str]): Reference sequences assumed to represent the
+            reference: Reference sequences assumed to represent the
                 target distribution.
-            descriptors (list[Callable]): A list of descriptor functions. Each should
+            descriptors: A list of descriptor functions. Each should
                 take a list of sequences and return a 1D NumPy array of features.
-            n_splits (int, optional): Number of cross-validation folds for KDE.
-            kde_bandwidth (float, optional): Bandwidth parameter for the Gaussian KDE.
-            random_state (float, optional): Seed for KFold shuffling.
-            reference_name (str, optional): Optional name for the reference dataset.
+            n_splits: Number of cross-validation folds for KDE.
+            kde_bandwidth: Bandwidth parameter for the Gaussian KDE.
+            random_state: Seed for KFold shuffling.
+            reference_name: Optional name for the reference dataset.
         """
+        if n_splits < 2:
+            raise ValueError("Number of cross-validation folds for KDE (n_splits) must be at least 2.")
         self.reference = reference
         self.descriptors = descriptors
         self.reference_name = reference_name
