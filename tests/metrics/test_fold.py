@@ -4,7 +4,7 @@ from pepme.metrics import Count, Fold
 
 
 def test_k_fold():
-    metric = Fold(metric=Count(), k=2)
+    metric = Fold(metric=Count(), n_splits=2)
     assert metric.name == "Count"
     assert metric.objective == "maximize"
 
@@ -15,7 +15,7 @@ def test_k_fold():
 
 
 def test_one_fold():
-    metric = Fold(metric=Count(), k=1)
+    metric = Fold(metric=Count(), n_splits=1)
     assert metric.name == "Count"
     assert metric.objective == "maximize"
 
@@ -26,7 +26,7 @@ def test_one_fold():
 
 
 def test_k_larger_than_sequence_count():
-    metric = Fold(metric=Count(), k=20)
+    metric = Fold(metric=Count(), n_splits=20)
     assert metric.name == "Count"
     assert metric.objective == "maximize"
 

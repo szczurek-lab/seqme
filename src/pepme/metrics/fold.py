@@ -15,7 +15,7 @@ class Fold(Metric):
         self,
         metric: Metric,
         *,
-        k: int | None = None,
+        n_splits: int | None = None,
         split_size: int | None = None,
         drop_last: bool = False,
         strict: bool = True,
@@ -27,8 +27,8 @@ class Fold(Metric):
 
         Args:
             metric: The underlying metric to evaluate per fold.
-            k: Number of folds to create (exclusive with split_size).
-            split_size: Fixed size for each fold (exclusive with k).
+            n_splits: Number of folds to create (exclusive with split_size).
+            split_size: Fixed size for each fold (exclusive with n_splits).
             drop_last: Drop final fold if smaller than split_size.
             strict: Error on any non-null fold deviation.
             shuffle: Shuffle data before splitting.
@@ -36,16 +36,16 @@ class Fold(Metric):
         """
         self.metric = metric
         self.strict = strict
-        self.k = k
+        self.n_splits = n_splits
         self.split_size = split_size
         self.drop_last = drop_last
         self.shuffle = shuffle
         self.seed = seed
 
-        if (self.k is not None) and (self.split_size is not None):
-            raise ValueError("Only one of 'k' or 'split_size' may be specified.")
-        if (self.k is None) and (self.split_size is None):
-            raise ValueError("One of 'k' or 'split_size' must be specified.")
+        if (self.n_splits is not None) and (self.split_size is not None):
+            raise ValueError("Only one of 'n_splits' or 'split_size' may be specified.")
+        if (self.n_splits is None) and (self.split_size is None):
+            raise ValueError("One of 'n_splits' or 'split_size' must be specified.")
 
     def __call__(self, sequences: list[str]) -> MetricResult:
         """
@@ -64,10 +64,11 @@ class Fold(Metric):
             rng = np.random.default_rng(self.seed)
             rng.shuffle(indices)
 
-        if self.k is not None:
-            if self.k > n:
-                raise ValueError(f"Cannot split into {self.k} folds with only {n} sequences.")
-            raw_folds = np.array_split(indices, self.k)
+        # Determine folds
+        if self.n_splits is not None:
+            if self.n_splits > n:
+                raise ValueError(f"Cannot split into {self.n_splits} folds with only {n} sequences.")
+            raw_folds = np.array_split(indices, self.n_splits)
         else:
             raw_folds = [indices[i : i + self.split_size] for i in range(0, n, self.split_size)]
             if self.drop_last and raw_folds and len(raw_folds[-1]) < self.split_size:

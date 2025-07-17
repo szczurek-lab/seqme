@@ -2,7 +2,7 @@
     <img src="docs/_static/logo_title.svg" alt="pepme logo" width="30%">
 </p>
 
-**pepme** is a modular and highly extendable python library containing model-agnostic metrics for evaluating peptides.
+**pepme** is a modular and highly extendable python library containing model-agnostic metrics for evaluating peptides - and other biological sequences.
 
 ## Installation
 
@@ -17,7 +17,7 @@ $ pip install git+https://github.com/szczurek-lab/pepme.git
 ```python
 from pepme import compute_metrics, show_table, FeatureCache
 from pepme.metrics import Uniqueness, Novelty, FBD
-from pepme.models.embeddings import Esm2
+from pepme.models import Esm2
 
 sequences = {
     "Random": ["MKQW", "RKSPL"],
