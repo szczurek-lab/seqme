@@ -1,6 +1,6 @@
 pepme
 =====
-**pepme** is a modular and highly extendable python library containing model-agnostic metrics for evaluating peptides.
+**pepme** is a modular and highly extendable python library containing model-agnostic metrics for evaluating peptides - and other biological sequences.
 
 
 Quick start
