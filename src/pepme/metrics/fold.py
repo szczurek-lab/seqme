@@ -60,12 +60,10 @@ class Fold(Metric):
         n = len(sequences)
         indices = np.arange(n)
 
-        # Optional shuffling
         if self.shuffle:
             rng = np.random.default_rng(self.seed)
             rng.shuffle(indices)
 
-        # Determine folds
         if self.k is not None:
             if self.k > n:
                 raise ValueError(f"Cannot split into {self.k} folds with only {n} sequences.")
@@ -88,12 +86,12 @@ class Fold(Metric):
             if self.strict and (result.deviation is not None):
                 raise ValueError("Fold result has non-null deviation in strict mode.")
 
-            results.append(result.value)
+            results.append(result)
 
-        values = np.array(results, dtype=float)
+        values = np.array([result.value for result in results], float)
         return MetricResult(
             value=values.mean().item(),
-            deviation=values.std(ddof=0).item(),
+            deviation=values.std(ddof=0).item() if len(results) > 1 else results[0].deviation,
         )
 
     @property
