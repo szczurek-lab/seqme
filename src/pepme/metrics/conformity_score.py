@@ -2,8 +2,8 @@ from collections.abc import Callable
 from typing import Literal
 
 import numpy as np
-from sklearn.model_selection import KFold  # type: ignore[import-untyped]
-from sklearn.neighbors import KernelDensity  # type: ignore[import-untyped]
+from sklearn.model_selection import KFold  # type: ignore
+from sklearn.neighbors import KernelDensity  # type: ignore
 
 from pepme.core import Metric, MetricResult
 
@@ -23,7 +23,7 @@ class ConformityScore(Metric):
         reference_name: str | None = None,
     ):
         """
-        Initialize the ConformityScore metric.
+        Initialize the conformity score metric.
 
         Args:
             reference: Reference sequences assumed to represent the
