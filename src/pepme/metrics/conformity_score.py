@@ -59,7 +59,7 @@ class ConformityScore(Metric):
         """
         Compute the conformity score for the given sequences.
         Args:
-            sequences (list[str]): List of generated sequences to evaluate.
+            sequences: List of generated sequences to evaluate.
 
         Returns:
             MetricResult: Contains the mean and standard deviation of the conformity
