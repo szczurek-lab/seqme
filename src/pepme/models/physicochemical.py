@@ -128,6 +128,45 @@ class Hydrophobicity:
         return d.descriptor.squeeze(axis=-1)
 
 
+class HydrophobicMoment:
+    """
+    Compute the hydrophobic moment (i.e., amphiphilicity) for one or more peptide sequences
+    using a sliding-window approach.
+    """
+
+    def __init__(
+        self,
+        scale: Literal["eisenberg", "hopp-woods", "janin", "kytedoolittle"] = "eisenberg",
+        window: int = 11,
+        angle: int = 100,
+        modality: Literal["max", "mean"] = "max",
+    ):
+        """
+        Args:
+            scale: Name of the hydrophobicity scale to use.
+            window: Size of window
+            angle: Angle in which to calculate the moment. 100 for alpha helices, 180 for beta sheets.
+            modality: Method to compute statistic
+        """
+        self.scale = scale
+        self.window = window
+        self.angle = angle
+        self.modality = modality
+
+    def __call__(self, sequences: list[str]) -> np.ndarray:
+        """
+        Args:
+            sequences: List of amino acid sequences.
+
+        Returns:
+            hydrophobic moment for each sequence.
+        """
+        d = PeptideDescriptor(sequences)
+        d.load_scale(self.scale)
+        d.calculate_moment(window=self.window, angle=self.angle, modality=self.modality)
+        return d.descriptor.squeeze(axis=-1)
+
+
 class InstabilityIndex:
     """
     Computes the instability index, predicting in vitro protein stability.

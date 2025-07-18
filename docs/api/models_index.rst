@@ -17,6 +17,7 @@ Models
     pepme.models.Charge
     pepme.models.Gravy
     pepme.models.Hydrophobicity
+    pepme.models.HydrophobicMoment
     pepme.models.InstabilityIndex
     pepme.models.IsoelectricPoint
     pepme.models.MolecularWeight
