@@ -87,4 +87,27 @@ class FrozenMeanGMM(GaussianMixture):
         self.precisions_cholesky_ = _compute_precision_cholesky(
             self.covariances_, self.covariance_type
         )
-        
+
+    def compute_log_likelihood(self, X: np.ndarray) -> np.ndarray:
+        """
+        Compute the log likelihood of the data under the GMM.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            The data to compute the log likelihood of.
+
+        Returns
+        ------- 
+        log_likelihood : array-like of shape (n_samples,)
+            The log likelihood of the data under the GMM.
+        """
+        return self.score_samples(X)
+    
+    def compute_negative_log_likelihood_dim_adjusted(self, X: np.ndarray) -> np.ndarray:
+        """
+        Compute the negative log likelihood of the data under the GMM, adjusted for dimension.
+        """
+        assert X.shape[1] == self.n_features_in_, "Number of features in X must match the number of features used to fit the GMM"
+        return (-1) * self.compute_log_likelihood(X) / self.n_features_in_
+    
