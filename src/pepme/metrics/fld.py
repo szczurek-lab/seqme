@@ -18,9 +18,9 @@ class FLD(Metric):
 
     def __init__(
         self,
-        reference: list[str] | dict[list[str], list[str]],
+        reference: dict[str, list[str]],
         embedder: Callable[[list[str]], np.ndarray],
-        reference_name: dict[str] | str | None = None,
+        reference_name: dict[str, str] | None = None,
         embedder_name: str | None = None,
         random_state: int | None = None,
     ):
@@ -53,7 +53,7 @@ class FLD(Metric):
         self.reference_name = reference_name
         self.embedder_name = embedder_name
         self.random_state = random_state
-        self.reference_embeddings = self.embedder(self.reference)
+        self.reference_embeddings = {k: self.embedder(v) for k, v in self.reference.items()}
 
         if not isinstance(self.reference, dict):
             raise ValueError("Reference must be a dictionary with train and test datasets")
