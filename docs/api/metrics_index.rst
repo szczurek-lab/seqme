@@ -38,6 +38,7 @@ Property-based
     pepme.metrics.ID
     pepme.metrics.HitRate
     pepme.metrics.HV
+    pepme.metrics.ConformityScore
 
 
 Miscellaneous

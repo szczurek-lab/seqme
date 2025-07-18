@@ -8,48 +8,37 @@ from pepme.core import Metric, MetricResult
 
 class Diversity(Metric):
     """
-    Diversity metric computes the average minimum pairwise distance between the sequences and the reference set.
+    Diversity metric computes the pairwise Levenshstein distance between the sequences and normalizes it by number of sequences and total letter.
     """
 
-    def __init__(self, reference: list[str], reference_name: str | None = None):
+    def __call__(self, sequences: list[str]) -> MetricResult:
         """
-        Initialize the Diversity metric with a reference corpus.
+        Compute the diversity.
 
         Args:
-            reference: A list of reference sequences against which
-                generated sequences will be compared.
-            reference_name: An optional label for the reference data.
-                This name will be appended to the metric name for identification.
-                Defaults to None.
+            sequences: A list of generated sequences to evaluate.
+
+        Returns:
+            MetricResult contains the diversity score.
         """
-        self.reference = list(set(reference))
-        self.reference_name = reference_name
+        if len(sequences) < 2:
+            raise ValueError("Expected at least 2 sequences.")
 
-        if len(self.reference) == 0:
-            raise ValueError("References must contain at least one sample.")
-
-    def __call__(self, sequences: list[str]) -> MetricResult:
-        seqs_min_levenshtein = np.array(
-            [min(levenshtein_distance_to_references(seq, self.reference)) for seq in sequences]
+        levenshtein_matrix = np.stack(
+            [[pylev.levenshtein(seq1, seq2) for seq2 in sequences] for seq1 in sequences], axis=-1
         )
 
-        return MetricResult(
-            seqs_min_levenshtein.mean().item(),
-            seqs_min_levenshtein.std().item(),
-        )
+        total_dist = levenshtein_matrix.sum()
+        total_letters = np.sum([len(seq) for seq in sequences])
+
+        diversity = total_dist / (total_letters * (len(sequences) - 1))
+
+        return MetricResult(diversity.item())
 
     @property
     def name(self) -> str:
-        return "Diversity" if self.reference_name is None else f"Diversity ({self.reference_name})"
+        return "Diversity"
 
     @property
     def objective(self) -> Literal["minimize", "maximize"]:
         return "maximize"
-
-
-def levenshtein_distance(sequence_a: str, sequence_b: str) -> int:
-    return pylev.levenshtein(sequence_a, sequence_b)
-
-
-def levenshtein_distance_to_references(sequence: str, references: list[str]) -> list[int]:
-    return [levenshtein_distance(sequence, ref) for ref in references]

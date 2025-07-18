@@ -77,7 +77,7 @@ def plot_kde(
     xlabel: str,
     color: str = "#68d6bc",
     figsize: tuple[int, int] = (4, 3),
-    bw_method=None,
+    bandwidth: float | Literal["scott", "silverman"] | None = None,
     num_points: int = 200,
     linewidth: float = 1.0,
     alpha: float = 0.8,
@@ -91,7 +91,7 @@ def plot_kde(
         xlabel: Label for the x-axis.
         color: Fill color under the KDE curve.
         figsize: Size of the figure (if no Axes provided).
-        bw_method: Bandwidth method for the KDE (passed to scipy).
+        bandwidth: Bandwidth method for the KDE (passed to scipy).
         num_points: Number of points to evaluate the KDE on.
         linewidth: Width of the KDE curve line.
         alpha: Transparency level for the curve and fill.
@@ -109,7 +109,7 @@ def plot_kde(
         fig, ax = plt.subplots(figsize=figsize)
         created_fig = True
 
-    kde_est = gaussian_kde(arr, bw_method=bw_method)
+    kde_est = gaussian_kde(arr, bw_method=bandwidth)
 
     x_min, x_max = arr.min(), arr.max()
     x_vals = np.linspace(x_min, x_max, num_points)

@@ -4,7 +4,7 @@ from pepme.metrics import Count, Fold
 
 
 def test_k_fold():
-    metric = Fold(metric=Count(), k=2)
+    metric = Fold(metric=Count(), n_splits=2)
     assert metric.name == "Count"
     assert metric.objective == "maximize"
 
@@ -14,8 +14,19 @@ def test_k_fold():
     assert result.deviation == 0.5
 
 
+def test_one_fold():
+    metric = Fold(metric=Count(), n_splits=1)
+    assert metric.name == "Count"
+    assert metric.objective == "maximize"
+
+    sequences = ["AA", "AAA", "AAAA", "AAA", "AAAAAA"]
+    result = metric(sequences)
+    assert result.value == 5
+    assert result.deviation is None
+
+
 def test_k_larger_than_sequence_count():
-    metric = Fold(metric=Count(), k=20)
+    metric = Fold(metric=Count(), n_splits=20)
     assert metric.name == "Count"
     assert metric.objective == "maximize"
 
@@ -45,7 +56,7 @@ def test_large_split_size():
     result = metric(sequences)
     # split_size > n_seqs → single fold of all sequences
     assert result.value == 5
-    assert result.deviation == 0
+    assert result.deviation is None
 
 
 def test_large_split_size_drop_last():

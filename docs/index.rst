@@ -1,6 +1,6 @@
 pepme
 =====
-**pepme** is a modular and highly extendable python library containing model-agnostic metrics for evaluating peptides.
+**pepme** is a modular and highly extendable python library containing model-agnostic metrics for evaluating peptides - and other biological sequences.
 
 
 Quick start
@@ -12,7 +12,7 @@ Let's compute a few metrics on example sequences.
 
     from pepme import compute_metrics, show_table, FeatureCache
     from pepme.metrics import Uniqueness, Novelty, FBD
-    from pepme.models.embeddings import Esm2
+    from pepme.models import Esm2
 
     sequences = {
         "Random": ["MKQW", "RKSPL"],

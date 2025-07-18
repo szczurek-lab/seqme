@@ -1,9 +1,10 @@
 from enum import Enum
+from itertools import islice
 
 import numpy as np
 import torch
 from tqdm import tqdm
-from transformers import AutoModel, AutoTokenizer
+from transformers import AutoModelForMaskedLM, AutoTokenizer
 from transformers.utils import logging
 
 
@@ -25,7 +26,7 @@ class Esm2:
     Wrapper for the ESM2 protein/peptide embedding model from Hugging Face.
 
     Computes sequence-level embeddings by averaging token embeddings,
-    excluding [CLS] and [EOS] tokens.
+    excluding [BOS] and [EOS] tokens.
     """
 
     def __init__(
@@ -50,7 +51,7 @@ class Esm2:
         prev = logging.get_verbosity()
         logging.set_verbosity_error()
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self.model = AutoModel.from_pretrained(model_name)
+        self.model = AutoModelForMaskedLM.from_pretrained(model_name)
         logging.set_verbosity(prev)
 
         self.model.to(device)
@@ -60,6 +61,9 @@ class Esm2:
         self.verbose = verbose
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
+        return self.embed(sequences)
+
+    def embed(self, sequences: list[str]) -> np.ndarray:
         """
         Compute embeddings for a list of sequences.
 
@@ -81,7 +85,7 @@ class Esm2:
                 batch = sequences[i : i + self.batch_size]
                 tokens = self.tokenizer(batch, return_tensors="pt", padding=True, truncation=False)
                 tokens = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in tokens.items()}
-                hidden_state = self.model(**tokens).last_hidden_state
+                hidden_state = self.model(**tokens, output_hidden_states=True).hidden_states[-1]
 
                 counts = tokens["attention_mask"].sum(dim=-1)
                 mask = tokens["attention_mask"]
@@ -96,3 +100,54 @@ class Esm2:
                 embeddings.append(embed.cpu().numpy())
 
         return np.concatenate(embeddings)
+
+    def compute_pseudo_perplexity(self, sequences: list[str], mask_size: int = 1) -> np.ndarray:
+        """
+        Compute pseudo-perplexity for a list of sequences, masking `mask_size` positions per pass.
+
+        Args:
+            sequences: List of amino acid sequences.
+            mask_size: Number of tokens to mask simultaneously in each forward pass.
+
+        Returns:
+            np.ndarray: Pseudo-perplexity scores, in the same order as the input sequences.
+        """
+        inputs = self.tokenizer(sequences, return_tensors="pt", padding=True, truncation=False)
+        input_ids = inputs["input_ids"].to(self.device)
+        attention_mask = inputs["attention_mask"].to(self.device)
+
+        B, L = input_ids.size()
+
+        total_loglik = torch.zeros(B, device=self.device)
+        lengths = attention_mask.sum(dim=1)
+
+        valid_positions = [pos for pos in range(L) if attention_mask[:, pos].any()]
+
+        # Utility to chunk a list into size‐<=mask_size
+        def chunked(lst, n):
+            it = iter(lst)
+            while True:
+                chunk = list(islice(it, n))
+                if not chunk:
+                    break
+                yield chunk
+
+        for pos_chunk in chunked(valid_positions, mask_size):
+            masked_in = input_ids.clone()
+
+            for pos in pos_chunk:
+                real = attention_mask[:, pos] == 1
+                masked_in[real, pos] = self.tokenizer.mask_token_id
+
+            with torch.no_grad():
+                logits = self.model(masked_in, attention_mask=attention_mask.to(self.device)).logits
+                log_probs = torch.log_softmax(logits, dim=-1)
+
+            for pos in pos_chunk:
+                real = attention_mask[:, pos] == 1
+                true_ids = input_ids[:, pos]
+                pos_logps = log_probs[torch.arange(B, device=self.device), pos, true_ids]
+                total_loglik[real] += pos_logps[real]
+
+        pppls = torch.exp(-total_loglik / lengths).cpu().numpy()
+        return pppls

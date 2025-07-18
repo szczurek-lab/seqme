@@ -2,31 +2,25 @@ Models
 ######
 Models mapping sequences to either embedding- or property-space.
 
-Embeddings
-----------
+Models
+------
 .. autosummary::
     :toctree:
     :nosignatures:
 
-    pepme.models.embeddings.Esm2
-    pepme.models.embeddings.KmerFrequencyEmbedding
-    pepme.models.embeddings.PropertyEmbedding
+    pepme.models.Esm2
+    pepme.models.KmerFrequencyEmbedding
 
-Properties
-----------
-.. autosummary::
-    :toctree:
-    :nosignatures:
-
-    pepme.models.properties.AliphaticIndex
-    pepme.models.properties.Aromaticity
-    pepme.models.properties.BomanIndex
-    pepme.models.properties.Charge
-    pepme.models.properties.Gravy
-    pepme.models.properties.Hydrophobicity
-    pepme.models.properties.InstabilityIndex
-    pepme.models.properties.IsoelectricPoint
-    pepme.models.properties.MolecularWeight
+    pepme.models.AliphaticIndex
+    pepme.models.Aromaticity
+    pepme.models.BomanIndex
+    pepme.models.Charge
+    pepme.models.Gravy
+    pepme.models.Hydrophobicity
+    pepme.models.HydrophobicMoment
+    pepme.models.InstabilityIndex
+    pepme.models.IsoelectricPoint
+    pepme.models.MolecularWeight
 
 Miscellaneous
 -------------
@@ -34,7 +28,9 @@ Miscellaneous
     :toctree:
     :nosignatures:
 
-    pepme.models.third_party.ThirdPartyModel
-    pepme.models.properties.Ensemble
+    pepme.models.ThirdPartyModel
+    pepme.models.Ensemble
+    pepme.models.Concatenate
     pepme.models.normalizers.MinMaxNorm
+
 

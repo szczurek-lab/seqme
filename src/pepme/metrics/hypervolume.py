@@ -106,7 +106,6 @@ def calculate_hypervolume(
     if ideal is not None:
         points = points / (ideal - nadir)
 
-    # Compute hypervolume using selected method
     if method == "standard":
         hv_indicator = hv.HV(ref_point=ref_point)
         hypervolume = hv_indicator(-points).item()

@@ -3,7 +3,7 @@ import random
 import pytest
 
 from pepme.metrics.conformity_score import ConformityScore
-from pepme.models.properties import Gravy
+from pepme.models import Gravy
 
 
 def generate_sequences_from_aas(aa_list, n_seqs, l=30):

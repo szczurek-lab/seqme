@@ -241,7 +241,6 @@ def show_table(
     metric_names = pd.unique(df.columns.get_level_values(0)).tolist()
     arrows = {"maximize": "↑", "minimize": "↓"}
 
-    # @TODO: take deviation into account
     def get_top_two_row_indices(bests: pd.Series) -> tuple[list[float], list[float]]:
         if pd.isna(bests.values[0]):
             return [], []
