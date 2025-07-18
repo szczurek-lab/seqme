@@ -7,6 +7,8 @@ import numpy as np
 from pepme.core import Metric, MetricResult
 from pepme.gmm import FrozenMeanGMM
 
+_DEFAULT_RANDOM_STATE = 42
+
 
 class FLD(Metric):
     """Computes the Feature Likelihood Divergence (FLD) metric.
@@ -52,7 +54,7 @@ class FLD(Metric):
         self.embedder = embedder
         self.reference_name = reference_name
         self.embedder_name = embedder_name
-        self.random_state = random_state
+        self.random_state = random_state if random_state is not None else _DEFAULT_RANDOM_STATE
         self.reference_embeddings = {k: self.embedder(v) for k, v in self.reference.items()}
 
         if not isinstance(self.reference, dict):
@@ -94,15 +96,15 @@ class FLD(Metric):
         if not gmm.converged_:
             warnings.warn("GMM did not converge", stacklevel=2)
         log_likelihood = gmm.compute_log_likelihood(sequence_embeddings_test)
-        fld = self._compute_normalized_nll(log_likelihood)
+        fld = self._compute_normalized_nll(log_likelihood, sequence_embeddings.shape[1])
         fld = fld.mean().item()
         fld_baseline = self._compute_baseline_nll(sequences).mean().item()
         fld = (fld - fld_baseline) * 100
         return MetricResult(fld)
 
     @staticmethod
-    def _compute_normalized_nll(log_likelihood):
-        return (-1) * log_likelihood / log_likelihood.shape[1]
+    def _compute_normalized_nll(log_likelihood, n_features: int):
+        return (-1) * log_likelihood / n_features
 
     def _compute_baseline_nll(self, sequences):
         sequence_embeddings = self.embedder(sequences)
@@ -117,7 +119,7 @@ class FLD(Metric):
         if not gmm.converged_:
             warnings.warn("GMM did not converge", stacklevel=2)
         baseline_nll = gmm.compute_log_likelihood(test_embeddings)
-        return self._compute_normalized_nll(baseline_nll)
+        return self._compute_normalized_nll(baseline_nll, sequence_embeddings.shape[1])
 
     @property
     def name(self) -> str:
