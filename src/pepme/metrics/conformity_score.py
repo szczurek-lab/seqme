@@ -18,7 +18,7 @@ class ConformityScore(Metric):
         reference: list[str],
         descriptors: list[Callable[[list[str]], np.ndarray]],
         n_splits: int = 5,
-        kde_bandwidth: float = 0.2,
+        kde_bandwidth: float | Literal["scott", "silverman"] = 0.2,
         seed: int | None = 0,
         reference_name: str | None = None,
     ):
@@ -43,11 +43,7 @@ class ConformityScore(Metric):
 
         reference_arr = self._sequences_to_desc_array(self.reference)  # (n_ref, n_descs)
 
-        kf = KFold(
-            n_splits=n_splits,
-            shuffle=True,
-            random_state=seed,
-        )
+        kf = KFold(n_splits=n_splits, shuffle=True, random_state=seed)
         self.ref_log_prob_per_split = [
             self._fit_and_score_reference(
                 train=reference_arr[train_idx], val=reference_arr[val_idx], kde_bandwidth=kde_bandwidth
@@ -73,7 +69,10 @@ class ConformityScore(Metric):
         return np.stack([desc_func(sequences) for desc_func in self.descriptors], axis=1)
 
     def _fit_and_score_reference(
-        self, train: np.ndarray, val: np.ndarray, kde_bandwidth: float
+        self,
+        train: np.ndarray,
+        val: np.ndarray,
+        kde_bandwidth: float | Literal["scott", "silverman"],
     ) -> tuple[np.ndarray, KernelDensity]:
         kde = KernelDensity(kernel="gaussian", bandwidth=kde_bandwidth)
         kde.fit(train)
