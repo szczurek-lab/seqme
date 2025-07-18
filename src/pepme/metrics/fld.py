@@ -109,12 +109,12 @@ class FLD(Metric):
         return (-1) * log_likelihood / log_likelihood.shape[1]
     
     def _compute_baseline_nll(self, sequences):
-        
-        n = len(sequences)
+        sequence_embeddings = self.embedder(sequences)
+        n = len(sequence_embeddings)
         train_embeddings, test_embeddings, _ = _preprocess(
             self.reference_embeddings["train"],
             self.reference_embeddings["test"],
-            sequences
+            sequence_embeddings
         )
         train_embeddings = _shuffle(train_embeddings)
 
@@ -127,7 +127,7 @@ class FLD(Metric):
 
     @property
     def name(self) -> str:
-        name = "FID"
+        name = "FLD"
         if self.embedder_name:
             name += f"@{self.embedder_name}"
         if self.reference_name:
@@ -140,17 +140,16 @@ class FLD(Metric):
 
 
 def _preprocess(train_x, test_x, gen_x, normalize=True):
+    mean_vals, std_vals = test_x.mean(axis=0), test_x.std(axis=0)
 
-    mean_vals, std_vals = test_x.mean(dim=0), test_x.std(dim=0)
-
-    def normalize(feat):
-        feat = (feat - mean_vals) / (std_vals)
+    def normalize_feat(feat):
+        feat = (feat - mean_vals) / (std_vals + 1e-8)  # Add small epsilon to avoid division by zero
         return feat
 
     if normalize:
-        train_x = normalize(train_x)
-        test_x = normalize(test_x)
-        gen_x = normalize(gen_x)
+        train_x = normalize_feat(train_x)
+        test_x = normalize_feat(test_x)
+        gen_x = normalize_feat(gen_x)
 
     return train_x, test_x, gen_x
 
