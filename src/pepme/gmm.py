@@ -7,17 +7,16 @@ that allows initialization from pre-defined means and disables their update duri
 
 import numpy as np
 from sklearn.mixture import GaussianMixture
-from sklearn.mixture._gaussian_mixture import _estimate_gaussian_parameters, _compute_precision_cholesky
-from typing import Optional
+from sklearn.mixture._gaussian_mixture import _compute_precision_cholesky, _estimate_gaussian_parameters
 
 
 class FrozenMeanGMM(GaussianMixture):
     """
     Gaussian Mixture Model with frozen means.
-    
+
     This class inherits from scikit-learn's GaussianMixture and overrides
     the M-step to keep means frozen during training.
-    
+
     Parameters
     ----------
     init_means : np.ndarray
@@ -38,36 +37,35 @@ class FrozenMeanGMM(GaussianMixture):
     verbose : int, default=0
         Forwarded to the base class for logging (kept but default silenced).
     """
-    
+
     def __init__(
         self,
         init_means: np.ndarray,
-        covariance_type: str = 'spherical',
-        random_state: Optional[int] = None,
+        covariance_type: str = "spherical",
+        random_state: int | None = None,
         max_iter: int = 100,
         tol: float = 1e-3,
         verbose: int | bool = 0,
     ):
-        
         self._frozen_means = init_means.copy()
-        
+
         super().__init__(
             n_components=self._frozen_means.shape[0],
             covariance_type=covariance_type,
             random_state=random_state,
             max_iter=max_iter,
             tol=tol,
-            init_params='random',
+            init_params="random",
             warm_start=True,
             verbose=verbose,
             means_init=self._frozen_means,
         )
-    
+
     @property
     def init_means(self) -> np.ndarray:
-        """ Ensures compatibility with scikit-learn's GaussianMixture. """
+        """Ensures compatibility with scikit-learn's GaussianMixture."""
         return self._frozen_means
-    
+
     def _m_step(self, X, log_resp):
         """M step with frozen means.
 
@@ -84,9 +82,7 @@ class FrozenMeanGMM(GaussianMixture):
             X, np.exp(log_resp), self.reg_covar, self.covariance_type
         )
         self.weights_ /= self.weights_.sum()
-        self.precisions_cholesky_ = _compute_precision_cholesky(
-            self.covariances_, self.covariance_type
-        )
+        self.precisions_cholesky_ = _compute_precision_cholesky(self.covariances_, self.covariance_type)
 
     def compute_log_likelihood(self, X: np.ndarray) -> np.ndarray:
         """
@@ -98,16 +94,17 @@ class FrozenMeanGMM(GaussianMixture):
             The data to compute the log likelihood of.
 
         Returns
-        ------- 
+        -------
         log_likelihood : array-like of shape (n_samples,)
             The log likelihood of the data under the GMM.
         """
         return self.score_samples(X)
-    
+
     def compute_negative_log_likelihood_dim_adjusted(self, X: np.ndarray) -> np.ndarray:
         """
         Compute the negative log likelihood of the data under the GMM, adjusted for dimension.
         """
-        assert X.shape[1] == self.n_features_in_, "Number of features in X must match the number of features used to fit the GMM"
+        assert X.shape[1] == self.n_features_in_, (
+            "Number of features in X must match the number of features used to fit the GMM"
+        )
         return (-1) * self.compute_log_likelihood(X) / self.n_features_in_
-    

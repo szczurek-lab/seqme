@@ -1,16 +1,15 @@
 import warnings
+from collections.abc import Callable
+from typing import Literal
 
 import numpy as np
-
-from typing import Literal
-from collections.abc import Callable
 
 from pepme.core import Metric, MetricResult
 from pepme.gmm import FrozenMeanGMM
 
 
 class FLD(Metric):
-    """ Computes the Feature Likelihood Divergence (FLD) metric.
+    """Computes the Feature Likelihood Divergence (FLD) metric.
 
     Reference:
         Jiralerspong et al., "Feature Likelihood Divergence: Evaluating the
@@ -39,17 +38,11 @@ class FLD(Metric):
 
         Example:
             >>> fld = FLD(
-            ...     reference={
-            ...         "train": train_sequences,
-            ...         "test": test_sequences
-            ...     },
+            ...     reference={"train": train_sequences, "test": test_sequences},
             ...     embedder=embedder,
-            ...     reference_name={
-            ...         "train": "train",
-            ...         "test": "test"
-            ...     },
+            ...     reference_name={"train": "train", "test": "test"},
             ...     embedder_name="Hyformer",
-            ...     random_state=42
+            ...     random_state=42,
             ... )
             >>> fld_score = fld(generated_sequences)
             >>> print(fld_score)
@@ -64,13 +57,13 @@ class FLD(Metric):
 
         if not isinstance(self.reference, dict):
             raise ValueError("Reference must be a dictionary with train and test datasets")
-        
+
         assert "train" in self.reference, "Reference must contain train dataset"
         assert "test" in self.reference, "Reference must contain test dataset"
-        
+
         if self.reference_embeddings["train"].shape[0] < 2:
             raise ValueError("Reference embeddings must contain at least two samples.")
-        
+
         if self.reference_embeddings["test"].shape[0] < 2:
             raise ValueError("Reference embeddings must contain at least two samples.")
 
@@ -87,16 +80,19 @@ class FLD(Metric):
         sequence_embeddings = self.embedder(sequences)
         if normalize_embeddings:
             sequence_embeddings, sequence_embeddings_train, sequence_embeddings_test = _preprocess(
-                sequence_embeddings,
-                self.reference_embeddings["train"],
-                self.reference_embeddings["test"]
+                sequence_embeddings, self.reference_embeddings["train"], self.reference_embeddings["test"]
             )
         else:
-            sequence_embeddings_train, sequence_embeddings_test = self.reference_embeddings["train"], self.reference_embeddings["test"]
-            
-        gmm = FrozenMeanGMM(init_means=sequence_embeddings, random_state=self.random_state).fit(sequence_embeddings_train)
+            sequence_embeddings_train, sequence_embeddings_test = (
+                self.reference_embeddings["train"],
+                self.reference_embeddings["test"],
+            )
+
+        gmm = FrozenMeanGMM(init_means=sequence_embeddings, random_state=self.random_state).fit(
+            sequence_embeddings_train
+        )
         if not gmm.converged_:
-            warnings.warn("GMM did not converge")
+            warnings.warn("GMM did not converge", stacklevel=2)
         log_likelihood = gmm.compute_log_likelihood(sequence_embeddings_test)
         fld = self._compute_normalized_nll(log_likelihood)
         fld = fld.mean().item()
@@ -107,21 +103,19 @@ class FLD(Metric):
     @staticmethod
     def _compute_normalized_nll(log_likelihood):
         return (-1) * log_likelihood / log_likelihood.shape[1]
-    
+
     def _compute_baseline_nll(self, sequences):
         sequence_embeddings = self.embedder(sequences)
         n = len(sequence_embeddings)
         train_embeddings, test_embeddings, _ = _preprocess(
-            self.reference_embeddings["train"],
-            self.reference_embeddings["test"],
-            sequence_embeddings
+            self.reference_embeddings["train"], self.reference_embeddings["test"], sequence_embeddings
         )
         train_embeddings = _shuffle(train_embeddings)
 
         split_size = n // 2
         gmm = FrozenMeanGMM(train_embeddings[:split_size]).fit(train_embeddings[split_size:])
         if not gmm.converged_:
-            warnings.warn("GMM did not converge")
+            warnings.warn("GMM did not converge", stacklevel=2)
         baseline_nll = gmm.compute_log_likelihood(test_embeddings)
         return self._compute_normalized_nll(baseline_nll)
 
