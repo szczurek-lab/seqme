@@ -99,7 +99,7 @@ def compute_authenticity(real_data: np.ndarray, synthetic_data: np.ndarray) -> f
     dist_real_to_real, _ = knn_real.kneighbors()
 
     auth_mask = dist_synth_to_real > dist_real_to_real[closest_real_per_synth_idx.squeeze(axis=-1)]
-    authenticity = np.mean(auth_mask)
+    authenticity = 1 - np.mean(auth_mask)
 
     return authenticity
 
