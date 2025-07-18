@@ -12,6 +12,7 @@ from pepme.metrics.mmd import MMD
 from pepme.metrics.novelty import Novelty
 from pepme.metrics.precision_recall import Precision, Recall
 from pepme.metrics.uniqueness import Uniqueness
+from pepme.metrics.fld import FLD
 
 __all__ = [
     "AuthPct",
@@ -28,5 +29,6 @@ __all__ = [
     "Novelty",
     "Precision",
     "Recall",
+    "FLD",
     "Uniqueness",
 ]
