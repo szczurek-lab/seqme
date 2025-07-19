@@ -1,4 +1,5 @@
 import pytest
+
 from pepme.metrics import KmerJaccardSimilarity
 
 

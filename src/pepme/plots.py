@@ -91,7 +91,7 @@ def plot_kde(
         xlabel: Label for the x-axis.
         color: Fill color under the KDE curve.
         figsize: Size of the figure (if no Axes provided).
-        bandwidth: Bandwidth method for the KDE (passed to scipy).
+        bandwidth: Bandwidth method for the KDE.
         num_points: Number of points to evaluate the KDE on.
         linewidth: Width of the KDE curve line.
         alpha: Transparency level for the curve and fill.
@@ -134,7 +134,7 @@ def plot_violin(
     xlabel: str,
     color: str = "#68d6bc",
     figsize: tuple[int, int] = (4, 3),
-    bw_method=None,
+    bandwidth: float | Literal["scott", "silverman"] | None = None,
     widths: float = 0.7,
     edge_color: str = "black",
     linewidth: float = 1.0,
@@ -151,7 +151,7 @@ def plot_violin(
         xlabel: Label for the x-axis.
         color: Fill color for the violin body.
         figsize: Size of the figure (if no Axes provided).
-        bw_method: Bandwidth method for KDE (passed to matplotlib).
+        bandwidth: Bandwidth method for the KDE.
         widths: Width of the violin body.
         edge_color: Outline color of the violin.
         linewidth: Width of the violin edge lines.
@@ -177,7 +177,7 @@ def plot_violin(
         arr,
         vert=True,
         widths=widths,
-        bw_method=bw_method,
+        bw_method=bandwidth,
         showmeans=show_means,
         showmedians=show_medians,
     )

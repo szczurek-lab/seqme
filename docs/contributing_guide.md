@@ -14,7 +14,7 @@ pip install ".[dev,doc]"
 
 ### Testing
 
-Write tests in the [tests](https://github.com/szczurek-lab/pepme/tree/main/tests) directory. Follow the [`pytest`](#tooling) guidlines. Each file in the directory has to follow the naming convention.
+Write tests in the [tests](https://github.com/szczurek-lab/pepme/tree/main/tests) directory. Follow the [`pytest`](#tooling) guidelines. Each file in the directory has to follow the naming convention.
 
 <h5 a><strong><code>tests/test_foo.py</code></strong></h5>
 
@@ -62,6 +62,7 @@ find . -name '*.ipynb' -exec nbstripout --drop-empty-cells --keep-output {} +
 This command is run automatically with [`pre-commit`](#tooling).
 
 ### Building sphinx docs
+
 ```shell
 cd docs
 make clean & make html
