@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from pepme.metrics.authenticity import AuthPct
+from pepme.metrics import AuthPct
 
 
 def mock_embedder(sequences: list[str]) -> np.ndarray:
