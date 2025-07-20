@@ -139,7 +139,7 @@ class HydrophobicMoment:
         scale: Literal["eisenberg", "hopp-woods", "janin", "kytedoolittle"] = "eisenberg",
         window: int = 11,
         angle: int = 100,
-        modality: Literal["max", "mean"] = "max",
+        modality: Literal["max", "mean"] = "mean",
     ):
         """
         Args:

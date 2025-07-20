@@ -19,6 +19,7 @@ def plot_hist(
     alpha: float = 1.0,
     edgecolor: str = "black",
     linewidth: float = 1.0,
+    label: str | None = None,
     ax: Axes | None = None,
 ):
     """
@@ -34,6 +35,7 @@ def plot_hist(
         alpha: Transparency level of the bars.
         edgecolor: Color of the bar edges.
         linewidth: Width of the bar edges.
+        label: Label for the plot legend.
         ax: Optional matplotlib Axes to plot on.
 
     Raises:
@@ -59,7 +61,11 @@ def plot_hist(
         edgecolor=edgecolor,
         linewidth=linewidth,
         density=(ytype == "density"),
+        label=label,
     )
+
+    if label is not None:
+        ax.legend()
 
     ax.set_axisbelow(True)
     ax.grid(True, linestyle="--", linewidth=0.5, alpha=0.7)
@@ -81,6 +87,8 @@ def plot_kde(
     num_points: int = 200,
     linewidth: float = 1.0,
     alpha: float = 0.8,
+    label: str | None = None,
+    xlim: tuple[float, float] | None = None,
     ax: Axes | None = None,
 ):
     """
@@ -95,6 +103,8 @@ def plot_kde(
         num_points: Number of points to evaluate the KDE on.
         linewidth: Width of the KDE curve line.
         alpha: Transparency level for the curve and fill.
+        label: Label for the plot legend.
+        xlim: Optional x-axis limits as a tuple [min, max].
         ax: Optional matplotlib Axes to plot on.
 
     Raises:
@@ -116,13 +126,19 @@ def plot_kde(
     y_vals = kde_est(x_vals)
 
     ax.plot(x_vals, y_vals, color="black", linewidth=linewidth, alpha=alpha)
-    ax.fill_between(x_vals, y_vals, color=color, alpha=alpha)
+    ax.fill_between(x_vals, y_vals, color=color, alpha=alpha, label=label)
 
-    ax.set_axisbelow(True)
-    ax.grid(True, linestyle="--", linewidth=0.5, alpha=0.7)
+    if label is not None:
+        ax.legend()
+
+    # ax.set_axisbelow(True)
+    # ax.grid(True, linestyle="--", linewidth=0.5, alpha=0.7)
 
     ax.set_xlabel(xlabel)
     ax.set_ylabel("Density")
+
+    if xlim is not None:
+        ax.set_xlim(xlim[0], xlim[1])
 
     if created_fig:
         plt.tight_layout()
@@ -212,7 +228,9 @@ def plot_pca(
     title: str | None = None,
     ax: Axes | None = None,
     figsize: tuple[int, int] = (4, 3),
-    point_size: int = 20,
+    outline_width: float = 0,
+    point_size: float = 20,
+    legend_point_size: float | None = None,
     alpha: float = 0.6,
     seed: int = 42,
 ):
@@ -227,7 +245,9 @@ def plot_pca(
         title: Optional plot title.
         ax: Optional matplotlib Axes to plot on.
         figsize: Size of the figure (if no Axes provided).
+        outline_width: Width of the outline around points.
         point_size: Size of scatter points.
+        legend_point_size: Size of scatter points in the legend.
         alpha: Transparency of points.
         seed: Random seed for reproducibility.
     """
@@ -246,11 +266,13 @@ def plot_pca(
         names,
         colors,
         property_values=property_values,
-        xlabel="PC 1",
-        ylabel="PC 2",
+        xlabel="PC1",
+        ylabel="PC2",
         title=title,
         ax=ax,
+        outline_width=outline_width,
         point_size=point_size,
+        legend_point_size=legend_point_size,
         alpha=alpha,
     )
     if ax.figure:
@@ -265,7 +287,9 @@ def plot_tsne(
     title: str | None = None,
     ax: Axes | None = None,
     figsize: tuple[int, int] = (4, 3),
-    point_size: int = 20,
+    outline_width: float = 0,
+    point_size: float = 20,
+    legend_point_size: float | None = None,
     alpha: float = 0.6,
     seed: int = 42,
 ):
@@ -280,7 +304,9 @@ def plot_tsne(
         title: Optional plot title.
         ax: Optional matplotlib Axes to plot on.
         figsize: Size of the figure (if no Axes provided).
+        outline_width: Width of the outline around points.
         point_size: Size of scatter points.
+        legend_point_size: Size of scatter points in the legend.
         alpha: Transparency of points.
         seed: Random seed for reproducibility.
     """
@@ -299,11 +325,13 @@ def plot_tsne(
         names,
         colors,
         property_values,
-        xlabel="t-SNE 1",
-        ylabel="t-SNE 2",
+        xlabel="t-SNE1",
+        ylabel="t-SNE2",
         title=title,
         ax=ax,
+        outline_width=outline_width,
         point_size=point_size,
+        legend_point_size=legend_point_size,
         alpha=alpha,
     )
     if ax.figure:
@@ -318,7 +346,9 @@ def plot_umap(
     title: str | None = None,
     ax: Axes | None = None,
     figsize: tuple[int, int] = (4, 3),
-    point_size: int = 20,
+    outline_width: float = 0,
+    point_size: float = 20,
+    legend_point_size: float | None = None,
     alpha: float = 0.6,
     seed: int = 42,
 ):
@@ -333,7 +363,9 @@ def plot_umap(
         title: Optional plot title.
         ax: Optional matplotlib Axes to plot on.
         figsize: Size of the figure (if no Axes provided).
+        outline_width: Width of the outline around points.
         point_size: Size of scatter points.
+        legend_point_size: Size of scatter points in the legend.
         alpha: Transparency of points.
         seed: Random seed for reproducibility.
     """
@@ -351,11 +383,13 @@ def plot_umap(
         names,
         colors,
         property_values,
-        xlabel="UMAP 1",
-        ylabel="UMAP 2",
+        xlabel="UMAP1",
+        ylabel="UMAP2",
         title=title,
         ax=ax,
+        outline_width=outline_width,
         point_size=point_size,
+        legend_point_size=legend_point_size,
         alpha=alpha,
     )
     if ax.figure:
@@ -388,7 +422,9 @@ def _plot_reduction(
     ylabel: str,
     title: str | None,
     ax: Axes,
-    point_size: int,
+    outline_width: float,
+    point_size: float,
+    legend_point_size: float,
     alpha: float,
 ):
     if property_values is not None:
@@ -406,7 +442,7 @@ def _plot_reduction(
             s=point_size,
             alpha=alpha,
             edgecolor="black",
-            linewidth=0.4,
+            linewidth=outline_width,
         )
         ax.figure.colorbar(sc, ax=ax)
     else:
@@ -421,18 +457,21 @@ def _plot_reduction(
                 s=point_size,
                 alpha=alpha,
                 edgecolor="black",
-                linewidth=0.4,
+                linewidth=outline_width,
             )
         if names is not None:
-            ax.legend(frameon=True)
+            leg = ax.legend(frameon=True)
+
+            if legend_point_size is not None:
+                for lh in leg.legend_handles:
+                    lh.set_sizes([legend_point_size])  # type: ignore
+                    lh.set_alpha(1.0)
 
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
 
     ax.set_xticks([])
     ax.set_yticks([])
-    ax.set_axisbelow(True)
-    ax.grid(True, linestyle="--", linewidth=0.5, alpha=0.5)
 
     if title is not None:
         ax.set_title(title)
