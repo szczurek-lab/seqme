@@ -1,0 +1,43 @@
+import numpy as np
+import pytest
+
+from pepme.metrics import Threshold
+
+
+def embedder(sequences: list[str]) -> np.ndarray:
+    lengths = [len(sequence) for sequence in sequences]
+    return np.array(lengths)[:, None]
+
+
+def test_above_threshold():
+    metric = Threshold(
+        predictor=embedder,
+        name="Sequence length",
+        threshold=2,
+    )
+
+    assert metric.name == "Sequence length"
+    assert metric.objective == "maximize"
+
+    result = metric(["A", "AA", "AAAA"])
+
+    assert result.value == pytest.approx(2 / 3)
+    assert result.deviation is None
+
+
+def test_below_threshold():
+    metric = Threshold(
+        predictor=embedder,
+        name="Sequence length2",
+        threshold=2,
+        inclusive=False,
+        objective="minimize",
+    )
+
+    assert metric.name == "Sequence length2"
+    assert metric.objective == "minimize"
+
+    result = metric(["A", "AA", "AAAA"])
+
+    assert result.value == pytest.approx(1 / 3)
+    assert result.deviation is None
