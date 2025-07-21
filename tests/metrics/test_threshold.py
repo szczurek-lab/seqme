@@ -4,14 +4,14 @@ import pytest
 from pepme.metrics import Threshold
 
 
-def embedder(sequences: list[str]) -> np.ndarray:
+def discriminator(sequences: list[str]) -> np.ndarray:
     lengths = [len(sequence) for sequence in sequences]
-    return np.array(lengths)[:, None]
+    return np.array(lengths)
 
 
 def test_above_threshold():
     metric = Threshold(
-        predictor=embedder,
+        predictor=discriminator,
         name="Sequence length",
         threshold=2,
     )
@@ -27,7 +27,7 @@ def test_above_threshold():
 
 def test_below_threshold():
     metric = Threshold(
-        predictor=embedder,
+        predictor=discriminator,
         name="Sequence length2",
         threshold=2,
         inclusive=False,
