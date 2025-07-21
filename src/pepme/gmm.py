@@ -11,31 +11,20 @@ from sklearn.mixture._gaussian_mixture import _compute_precision_cholesky, _esti
 
 
 class FrozenMeanGMM(GaussianMixture):
-    """
-    Gaussian Mixture Model with frozen means.
+    """Gaussian Mixture Model with frozen means.
 
     This class inherits from scikit-learn's GaussianMixture and overrides
     the M-step to keep means frozen during training.
 
-    Parameters
-    ----------
-    init_means : np.ndarray
-        Initial means for the GMM components. Shape should be (n_components, n_features).
-        The number of components will be determined by the first dimension.
-    covariance_type : str, default='spherical'
-        Type of covariance parameters. Must be one of:
-        - 'full': each component has its own general covariance matrix
-        - 'tied': all components share the same general covariance matrix
-        - 'diag': each component has its own diagonal covariance matrix
-        - 'spherical': each component has its own single variance
-    random_state : Optional[int], default=None
-        Random state for reproducibility.
-    max_iter : int, default=100
-        Maximum number of iterations for the EM algorithm.
-    tol : float, default=1e-3
-        Convergence threshold for the EM algorithm.
-    verbose : int, default=0
-        Forwarded to the base class for logging (kept but default silenced).
+    Args:
+        init_means: Initial means for the GMM components. Shape should be (n_components, n_features).
+            The number of components will be determined by the first dimension.
+        covariance_type: Type of covariance parameters. Must be one of:
+            'full', 'tied', 'diag', or 'spherical'.
+        random_state: Random state for reproducibility.
+        max_iter: Maximum number of iterations for the EM algorithm.
+        tol: Convergence threshold for the EM algorithm.
+        verbose: Forwarded to the base class for logging (kept but default silenced).
     """
 
     def __init__(
@@ -63,47 +52,82 @@ class FrozenMeanGMM(GaussianMixture):
 
     @property
     def init_means(self) -> np.ndarray:
-        """Ensures compatibility with scikit-learn's GaussianMixture."""
+        """Ensure compatibility with scikit-learn's GaussianMixture."""
         return self._frozen_means
 
     def _m_step(self, X, log_resp):
         """M step with frozen means.
 
-        Parameters
-        ----------
-        X : array-like of shape (n_samples, n_features)
-
-        log_resp : array-like of shape (n_samples, n_components)
-            Logarithm of the posterior probabilities (or responsibilities) of
-            the point of each sample in X.
+        Args:
+            X: Array-like of shape (n_samples, n_features).
+            log_resp: Array-like of shape (n_samples, n_components).
+                Logarithm of the posterior probabilities (or responsibilities) of
+                the point of each sample in X.
         """
         self.weights_, _, self.covariances_ = _estimate_gaussian_parameters(
             X, np.exp(log_resp), self.reg_covar, self.covariance_type
         )
         self.weights_ /= self.weights_.sum()
         self.precisions_cholesky_ = _compute_precision_cholesky(self.covariances_, self.covariance_type)
+        assert np.allclose(self.means_, self._frozen_means), "GMM means are not equal to the frozen means"
+        return self
 
-    def compute_log_likelihood(self, X: np.ndarray) -> np.ndarray:
-        """
-        Compute the log likelihood of the data under the GMM.
+    def compute_log_likelihood(self, X: np.ndarray, dim_adjusted: bool = True) -> np.ndarray:
+        """Compute the log likelihood of the data under the GMM.
 
-        Parameters
-        ----------
-        X : array-like of shape (n_samples, n_features)
-            The data to compute the log likelihood of.
+        Args:
+            X: Array-like of shape (n_samples, n_features).
+                The data to compute the log likelihood of.
 
-        Returns
-        -------
-        log_likelihood : array-like of shape (n_samples,)
-            The log likelihood of the data under the GMM.
+        Returns:
+            Array-like of shape (n_samples,). The log likelihood of the data under the GMM.
         """
-        return self.score_samples(X)
+        return self.score_samples(X) / X.shape[1] if dim_adjusted else self.score_samples(X)
 
-    def compute_negative_log_likelihood_dim_adjusted(self, X: np.ndarray) -> np.ndarray:
+    def compute_negative_log_likelihood(self, X: np.ndarray, dim_adjusted: bool = True) -> np.ndarray:
+        """Compute the negative log likelihood of the data under the GMM.
+
+        Args:
+            X: Array-like of shape (n_samples, n_features).
+                The data to compute the negative log likelihood of.
+
+        Returns:
+            Array-like of shape (n_samples,). The negative log likelihood of the data under the GMM.
         """
-        Compute the negative log likelihood of the data under the GMM, adjusted for dimension.
+        return (-1) * self.compute_log_likelihood(X, dim_adjusted)
+
+    def compute_pairwise_log_likelihoods(self, reference_embeddings: np.ndarray) -> np.ndarray:
+        """Return an n x m matrix of pairwise log likelihoods.
+
+        Compute an n x m matrix where n is the number of samples and m is the number of GMM components.
+        An entry a_ij of this matrix is such that a_ij = log[N(x_i|x_j, sigma_j)].
+
+        Args:
+            reference_embeddings: Reference embeddings to compute pairwise log likelihoods for.
+
+        Returns:
+            Pairwise log likelihood matrix of shape (n_samples, n_components).
         """
-        assert X.shape[1] == self.n_features_in_, (
-            "Number of features in X must match the number of features used to fit the GMM"
-        )
-        return (-1) * self.compute_log_likelihood(X) / self.n_features_in_
+        return self._estimate_log_prob(reference_embeddings)
+    
+    def _compute_pairwise_negative_log_likelihoods(self, reference_embeddings: np.ndarray) -> np.ndarray:
+        """Compute the negative log likelihood of the data under the GMM.
+
+        Args:
+            X: Array-like of shape (n_samples, n_features).
+                The data to compute the negative log likelihood of.
+
+        Returns:
+            Array-like of shape (n_samples, n_components). The negative log likelihood of the data under the GMM.
+        """
+        return (-1) * self._estimate_log_prob(reference_embeddings)
+    
+    @property
+    def log_sigmas_(self) -> np.ndarray:
+        """Compute the log of the standard deviations of the GMM.
+
+        Returns:
+            Log standard deviations for each GMM component.
+        """
+        return np.log(np.sqrt(self.covariances_))
+    
