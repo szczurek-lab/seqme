@@ -5,7 +5,7 @@ from pepme.core import Metric, MetricResult
 
 class Novelty(Metric):
     """
-    Novelty metric compares generated sequences against a reference set
+    Compares generated sequences against a reference set
     and returns the fraction of sequences not seen in the reference.
     """
 

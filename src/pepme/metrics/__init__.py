@@ -11,6 +11,7 @@ from pepme.metrics.jaccard_similarity import KmerJaccardSimilarity
 from pepme.metrics.mmd import MMD
 from pepme.metrics.novelty import Novelty
 from pepme.metrics.precision_recall import Precision, Recall
+from pepme.metrics.threshold import Threshold
 from pepme.metrics.uniqueness import Uniqueness
 
 __all__ = [
@@ -28,5 +29,6 @@ __all__ = [
     "Novelty",
     "Precision",
     "Recall",
+    "Threshold",
     "Uniqueness",
 ]
