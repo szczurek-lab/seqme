@@ -36,6 +36,7 @@ Property-based
     :nosignatures:
 
     pepme.metrics.ID
+    pepme.metrics.Threshold
     pepme.metrics.HitRate
     pepme.metrics.HV
     pepme.metrics.ConformityScore
