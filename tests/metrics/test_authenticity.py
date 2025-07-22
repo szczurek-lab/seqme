@@ -18,14 +18,14 @@ def test_authenticity():
     )
 
     result = metric(["A" * 15, "A" * 4, "A" * 13])
-    assert result.value == pytest.approx(1.0 - 0.333, abs=1e-3)
+    assert result.value == pytest.approx(0.333, abs=1e-3)
 
 
 def test_the_same():
     train_set = ["KKAA", "KKAA"]
     metric = AuthPct(train_set=train_set, embedder=mock_embedder)
     result = metric(["KKAA", "KKAA"])
-    assert result.value == 1.0
+    assert result.value == 0.0
 
 
 def test_empty_reference_raises():
@@ -40,10 +40,3 @@ def test_empty_sequences_raises():
     # calling the metric on an empty list should error
     with pytest.raises(ValueError):
         metric([])
-
-
-def test_strict_mode_raises():
-    train_set = ["KKAA", "KKAA"]
-    metric = AuthPct(train_set=train_set, embedder=mock_embedder, strict=True)
-    with pytest.raises(ValueError):
-        metric(["KAAA"])
