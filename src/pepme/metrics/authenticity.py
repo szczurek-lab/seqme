@@ -57,7 +57,7 @@ class Authenticity(Metric):
 
         if self.strict and len(sequences) != self.train_set_embeddings.shape[0]:
             raise ValueError(
-                f"Number of sequences ({len(sequences)}) must match the number of sequences in the training set ({self.train_set_embeddings.shape[0]}). Set `strict=False` to disable this check."
+                f"Number of sequences ({len(sequences)}) must match the number of sequences in the training set ({self.train_set_embeddings.shape[0]}). Set strict=False to disable this check."
             )
 
         embeddings = self.embedder(sequences)
