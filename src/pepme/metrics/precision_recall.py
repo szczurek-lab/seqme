@@ -59,10 +59,10 @@ class Precision(Metric):
 
         if reference_quantile is not None:
             if reference_quantile < 0 or reference_quantile > 1:
-                raise ValueError("`reference_quantile` must be between 0 and 1.")
+                raise ValueError("reference_quantile must be between 0 and 1.")
 
         if self.neighborhood_size < 1:
-            raise ValueError("`neighborhood_size` must be greater than 0.")
+            raise ValueError("neighborhood_size must be greater than 0.")
 
         self.reference_embeddings = self.embedder(self.reference)
         if self.reference_embeddings.shape[0] < 1:
@@ -82,7 +82,7 @@ class Precision(Metric):
 
         if self.strict and seq_embeddings.shape[0] != self.reference_embeddings.shape[0]:
             raise ValueError(
-                f"Number of sequences ({seq_embeddings.shape[0]}) must match number of reference embeddings ({self.reference_embeddings.shape[0]}). Set `strict=False` to disable this check."
+                f"Number of sequences ({seq_embeddings.shape[0]}) must match number of reference embeddings ({self.reference_embeddings.shape[0]}). Set strict=False to disable this check."
             )
 
         value = compute_precision(
@@ -161,10 +161,10 @@ class Recall(Metric):
 
         if reference_quantile is not None:
             if reference_quantile < 0 or reference_quantile > 1:
-                raise ValueError("`reference_quantile` must be between 0 and 1.")
+                raise ValueError("reference_quantile must be between 0 and 1.")
 
         if self.neighborhood_size < 1:
-            raise ValueError("`neighborhood_size` must be greater than 0.")
+            raise ValueError("neighborhood_size must be greater than 0.")
 
         self.reference_embeddings = self.embedder(self.reference)
         if self.reference_embeddings.shape[0] < 1:
@@ -183,7 +183,7 @@ class Recall(Metric):
 
         if self.strict and seq_embeddings.shape[0] != self.reference_embeddings.shape[0]:
             raise ValueError(
-                f"Number of sequences ({seq_embeddings.shape[0]}) must match number of reference embeddings ({self.reference_embeddings.shape[0]}). Set `strict=False` to disable this check."
+                f"Number of sequences ({seq_embeddings.shape[0]}) must match number of reference embeddings ({self.reference_embeddings.shape[0]}). Set strict=False to disable this check."
             )
 
         value = compute_recall(

@@ -43,9 +43,9 @@ class Fold(Metric):
         self.seed = seed
 
         if (self.n_splits is not None) and (self.split_size is not None):
-            raise ValueError("Only one of 'n_splits' or 'split_size' may be specified.")
+            raise ValueError("Only one of n_splits or split_size may be specified.")
         if (self.n_splits is None) and (self.split_size is None):
-            raise ValueError("One of 'n_splits' or 'split_size' must be specified.")
+            raise ValueError("One of n_splits or split_size must be specified.")
 
     def __call__(self, sequences: list[str]) -> MetricResult:
         """

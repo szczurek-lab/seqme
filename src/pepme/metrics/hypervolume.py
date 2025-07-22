@@ -38,7 +38,7 @@ class Hypervolume(Metric):
 
         if self.nadir.shape[0] != len(predictors):
             raise ValueError(
-                f"Expected `nadir` to have {len(predictors)} elements, but only has {self.nadir.shape[0]} elements."
+                f"Expected nadir to have {len(predictors)} elements, but only has {self.nadir.shape[0]} elements."
             )
 
     def __call__(self, sequences: list[str]) -> MetricResult:
@@ -92,8 +92,8 @@ def calculate_hypervolume(
     min_points = points.min(axis=0)
     if (nadir > min_points).any():
         raise ValueError(
-            f"Invalid `nadir`: each component must be less than or equal to the minimum value in that dimension.\n"
-            f"Provided `nadir`: {nadir}\n"
+            f"Invalid nadir: each component must be less than or equal to the minimum value in that dimension.\n"
+            f"Provided nadir: {nadir}\n"
             f"Minimum required values: {min_points}"
         )
 
@@ -116,7 +116,7 @@ def calculate_hypervolume(
         except QhullError:
             hypervolume = float("nan")  # Return NaN if hull can't be formed
     else:
-        raise ValueError(f"Unknown method '{method}'.")
+        raise ValueError(f"Unknown method: {method}")
 
     return hypervolume
 

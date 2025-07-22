@@ -225,7 +225,7 @@ def show_table(
         Styler: pandas Styler object.
     """
     if "objective" not in df.attrs:
-        raise ValueError("DataFrame must have an 'objective' attribute. Use `compute_metrics` to create the DataFrame.")
+        raise ValueError("DataFrame must have an 'objective' attribute. Use compute_metrics to create the DataFrame.")
 
     objectives = df.attrs["objective"]
 
@@ -238,80 +238,74 @@ def show_table(
             f"Expected {n_metrics} decimals, got {len(decimals)}. Provide a single int or a list matching the number of metrics."
         )
 
-    metric_names = pd.unique(df.columns.get_level_values(0)).tolist()
+    metrics = pd.unique(df.columns.get_level_values(0)).tolist()
     arrows = {"maximize": "↑", "minimize": "↓"}
 
-    def get_top_two_row_indices(bests: pd.Series) -> tuple[list[float], list[float]]:
-        if pd.isna(bests.values[0]):
+    df_display = pd.DataFrame(index=df.index)
+    df_rounded = df.round(dict(zip(df.columns, decimals * 2, strict=True)))
+
+    ## Extract top sequence indices
+    def get_top_indices(top_two: pd.Series) -> tuple[list[int], list[int]]:
+        if pd.isna(top_two.values[0]):
             return [], []
 
         # get all indices with the same value as the best value
-        value1 = bests.values[0]
-        indices1 = bests.index[bests == value1].tolist()
+        value1 = top_two.values[0]
+        indices1 = top_two.index[top_two == value1].tolist()
         if len(indices1) > 2:
             return indices1, []
 
-        if len(bests) < 2 or pd.isna(bests.values[1]):
+        if len(top_two) < 2 or pd.isna(top_two.values[1]):
             return indices1, []
 
         # get all indices with the same value as the second best value
-        value2 = bests.values[1]
-        indices2 = bests.index[bests == value2].tolist()
+        value2 = top_two.values[1]
+        indices2 = top_two.index[top_two == value2].tolist()
 
         return indices1, indices2
 
-    # Build combined DataFrame and track raw values
-    combined = pd.DataFrame(index=df.index)
-    best_idx = {}
-    second_idx = {}
+    best_indices = {}
+    second_best_indices = {}
 
-    for i, m in enumerate(metric_names):
-        vals = df[(m, "value")]
-        devs = df[(m, "deviation")]
-
-        # Determine the two best indices based on objective
+    for m in metrics:
+        vals, devs = df_rounded[(m, "value")], df_rounded[(m, "deviation")]
         if objectives[m] == "maximize":
             best_cells = vals.nlargest(2, keep="all")
-            best_idx[m], second_idx[m] = get_top_two_row_indices(best_cells)
-        else:
-            if objectives[m] != "minimize":
-                raise ValueError(f"Unknown objective '{objectives[m]}' for metric '{m}")
+            best_indices[m], second_best_indices[m] = get_top_indices(best_cells)
+        elif objectives[m] == "minimize":
             best_cells = vals.nsmallest(2, keep="all")
-            best_idx[m], second_idx[m] = get_top_two_row_indices(best_cells)
+            best_indices[m], second_best_indices[m] = get_top_indices(best_cells)
+        else:
+            raise ValueError(f"Unknown objective '{objectives[m]}' for metric '{m}")
 
-        def format_cell(
-            val: float,
-            dev: float,
-            n_decimals: int,
-            notation: str,
-            no_value: str = missing_value,
-        ) -> str:
-            if pd.isna(val):
-                return no_value
-            if pd.isna(dev):
-                return f"{val:.{n_decimals}{notation}}"
-            return f"{val:.{n_decimals}{notation}}±{dev:.{n_decimals}{notation}}"
+    ## Format cell values
+    def format_cell(val: float, dev: float, n_decimals: int, notation: str, no_value: str = missing_value) -> str:
+        if pd.isna(val):
+            return no_value
+        if pd.isna(dev):
+            return f"{val:.{n_decimals}{notation}}"
+        return f"{val:.{n_decimals}{notation}}±{dev:.{n_decimals}{notation}}"
 
-        # Combine formatting
-        decimal = decimals[i]
-        notation = notations[i]
+    for i, m in enumerate(metrics):
+        vals, devs = df_rounded[(m, "value")], df_rounded[(m, "deviation")]
+        decimal, notation = decimals[i], notations[i]
 
         arrow = arrows[objectives[m]]
-        combined[f"{m}{arrow}"] = [
+        df_display[f"{m}{arrow}"] = [
             format_cell(val, dev, decimal, notation) for val, dev in zip(vals, devs, strict=True)
         ]
 
-    styler = combined.style
+    ## Apply cell styles per column
+    styler = df_display.style
 
-    # Apply cell styles per column
-    for col, metric_name in zip(combined.columns, metric_names, strict=True):
+    for col, metric in zip(df_display.columns, metrics, strict=True):
 
-        def highlight_column(col_series, metric_name=metric_name):
+        def highlight_column(col_series: pd.Series, metric: str = metric) -> list[str]:
             return [
                 f"background-color:{color}; font-weight:bold"
-                if idx in best_idx[metric_name]
+                if idx in best_indices[metric]
                 else "text-decoration:underline; font-weight:bold"
-                if idx in second_idx[metric_name]
+                if idx in second_best_indices[metric]
                 else ""
                 for idx in col_series.index
             ]
@@ -322,9 +316,6 @@ def show_table(
         {"selector": "th.col_heading", "props": [("text-align", "center")]},
         {"selector": "td", "props": [("border-right", "1px solid #ccc")]},
         {"selector": "th.row_heading", "props": [("border-right", "1px solid #ccc")]},
-        # {"selector": "tr:nth-child(odd)", "props": [("background-color", "#f9f9f9")]},
-        # {"selector": "tr:nth-child(even)", "props": [("background-color", "#fff")]},
-        # {"selector": "td", "props": [("text-align", "center"), ("padding", "5px")]}
     ]
     styler = styler.set_table_styles(table_styles, overwrite=False)  # type: ignore
     return styler
@@ -343,7 +334,7 @@ def barplot(
     Plot a bar chart for a given metric, optionally with error bars.
 
     Args:
-        df: A DataFrame with a MultiIndex column [metric_name, {"value", "deviation"}].
+        df: A DataFrame with a MultiIndex column [metric, {"value", "deviation"}].
         metric: The name of the metric to plot.
         color: Bar color (optional, default is teal).
         x_ticks_label_rotation: Rotation angle for x-axis tick labels.
@@ -456,7 +447,7 @@ class FeatureCache:
             ValueError: If the model is unknown.
         """
         if model_name not in self.model_to_cache:
-            raise ValueError(f"'{model_name}' is not callable nor has any pre-cached sequences.")
+            raise ValueError(f"{model_name} is not callable nor has any pre-cached sequences.")
         return lambda sequence: self(sequence, model_name)
 
     def add_model(self, model_name: str, model: Callable[[list[str]], np.ndarray]):

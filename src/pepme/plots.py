@@ -393,7 +393,7 @@ def _plot_reduction(
 ):
     if property_values is not None:
         if (names is not None) or (colors is not None):
-            raise ValueError("`names` and `colors` must be None when `property_values` is not None.")
+            raise ValueError("names and colors must be None when property_values is not None.")
 
         if len(segments) != 1:
             raise ValueError("Property coloring is only supported for a single segment")
