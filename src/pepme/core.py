@@ -242,7 +242,7 @@ def show_table(
     arrows = {"maximize": "↑", "minimize": "↓"}
 
     df_display = pd.DataFrame(index=df.index)
-    df_rounded = df.round(dict(zip(df.columns, decimals * 2, strict=True)))
+    df_rounded = df.round(dict(zip(df.columns, [d for d in decimals for _ in range(2)], strict=True)))
 
     ## Extract top sequence indices
     def get_top_indices(top_two: pd.Series) -> tuple[list[int], list[int]]:
