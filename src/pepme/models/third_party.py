@@ -29,22 +29,22 @@ class ThirdPartyModel:
         Initialize and install the plugin.
 
         Args:
-            entry_point: String specifying the module and function, in the form 'module.path:func_name'.
+            entry_point: String specifying the module and function, in the form 'module.path:function'.
             repo_path: Root directory for plugin environments and repos.
             python_bin: Optional path to a python executable. If None, creates a venv enviroment using the exposed python executable.
             repo_url: Optional Git repository URL for the plugin (prefixed with 'git+' or local path).
             branch: Optional branch to clone. If none, clone the whole repository.
 
         Raises:
-            ValueError: If entry_point is not of the form 'module:func'.
+            ValueError: If entry_point is not of the form 'module:function'.
         """
         try:
-            module, func = entry_point.split(":", 1)
+            module, fn = entry_point.split(":", 1)
         except ValueError as e:
-            raise ValueError("entry_point must be of the form 'module:func'") from e
+            raise ValueError("entry_point must be of the form 'module:function'.") from e
 
         self.module = module
-        self.func = func
+        self.fn = fn
 
         self.plugin = Plugin()
         self.plugin.setup(
@@ -69,7 +69,7 @@ class ThirdPartyModel:
             ValueError: If the plugin response is not a numpy.ndarray.
         """
         kwargs["sequences"] = sequences
-        result = self.plugin.run(self.module, self.func, kwargs)
+        result = self.plugin.run(self.module, self.fn, kwargs)
         if not isinstance(result, np.ndarray):
             raise ValueError("Invalid plugin response: expected numpy.ndarray")
         return result
@@ -106,10 +106,13 @@ class Plugin:
             if not env_dir.exists():
                 subprocess.check_call([sys.executable, "-m", "venv", str(env_dir)])
                 subprocess.check_call([str(python_bin), "-m", "pip", "install", "--upgrade", "pip"])
+        else:
+            if not python_bin.is_file():
+                raise ValueError(f"Python executable not found: '{python_bin!r}'.")
 
         if not repo_dir.exists():
             if repo_url is None:
-                raise ValueError(f"{repo_dir} does not exist. Correct the path or define a repository url to clone.")
+                raise ValueError(f"'{repo_dir}' does not exist. Correct the path or define a repository url to clone.")
 
             url = repo_url.removeprefix("git+")
 
@@ -125,7 +128,7 @@ class Plugin:
     def run(
         self,
         module: str,
-        func: str,
+        fn: str,
         arguments: dict,
     ) -> Any:
         """
@@ -133,7 +136,7 @@ class Plugin:
 
         Args:
             module: The module path containing the function to call.
-            func: The name of the function within the module.
+            fn: The name of the function within the module.
             arguments: Dictionary of arguments passed to the function.
 
         Returns:
@@ -152,7 +155,7 @@ class Plugin:
                 "import pickle, sys;"
                 f"import {module};"
                 "data = pickle.load(open(sys.argv[1],'rb'));"
-                f"result = {module}.{func}(**data);"
+                f"result = {module}.{fn}(**data);"
                 "pickle.dump(result, open(sys.argv[2],'wb'))"
             )
             cmd = [str(self.python_bin), "-c", code, str(in_path), str(out_path)]
