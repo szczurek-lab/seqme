@@ -443,6 +443,9 @@ class FeatureCache:
         """
         Return a callable interface for a given model name.
 
+        Args:
+            model_name: Name of the model to use.
+
         Raises:
             ValueError: If the model is unknown.
         """
@@ -450,33 +453,38 @@ class FeatureCache:
             raise ValueError(f"{model_name} is not callable nor has any pre-cached sequences.")
         return lambda sequence: self(sequence, model_name)
 
-    def add_model(self, model_name: str, model: Callable[[list[str]], np.ndarray]):
+    def add(self, model_name: str, element: Callable[[list[str]], np.ndarray] | dict[str, np.ndarray]):
         """
-        Add a new model to the cache.
+        Add a new model or precomuted embeddings to the cache.
+
+        Args:
+            model_name: Name of the model to use.
+            element: A callable embedding function or pre-computed (sequence, embedding) pairs.
 
         Raises:
             ValueError: If the model already exists.
         """
-        if model_name in self.model_to_callable:
-            raise ValueError("Model already exists.")
-        self.model_to_callable[model_name] = model
 
-    def add_to_cache(self, model_name: str, pairs: dict[str, np.ndarray]):
-        """
-        Add precomputed embeddings to the cache.
+        if callable(element):
+            if model_name in self.model_to_callable:
+                raise ValueError("Model already exists.")
 
-        Args:
-            model_name: The model the embeddings belong to.
-            pairs: Mapping from text to embedding.
-        """
-        if model_name not in self.model_to_cache:
-            self.model_to_cache[model_name] = {}
+            self.model_to_callable[model_name] = element
 
-        sequence_to_rep = self.model_to_cache[model_name]
-        for sequence, reps in pairs.items():
-            sequence_to_rep[sequence] = reps
+        elif isinstance(element, dict):
+            if model_name not in self.model_to_cache:
+                self.model_to_cache[model_name] = {}
 
-    def get_cache(self) -> dict[str, dict[str, np.ndarray]]:
+            sequence_to_rep = self.model_to_cache[model_name]
+            for sequence, reps in element.items():
+                sequence_to_rep[sequence] = reps
+        else:
+            raise TypeError(
+                f"element must be either dict[str, np.ndarray] or Callable[[list[str]], np.ndarray], "
+                f"but got {type(element).__name__}"
+            )
+
+    def get(self) -> dict[str, dict[str, np.ndarray]]:
         """
         Return a copy of the current cache.
 
