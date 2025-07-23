@@ -487,6 +487,18 @@ class FeatureCache:
                 f"but got {type(element).__name__}"
             )
 
+    def remove(self, model_name: str):
+        """
+        Removes the cache of a model and the model callable if defined.
+
+        Args:
+            model_name: Name of the model to use.
+        """
+        del self.model_to_cache[model_name]
+
+        if model_name in self.model_to_callable:
+            del self.model_to_callable[model_name]
+
     def get(self) -> dict[str, dict[str, np.ndarray]]:
         """
         Return a copy of the current cache.
