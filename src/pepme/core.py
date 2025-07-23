@@ -455,7 +455,7 @@ class FeatureCache:
 
     def add(self, model_name: str, element: Callable[[list[str]], np.ndarray] | dict[str, np.ndarray]):
         """
-        Add a new model or precomuted embeddings to the cache.
+        Add a new model or precomputed embeddings to the cache.
 
         Args:
             model_name: Name of the model to use.
@@ -470,6 +470,9 @@ class FeatureCache:
                 raise ValueError("Model already exists.")
 
             self.model_to_callable[model_name] = element
+
+            if model_name not in self.model_to_cache:
+                self.model_to_cache[model_name] = {}
 
         elif isinstance(element, dict):
             if model_name not in self.model_to_cache:
