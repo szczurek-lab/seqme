@@ -44,7 +44,7 @@ class KLDivergence(Metric):
 
     def __call__(self, sequences: list[str]) -> MetricResult:
         """
-        Compute the KL-diverence between reference and sequence descriptor.
+        Compute the KL-divergence between reference and sequence descriptor.
 
         Args:
             sequences: List of generated sequences to evaluate.
