@@ -6,7 +6,7 @@ from pepme.core import Metric, MetricResult
 class Novelty(Metric):
     """Fraction of sequences not in the reference."""
 
-    def __init__(self, reference: list[str], reference_name: str | None = None):
+    def __init__(self, reference: list[str], *, reference_name: str | None = None):
         """
         Initialize the Novelty metric with a reference corpus.
 
