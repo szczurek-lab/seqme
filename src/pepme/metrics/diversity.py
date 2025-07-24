@@ -8,7 +8,7 @@ from pepme.core import Metric, MetricResult
 
 class Diversity(Metric):
     """
-    Computes the pairwise Levenshstein distance between the sequences and normalizes it by number of sequences and total letter.
+    Pairwise Levenshstein distance between the sequences, normalized by number of sequences and number of residues.
     """
 
     def __call__(self, sequences: list[str]) -> MetricResult:
