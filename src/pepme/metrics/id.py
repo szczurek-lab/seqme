@@ -9,7 +9,7 @@ from pepme.core import Metric, MetricResult
 class Identity(Metric):
     """
     Applies a user-provided predictor to a list of sequences
-    and returns the average and standard deviation of the predictor's outputs.
+    and returns the mean and standard deviation of the predictor's outputs.
     """
 
     def __init__(

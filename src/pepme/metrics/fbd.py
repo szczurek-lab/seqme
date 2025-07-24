@@ -9,7 +9,7 @@ from pepme.core import Metric, MetricResult
 
 class FrechetBiologicalDistance(Metric):
     """
-    Computes the Fréchet Biological Distance (FBD) between a set of generated
+    Fréchet Biological Distance (FBD) between a set of generated
     sequences and a reference dataset based on their embeddings.
 
     This metric estimates how similar the distributions of two sets of embeddings
@@ -24,6 +24,7 @@ class FrechetBiologicalDistance(Metric):
         self,
         reference: list[str],
         embedder: Callable[[list[str]], np.ndarray],
+        *,
         reference_name: str | None = None,
         embedder_name: str | None = None,
     ):
@@ -115,7 +116,7 @@ def wasserstein_distance(e1: np.ndarray, e2: np.ndarray) -> float:
 
 class FBD(FrechetBiologicalDistance):
     """
-    Computes the Fréchet Biological Distance (FBD) between a set of generated
+    Fréchet Biological Distance (FBD) between a set of generated
     sequences and a reference dataset based on their embeddings.
 
     This metric estimates how similar the distributions of two sets of embeddings

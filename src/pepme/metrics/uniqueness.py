@@ -5,8 +5,7 @@ from pepme.core import Metric, MetricResult
 
 class Uniqueness(Metric):
     """
-    Computes the fraction of unique sequences
-    within the provided list of generated sequences.
+    Fraction of unique sequences within the provided list of generated sequences.
     """
 
     def __call__(self, sequences: list[str]) -> MetricResult:

@@ -8,13 +8,10 @@ from pepme.core import Metric, MetricResult
 
 class HitRate(Metric):
     """
-    Computes the fraction of sequences that satisfy a given filter condition.
+    Fraction of sequences that satisfy a given filter condition.
     """
 
-    def __init__(
-        self,
-        condition_fn: Callable[[list[str]], np.ndarray],
-    ):
+    def __init__(self, condition_fn: Callable[[list[str]], np.ndarray]):
         """
         Initializes the hit‐rate metric.
 

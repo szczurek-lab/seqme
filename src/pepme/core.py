@@ -205,7 +205,7 @@ def show_table(
     color: str = "#68d6bc",
     missing_value: str = "-",
 ) -> Styler:
-    """Plots a table for metric dataframe.
+    """Visualize a table of a metric dataframe.
 
     Render a styled DataFrame that:
         - Combines 'value' and 'deviation' into "value ± deviation".

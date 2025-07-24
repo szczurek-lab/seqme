@@ -19,6 +19,7 @@ class Authenticity(Metric):
         self,
         train_set: list[str],
         embedder: Callable[[list[str]], np.ndarray],
+        *,
         embedder_name: str | None = None,
     ):
         """

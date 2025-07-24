@@ -5,7 +5,7 @@ import numpy as np
 
 class Ensemble:
     """
-    Combine multiple predictor functions into a weighted ensemble.
+    Combines multiple predictor functions into a weighted ensemble.
 
     Each predictor maps sequences to numeric arrays. The final output is a
     weighted sum of individual predictions.

@@ -55,7 +55,7 @@ class Fold(Metric):
             sequences: Input data to split into folds.
 
         Returns:
-            Aggregated mean value and standard deviation across folds.
+            Aggregated mean value and standard error across folds.
         """
         n = len(sequences)
         indices = np.arange(n)
@@ -92,7 +92,7 @@ class Fold(Metric):
         values = np.array([result.value for result in results], float)
         return MetricResult(
             value=values.mean().item(),
-            deviation=values.std(ddof=0).item() if len(results) > 1 else results[0].deviation,
+            deviation=float(values.std(ddof=0)) / (len(values) ** 0.5) if len(results) > 1 else results[0].deviation,
         )
 
     @property
