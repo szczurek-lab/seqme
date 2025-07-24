@@ -4,9 +4,7 @@ from pepme.core import Metric, MetricResult
 
 
 class Count(Metric):
-    """
-    A simple metric that counts the number of input sequences.
-    """
+    """Number of sequences."""
 
     def __call__(self, sequences: list[str]) -> MetricResult:
         """

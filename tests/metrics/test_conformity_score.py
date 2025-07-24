@@ -2,7 +2,7 @@ import random
 
 import pytest
 
-from pepme.metrics.conformity_score import ConformityScore
+from pepme.metrics import ConformityScore
 from pepme.models import Gravy
 
 

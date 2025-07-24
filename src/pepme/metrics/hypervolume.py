@@ -10,13 +10,14 @@ from pepme.core import Metric, MetricResult
 
 class Hypervolume(Metric):
     """
-    Computes the hypervolume (HV) metric for multi-objective optimization.
+    Hypervolume (HV) metric for multi-objective optimization.
     Each predictor maps sequences to a numeric objective.
     """
 
     def __init__(
         self,
         predictors: list[Callable[[list[str]], np.ndarray]],
+        *,
         method: Literal["standard", "convex-hull"] = "standard",
         nadir: np.ndarray | None = None,
         ideal: np.ndarray | None = None,
@@ -123,7 +124,7 @@ def calculate_hypervolume(
 
 class HV(Hypervolume):
     """
-    Computes the hypervolume (HV) metric for multi-objective optimization.
+    Hypervolume (HV) metric for multi-objective optimization.
     Each predictor maps sequences to a numeric objective.
     """
 

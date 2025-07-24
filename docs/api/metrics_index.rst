@@ -40,6 +40,7 @@ Property-based
     pepme.metrics.HitRate
     pepme.metrics.HV
     pepme.metrics.ConformityScore
+    pepme.metrics.KLDivergence
 
 
 Miscellaneous

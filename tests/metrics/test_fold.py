@@ -11,7 +11,7 @@ def test_k_fold():
     sequences = ["AA", "AAA", "AAAA", "AAA", "AAAAAA"]
     result = metric(sequences)
     assert result.value == 2.5
-    assert result.deviation == 0.5
+    assert result.deviation == 0.5 / (2**0.5)
 
 
 def test_one_fold():
@@ -44,7 +44,7 @@ def test_split_size():
     result = metric(sequences)
     # total count is 5, split into chunks of 2 → [2,2,1] → mean=5/3, std≈0.471405
     assert result.value == pytest.approx(5 / 3)
-    assert result.deviation == pytest.approx(0.471405, abs=1e-6)
+    assert result.deviation == pytest.approx(0.471405 / (3**0.5), abs=1e-6)
 
 
 def test_large_split_size():

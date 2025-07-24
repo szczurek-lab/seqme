@@ -4,10 +4,7 @@ from pepme.core import Metric, MetricResult
 
 
 class Novelty(Metric):
-    """
-    Compares generated sequences against a reference set
-    and returns the fraction of sequences not seen in the reference.
-    """
+    """Fraction of sequences not in the reference."""
 
     def __init__(self, reference: list[str], reference_name: str | None = None):
         """

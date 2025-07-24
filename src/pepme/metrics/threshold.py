@@ -8,7 +8,7 @@ from pepme.core import Metric, MetricResult
 
 class Threshold(Metric):
     """
-    Computes the fraction of sequences with a property above (or below) a user-defined threshold.
+    Fraction of sequences with a property above (or below) a user-defined threshold.
     """
 
     def __init__(

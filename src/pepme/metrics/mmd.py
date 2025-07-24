@@ -21,6 +21,7 @@ class MaximumMeanDiscrepancy(Metric):
         self,
         reference: list[str],
         embedder: Callable[[list[str]], np.ndarray],
+        *,
         sigma: float = 10,
         scale: float = 1000,
         device: str = "cpu",
