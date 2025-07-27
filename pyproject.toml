@@ -38,6 +38,7 @@ doc = [
     "myst_nb",
     "scanpydoc",
     "sphinx-book-theme",
+    "sphinx-gallery",
     "sphinx-copybutton",
     "sphinx-autodoc-typehints",
 ]
