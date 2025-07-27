@@ -12,7 +12,7 @@ def feature_alignment_score(xs: np.ndarray, labels: np.ndarray, n_neighbors: int
 
     Args:
         xs: Sequence embeddings.
-        labels: Group label for each sequence:
+        labels: Group label for each sequence.
         n_neighbors: Number of neighbors used by k-NN.
 
     Returns:
@@ -57,7 +57,7 @@ def plot_feature_alignment_score(
 
     Args:
         xs: Sequence embeddings.
-        labels: Group label for each sequence:
+        labels: Group label for each sequence.
         n_neighbors: Number of neighbors used by k-NN.
         label: Model name.
         ax: Optional Axes.
