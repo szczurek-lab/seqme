@@ -34,3 +34,12 @@ Miscellaneous
     pepme.models.normalizers.MinMaxNorm
 
 
+Diagnostics
+-----------
+.. autosummary::
+    :toctree:
+    :nosignatures:
+
+    pepme.models.diagnostics.feature_alignment_score
+    pepme.models.diagnostics.spearman_correlation_coefficient
+    pepme.models.diagnostics.plot_feature_alignment_score

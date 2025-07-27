@@ -13,18 +13,18 @@ authors = [
 ]
 requires-python = ">=3.10"
 dependencies = [
-    "matplotlib>=3.9.4",
-    "numpy>=2.0",
-    "pandas>=2.0",
-    "pymoo>=0.6.1.5",
-    "scipy>=1.13.1",
-    "torch>=2.0",
-    "tqdm>=4.67.1",
-    "transformers>=4.53.0",
-    "scikit-learn>=1.7.0",
-    "umap-learn>=0.5.9.post2",
-    "modlamp>=4.3.2",
-    "pylev>=1.4.0",
+    "matplotlib>3.6",
+    "numpy",
+    "pandas>=1.5",
+    "pymoo",
+    "scipy",
+    "torch",
+    "tqdm",
+    "transformers",
+    "scikit-learn<1.7.0",
+    "umap-learn",
+    "modlamp",
+    "pylev",
 ]
 
 [project.optional-dependencies]
@@ -38,6 +38,7 @@ doc = [
     "myst_nb",
     "scanpydoc",
     "sphinx-book-theme",
+    "sphinx-gallery",
     "sphinx-copybutton",
     "sphinx-autodoc-typehints",
 ]
@@ -45,12 +46,12 @@ doc = [
 dev = [
     "mypy>=1.16.1",
     "nbstripout>=0.8.1",
-    "pandas-stubs>=2.2.2.240807",
+    "pandas-stubs",
     "pre-commit>=3.0.0",
     "pytest>=8.4.1",
     "ruff>=0.12.0",
-    "scipy-stubs>=1.15.3.0",
-    "types-tqdm>=4.67.0.20250516",
+    "scipy-stubs",
+    "types-tqdm",
     "ipykernel>=6.29.5",
     "ipywidgets>=8.1.7",
 ]

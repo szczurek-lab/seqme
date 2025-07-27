@@ -8,9 +8,9 @@ Embeddings
     :toctree:
     :nosignatures:
 
-    pepme.plots.plot_pca
-    pepme.plots.plot_tsne
-    pepme.plots.plot_umap
+    pepme.plots.plot_embeddings
+    pepme.plots.plot_embedding_with_value
+    
 
 Properties
 ----------
@@ -21,4 +21,15 @@ Properties
     pepme.plots.plot_hist
     pepme.plots.plot_kde
     pepme.plots.plot_violin
+
+
+Projection
+----------
+.. autosummary::
+    :toctree:
+    :nosignatures:
+
+    pepme.plots.pca
+    pepme.plots.tsne
+    pepme.plots.umap
 

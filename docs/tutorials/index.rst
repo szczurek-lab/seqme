@@ -3,10 +3,11 @@ Tutorials
 
 Tutorials on using pepme for peptide evaluation, adding new metrics, and integrating third-party models.
 
-.. toctree::
-    :hidden:
+.. nbgallery::
 
     getting_started
-    benchmark
+    benchmark_peptides
+    benchmark_rna
+    diagnostics
     third_party
-    visualization
+    
