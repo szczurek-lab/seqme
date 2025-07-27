@@ -32,7 +32,7 @@ class ThirdPartyModel:
             entry_point: String specifying the module and function, in the form 'module.path:function'.
             repo_path: Root directory for plugin environments and repos.
             python_bin: Optional path to a python executable. If None, creates a venv enviroment using the exposed python executable.
-            repo_url: Optional Git repository URL for the plugin (prefixed with 'git+' or local path).
+            repo_url: Optional Git repository URL for the plugin (Optionally prefixed with 'git+').
             branch: Optional branch to clone. If none, clone the whole repository.
 
         Raises:
