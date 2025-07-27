@@ -204,235 +204,183 @@ def plot_violin(
         plt.show()
 
 
-def plot_pca(
-    embeddings: list[np.ndarray],
-    names: list[str] | None = None,
+def pca(embeddings: np.ndarray, seed: int = 42) -> np.ndarray:
+    """
+    Project embeddings into 2D using PCA.
+
+    Args:
+        embeddings: 2D array where each row is a data point.
+        seed: Seed for reproducibility in PCA.
+
+    Returns:
+        2D array of shape (n_samples, 2).
+
+    Notes:
+        PCA is a linear dimensionality reduction that preserves global structure by projecting data into directions of maximal variance.
+    """
+    return PCA(n_components=2, random_state=seed).fit_transform(embeddings)
+
+
+def tsne(embeddings: np.ndarray, seed: int = 42) -> np.ndarray:
+    """
+    Project embeddings into 2D using t‑SNE.
+
+    Args:
+        embeddings: 2D array where each row is a data point.
+        seed: Seed for reproducibility in t‑SNE.
+
+    Returns:
+        2D array of shape (n_samples, 2).
+
+    Notes:
+        t‑SNE is a nonlinear technique that preserves local neighborhood structure by minimizing KL‑divergence between high‑dimensional and low‑dim similarity distributions.
+    """
+    return TSNE(n_components=2, random_state=seed, init="pca", learning_rate="auto").fit_transform(embeddings)
+
+
+def umap(embeddings: np.ndarray, seed: int = 42) -> np.ndarray:
+    """
+    Project embeddings into 2D using UMAP.
+
+    Args:
+        embeddings: 2D array where each row is a data point.
+        seed: Seed for reproducibility in UMAP.
+
+    Returns:
+        2D array of shape (n_samples, 2).
+
+    Notes:
+        UMAP is a nonlinear manifold learning method that preserves both local and some global structure, offering speed and scalability comparable to or better than t‑SNE.
+    """
+    return UMAP(n_components=2, random_state=seed).fit_transform(embeddings)
+
+
+def plot_embeddings(
+    projections: list[np.ndarray],
+    *,
     colors: list[str] | None = None,
-    property_values: np.ndarray | None = None,
+    labels: list[str] | None = None,
     title: str | None = None,
     ax: Axes | None = None,
+    xlabel: str = "dim1",
+    ylabel: str = "dim2",
     figsize: tuple[int, int] = (4, 3),
     point_size: int = 20,
     alpha: float = 0.6,
-    seed: int = 42,
+    show_ticks: bool = False,
 ):
     """
-    Plot a 2D PCA projection of multiple sets of vectors.
+    Plot projections for one or more groups.
 
     Args:
-        embeddings: List of arrays, each containing vectors to embed.
-        names: Labels corresponding to each set in data.
+        projections: List of arrays, each containing vectors to embed.
+        labels: Labels corresponding to each set in data.
         colors: Colors for each group of points.
-        property_values: Continuous values to color points by (for a single group).
         title: Optional plot title.
         ax: Optional matplotlib Axes to plot on.
         figsize: Size of the figure (if no Axes provided).
+        xlabel: x-axis label.
+        ylabel: y-axis label.
+        figsize: Size of figure.
         point_size: Size of scatter points.
         alpha: Transparency of points.
-        seed: Random seed for reproducibility.
+        show_ticks: Whether to show axis ticks.
     """
 
     if ax is None:
         fig, ax = plt.subplots(figsize=figsize)
 
-    reducer = PCA(n_components=2, random_state=seed)
-
-    X_all, splits = _prepare_data_groups(embeddings)
-    X2 = reducer.fit_transform(X_all)
-    segments = np.split(X2, splits)
-
-    _plot_reduction(
-        segments,
-        names,
-        colors,
-        property_values=property_values,
-        xlabel="PC 1",
-        ylabel="PC 2",
-        title=title,
-        ax=ax,
-        point_size=point_size,
-        alpha=alpha,
-    )
-    if ax.figure:
-        ax.figure.tight_layout()  # type: ignore
-
-
-def plot_tsne(
-    embeddings: list[np.ndarray],
-    names: list[str] | None = None,
-    colors: list[str] | None = None,
-    property_values: np.ndarray | None = None,
-    title: str | None = None,
-    ax: Axes | None = None,
-    figsize: tuple[int, int] = (4, 3),
-    point_size: int = 20,
-    alpha: float = 0.6,
-    seed: int = 42,
-):
-    """
-    Plot a 2D t-SNE projection of multiple sets of vectors.
-
-    Args:
-        embeddings: List of arrays, each containing vectors to embed.
-        names: Labels corresponding to each set in data.
-        colors: Colors for each group of points.
-        property_values: Continuous values to color points by (for a single group).
-        title: Optional plot title.
-        ax: Optional matplotlib Axes to plot on.
-        figsize: Size of the figure (if no Axes provided).
-        point_size: Size of scatter points.
-        alpha: Transparency of points.
-        seed: Random seed for reproducibility.
-    """
-
-    if ax is None:
-        fig, ax = plt.subplots(figsize=figsize)
-
-    reducer = TSNE(n_components=2, random_state=seed, init="pca", learning_rate="auto")
-
-    X_all, splits = _prepare_data_groups(embeddings)
-    X2 = reducer.fit_transform(X_all)
-    segments = np.split(X2, splits)
-
-    _plot_reduction(
-        segments,
-        names,
-        colors,
-        property_values,
-        xlabel="t-SNE 1",
-        ylabel="t-SNE 2",
-        title=title,
-        ax=ax,
-        point_size=point_size,
-        alpha=alpha,
-    )
-    if ax.figure:
-        ax.figure.tight_layout()  # type: ignore
-
-
-def plot_umap(
-    embeddings: list[np.ndarray],
-    names: list[str] | None = None,
-    colors: list[str] | None = None,
-    property_values: np.ndarray | None = None,
-    title: str | None = None,
-    ax: Axes | None = None,
-    figsize: tuple[int, int] = (4, 3),
-    point_size: int = 20,
-    alpha: float = 0.6,
-    seed: int = 42,
-):
-    """
-    Plot a 2D UMAP projection of multiple sets of vectors.
-
-    Args:
-        embeddings: List of arrays, each containing vectors to embed.
-        names: Labels corresponding to each set in data.
-        colors: Colors for each group of points.
-        property_values: Continuous values to color points by (for a single group).
-        title: Optional plot title.
-        ax: Optional matplotlib Axes to plot on.
-        figsize: Size of the figure (if no Axes provided).
-        point_size: Size of scatter points.
-        alpha: Transparency of points.
-        seed: Random seed for reproducibility.
-    """
-    if ax is None:
-        fig, ax = plt.subplots(figsize=figsize)
-
-    reducer = UMAP(n_components=2, random_state=seed)
-
-    X_all, splits = _prepare_data_groups(embeddings)
-    X2 = reducer.fit_transform(X_all)
-    segments = np.split(X2, splits)
-
-    _plot_reduction(
-        segments,
-        names,
-        colors,
-        property_values,
-        xlabel="UMAP 1",
-        ylabel="UMAP 2",
-        title=title,
-        ax=ax,
-        point_size=point_size,
-        alpha=alpha,
-    )
-    if ax.figure:
-        ax.figure.tight_layout()  # type: ignore
-
-
-def _prepare_data_groups(data_groups: list[np.ndarray]) -> tuple[np.ndarray, list[int]]:
-    """
-    Stacks a list of 2D arrays and returns the combined array and group split indices.
-    """
-    processed: list[np.ndarray] = []
-    lengths: list[int] = []
-    for arr in data_groups:
-        X = np.asarray(arr)
-        if X.ndim != 2:
-            raise ValueError("Each group must be a 2D array of shape (n_samples, n_features).")
-        processed.append(X)
-        lengths.append(X.shape[0])
-    combined = np.vstack(processed)
-    split_indices: list[int] = np.cumsum(lengths)[:-1].tolist()
-    return combined, split_indices
-
-
-def _plot_reduction(
-    segments: list[np.ndarray],
-    names: list[str],
-    colors: list[str],
-    property_values: np.ndarray,
-    xlabel: str,
-    ylabel: str,
-    title: str | None,
-    ax: Axes,
-    point_size: int,
-    alpha: float,
-):
-    if property_values is not None:
-        if (names is not None) or (colors is not None):
-            raise ValueError("names and colors must be None when property_values is not None.")
-
-        if len(segments) != 1:
-            raise ValueError("Property coloring is only supported for a single segment")
-
-        sc = ax.scatter(
-            segments[0][:, 0],
-            segments[0][:, 1],
-            label=None,
-            c=property_values,
+    for i, seg in enumerate(projections):
+        color = colors[i] if colors is not None else None
+        label = labels[i] if labels is not None else None
+        ax.scatter(
+            seg[:, 0],
+            seg[:, 1],
+            label=label,
+            c=color,
             s=point_size,
             alpha=alpha,
             edgecolor="black",
             linewidth=0.4,
         )
-        ax.figure.colorbar(sc, ax=ax)
-    else:
-        for i, seg in enumerate(segments):
-            color = colors[i] if colors is not None else None
-            name = names[i] if names is not None else None
-            ax.scatter(
-                seg[:, 0],
-                seg[:, 1],
-                label=name,
-                c=color,
-                s=point_size,
-                alpha=alpha,
-                edgecolor="black",
-                linewidth=0.4,
-            )
-        if names is not None:
+
+        if labels is not None:
             ax.legend(frameon=True)
 
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
 
-    ax.set_xticks([])
-    ax.set_yticks([])
+    if not show_ticks:
+        ax.set_xticks([])
+        ax.set_yticks([])
+
     ax.set_axisbelow(True)
     ax.grid(True, linestyle="--", linewidth=0.5, alpha=0.5)
 
     if title is not None:
         ax.set_title(title)
+
+    if ax.figure:
+        ax.figure.tight_layout()  # type: ignore
+
+
+def plot_embedding_with_value(
+    projections: np.ndarray,
+    *,
+    values: np.ndarray | None = None,
+    title: str | None = None,
+    ax: Axes | None = None,
+    xlabel: str = "dim1",
+    ylabel: str = "dim2",
+    figsize: tuple[int, int] = (4, 3),
+    point_size: int = 20,
+    alpha: float = 0.6,
+    show_ticks: bool = False,
+):
+    """
+    Plot projections and color by value.
+
+    Args:
+        projections: Arrays of projected embeddings.
+        values: Attribute values.
+        title: Optional plot title.
+        ax: Optional matplotlib Axes to plot on.
+        figsize: Size of the figure (if no Axes provided).
+        xlabel: x-axis label.
+        ylabel: y-axis label.
+        figsize: Size of figure.
+        point_size: Size of scatter points.
+        alpha: Transparency of points.
+        show_ticks: Whether to show axis ticks.
+    """
+
+    if ax is None:
+        fig, ax = plt.subplots(figsize=figsize)
+
+    sc = ax.scatter(
+        projections[:, 0],
+        projections[:, 1],
+        label=None,
+        c=values,
+        s=point_size,
+        alpha=alpha,
+        edgecolor="black",
+        linewidth=0.4,
+    )
+    ax.figure.colorbar(sc, ax=ax)
+
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+
+    if not show_ticks:
+        ax.set_xticks([])
+        ax.set_yticks([])
+
+    ax.set_axisbelow(True)
+    ax.grid(True, linestyle="--", linewidth=0.5, alpha=0.5)
+
+    if title is not None:
+        ax.set_title(title)
+
+    if ax.figure:
+        ax.figure.tight_layout()  # type: ignore
