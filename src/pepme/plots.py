@@ -249,17 +249,17 @@ def pca(embeddings: np.ndarray | list[np.ndarray], seed: int = 42) -> np.ndarray
 
 def tsne(embeddings: np.ndarray | list[np.ndarray], seed: int = 42) -> np.ndarray | list[np.ndarray]:
     """
-    Project embeddings into 2D using t‑SNE.
+    Project embeddings into 2D using t-SNE.
 
     Args:
         embeddings: 2D array where each row is a data point or list.
-        seed: Seed for reproducibility in t‑SNE.
+        seed: Seed for reproducibility in t-SNE.
 
     Returns:
         2D array of shape (n_samples, 2) or list.
 
     Notes:
-        t‑SNE is a nonlinear technique that preserves local neighborhood structure by minimizing KL‑divergence between high‑dimensional and low‑dim similarity distributions.
+        t-SNE is a nonlinear technique that preserves local neighborhood structure by minimizing KL-divergence between high-dimensional and low-dim similarity distributions.
     """
 
     def _tsne(embeds: np.ndarray) -> np.ndarray:
@@ -286,7 +286,7 @@ def umap(embeddings: np.ndarray | list[np.ndarray], seed: int = 42) -> np.ndarra
         2D array of shape (n_samples, 2) or list.
 
     Notes:
-        UMAP is a nonlinear manifold learning method that preserves both local and some global structure, offering speed and scalability comparable to or better than t‑SNE.
+        UMAP is a nonlinear manifold learning method that preserves both local and some global structure, offering speed and scalability comparable to or better than t-SNE.
     """
 
     def _umap(embeds: np.ndarray) -> np.ndarray:
