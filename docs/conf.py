@@ -30,6 +30,7 @@ extensions = [
     "sphinx_autodoc_typehints",  # needs to be after napoleon
     "sphinx.ext.autosummary",
     "sphinx_copybutton",
+    "sphinx_gallery.load_style",
     "nbsphinx",
 ]
 intersphinx_mapping = {
@@ -59,12 +60,21 @@ myst_enable_extensions = [
 
 templates_path = ["_templates"]
 
-
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = "scanpydoc"  # "sphinx_rtd_theme"
 html_title = "pepme"
 html_static_path = ["_static"]
+html_css_files = ["css/overwrite.css", "css/sphinx_gallery.css"]
+
 html_logo = "_static/logo.svg"
 html_show_sphinx = False
+
+nbsphinx_thumbnails = {
+    "tutorials/getting_started": "_static/logo.svg",
+    "tutorials/benchmark_peptides": "_static/logo.svg",
+    "tutorials/benchmark_rna": "_static/logo.svg",
+    "tutorials/diagnostics": "_static/logo.svg",
+    "tutorials/third_party": "_static/logo.svg",
+}
