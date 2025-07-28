@@ -2,8 +2,8 @@ import random
 
 import pytest
 
-from pepme.metrics import KLDivergence
-from pepme.models import Gravy
+from seqme.metrics import KLDivergence
+from seqme.models import Gravy
 
 
 def generate_sequences_from_aas(aa_list, n_seqs, l=30):

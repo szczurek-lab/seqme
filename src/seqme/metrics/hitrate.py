@@ -3,7 +3,7 @@ from typing import Literal
 
 import numpy as np
 
-from pepme.core import Metric, MetricResult
+from seqme.core import Metric, MetricResult
 
 
 class HitRate(Metric):

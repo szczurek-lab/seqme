@@ -1,23 +1,23 @@
 <p align="left">
-    <img src="docs/_static/logo_title.svg" alt="pepme logo" width="30%">
+    <img src="docs/_static/logo_title.svg" alt="seqme logo" width="30%">
 </p>
 
-**pepme** is a modular and highly extendable python library containing model-agnostic metrics for evaluating peptides - and other biological sequences.
+**seqme** is a modular and highly extendable python library containing model-agnostic metrics for biological sequences.
 
 ## Installation
 
 You need to have Python 3.10 or newer installed on your system.
 
 ```bash
-$ pip install git+https://github.com/szczurek-lab/pepme.git
+$ pip install git+https://github.com/szczurek-lab/seqme.git
 ```
 
 ## Quick start
 
 ```python
-from pepme import compute_metrics, show_table, FeatureCache
-from pepme.metrics import Uniqueness, Novelty, FBD
-from pepme.models import Esm2
+from seqme import compute_metrics, show_table, FeatureCache
+from seqme.metrics import Uniqueness, Novelty, FBD
+from seqme.models import Esm2
 
 sequences = {
     "Random": ["MKQW", "RKSPL"],

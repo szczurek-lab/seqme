@@ -3,7 +3,7 @@ import math
 import numpy as np
 import pytest
 
-from pepme.metrics import FBD
+from seqme.metrics import FBD
 
 
 @pytest.fixture

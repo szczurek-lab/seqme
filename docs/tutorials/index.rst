@@ -1,7 +1,7 @@
 Tutorials
 #########
 
-Tutorials on using pepme for peptide evaluation, adding new metrics, and integrating third-party models.
+Tutorials on using seqme for peptide evaluation, adding new metrics, and integrating third-party models.
 
 .. nbgallery::
 

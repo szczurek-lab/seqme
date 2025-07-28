@@ -1,4 +1,4 @@
-from pepme.core import (
+from seqme.core import (
     FeatureCache,
     barplot,
     combine_metric_dataframes,

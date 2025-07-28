@@ -1,7 +1,7 @@
 Metrics
 #######
 
-Pepme contains three types of metrics. Those operating in sequence-, embedding-, and property-space.
+seqme contains three types of metrics. Those operating in sequence-, embedding-, and property-space.
 
 Sequence-based
 --------------
@@ -10,10 +10,10 @@ Sequence-based
     :toctree:
     :nosignatures:
 
-    pepme.metrics.Diversity
-    pepme.metrics.Uniqueness
-    pepme.metrics.Novelty
-    pepme.metrics.KmerJaccardSimilarity
+    seqme.metrics.Diversity
+    seqme.metrics.Uniqueness
+    seqme.metrics.Novelty
+    seqme.metrics.KmerJaccardSimilarity
 
 Embedding-based
 ---------------
@@ -22,11 +22,11 @@ Embedding-based
     :toctree:
     :nosignatures:
 
-    pepme.metrics.FBD
-    pepme.metrics.MMD
-    pepme.metrics.Precision
-    pepme.metrics.Recall
-    pepme.metrics.AuthPct
+    seqme.metrics.FBD
+    seqme.metrics.MMD
+    seqme.metrics.Precision
+    seqme.metrics.Recall
+    seqme.metrics.AuthPct
 
 Property-based
 --------------
@@ -35,12 +35,12 @@ Property-based
     :toctree:
     :nosignatures:
 
-    pepme.metrics.ID
-    pepme.metrics.Threshold
-    pepme.metrics.HitRate
-    pepme.metrics.HV
-    pepme.metrics.ConformityScore
-    pepme.metrics.KLDivergence
+    seqme.metrics.ID
+    seqme.metrics.Threshold
+    seqme.metrics.HitRate
+    seqme.metrics.HV
+    seqme.metrics.ConformityScore
+    seqme.metrics.KLDivergence
 
 
 Miscellaneous
@@ -49,5 +49,5 @@ Miscellaneous
     :toctree:
     :nosignatures:
 
-    pepme.metrics.Fold
-    pepme.metrics.Count
+    seqme.metrics.Fold
+    seqme.metrics.Count

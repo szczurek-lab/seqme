@@ -8,19 +8,19 @@ Models
     :toctree:
     :nosignatures:
 
-    pepme.models.Esm2
-    pepme.models.KmerFrequencyEmbedding
+    seqme.models.Esm2
+    seqme.models.KmerFrequencyEmbedding
 
-    pepme.models.AliphaticIndex
-    pepme.models.Aromaticity
-    pepme.models.BomanIndex
-    pepme.models.Charge
-    pepme.models.Gravy
-    pepme.models.Hydrophobicity
-    pepme.models.HydrophobicMoment
-    pepme.models.InstabilityIndex
-    pepme.models.IsoelectricPoint
-    pepme.models.MolecularWeight
+    seqme.models.AliphaticIndex
+    seqme.models.Aromaticity
+    seqme.models.BomanIndex
+    seqme.models.Charge
+    seqme.models.Gravy
+    seqme.models.Hydrophobicity
+    seqme.models.HydrophobicMoment
+    seqme.models.InstabilityIndex
+    seqme.models.IsoelectricPoint
+    seqme.models.MolecularWeight
 
 Miscellaneous
 -------------
@@ -28,10 +28,10 @@ Miscellaneous
     :toctree:
     :nosignatures:
 
-    pepme.models.ThirdPartyModel
-    pepme.models.Ensemble
-    pepme.models.Concatenate
-    pepme.models.normalizers.MinMaxNorm
+    seqme.models.ThirdPartyModel
+    seqme.models.Ensemble
+    seqme.models.Concatenate
+    seqme.models.normalizers.MinMaxNorm
 
 
 Diagnostics
@@ -40,6 +40,6 @@ Diagnostics
     :toctree:
     :nosignatures:
 
-    pepme.models.diagnostics.feature_alignment_score
-    pepme.models.diagnostics.spearman_correlation_coefficient
-    pepme.models.diagnostics.plot_feature_alignment_score
+    seqme.models.diagnostics.feature_alignment_score
+    seqme.models.diagnostics.spearman_correlation_coefficient
+    seqme.models.diagnostics.plot_feature_alignment_score

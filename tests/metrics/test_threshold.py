@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from pepme.metrics import Threshold
+from seqme.metrics import Threshold
 
 
 def discriminator(sequences: list[str]) -> np.ndarray:

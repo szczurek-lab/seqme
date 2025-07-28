@@ -1,8 +1,8 @@
 import pandas as pd
 import pytest
 
-from pepme import compute_metrics
-from pepme.metrics import Novelty
+from seqme import compute_metrics
+from seqme.metrics import Novelty
 
 
 def test_compute_metrics():

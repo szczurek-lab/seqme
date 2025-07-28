@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from pepme.metrics import Precision, Recall
+from seqme.metrics import Precision, Recall
 
 
 def test_basic_precision():

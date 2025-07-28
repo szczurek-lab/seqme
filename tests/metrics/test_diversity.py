@@ -1,6 +1,6 @@
 import pytest
 
-from pepme.metrics import Diversity
+from seqme.metrics import Diversity
 
 
 def test_multiple_sequences():

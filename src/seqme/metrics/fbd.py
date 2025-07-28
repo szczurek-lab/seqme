@@ -4,7 +4,7 @@ from typing import Literal
 import numpy as np
 from scipy.linalg import sqrtm
 
-from pepme.core import Metric, MetricResult
+from seqme.core import Metric, MetricResult
 
 
 class FrechetBiologicalDistance(Metric):

@@ -8,8 +8,8 @@ Embeddings
     :toctree:
     :nosignatures:
 
-    pepme.plots.plot_embeddings
-    pepme.plots.plot_embedding_with_value
+    seqme.plots.plot_embeddings
+    seqme.plots.plot_embedding_with_value
     
 
 Properties
@@ -18,9 +18,9 @@ Properties
     :toctree:
     :nosignatures:
 
-    pepme.plots.plot_hist
-    pepme.plots.plot_kde
-    pepme.plots.plot_violin
+    seqme.plots.plot_hist
+    seqme.plots.plot_kde
+    seqme.plots.plot_violin
 
 
 Projection
@@ -29,7 +29,7 @@ Projection
     :toctree:
     :nosignatures:
 
-    pepme.plots.pca
-    pepme.plots.tsne
-    pepme.plots.umap
+    seqme.plots.pca
+    seqme.plots.tsne
+    seqme.plots.umap
 

@@ -6,7 +6,7 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = "pepme"
+project = "seqme"
 copyright = "2025, Rasmus Møller-Larsen"
 author = "Rasmus Møller-Larsen"
 
@@ -64,7 +64,7 @@ templates_path = ["_templates"]
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = "scanpydoc"  # "sphinx_rtd_theme"
-html_title = "pepme"
+html_title = "seqme"
 html_static_path = ["_static"]
 html_css_files = ["css/overwrite.css", "css/sphinx_gallery.css"]
 

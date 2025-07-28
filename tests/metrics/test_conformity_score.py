@@ -2,8 +2,8 @@ import random
 
 import pytest
 
-from pepme.metrics import ConformityScore
-from pepme.models import Gravy
+from seqme.metrics import ConformityScore
+from seqme.models import Gravy
 
 
 def generate_sequences_from_aas(aa_list, n_seqs, l=30):

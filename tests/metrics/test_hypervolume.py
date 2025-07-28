@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from pepme.metrics import HV
+from seqme.metrics import HV
 
 
 def p_count_aa(sequences: list[str], aa: str) -> np.ndarray:
