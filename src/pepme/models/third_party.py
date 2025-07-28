@@ -20,36 +20,35 @@ class ThirdPartyModel:
     def __init__(
         self,
         entry_point: str,
-        repo_url: str,
-        save_dir: str,
+        repo_path: str,
         python_bin: str | None = None,
+        repo_url: str | None = None,
         branch: str | None = None,
     ):
         """
         Initialize and install the plugin.
 
         Args:
-            entry_point (str): String specifying the module and function,
-                in the form 'module.path:func_name'.
-            repo_url (str): Git repository URL for the plugin (prefixed with 'git+' or local path).
-            save_dir (str): Directory where the virtual environment and repo will be stored.
+            entry_point: String specifying the module and function, in the form 'module.path:function'.
+            repo_path: Root directory for plugin environments and repos.
             python_bin: Optional path to a python executable. If None, creates a venv enviroment using the exposed python executable.
+            repo_url: Optional Git repository URL for the plugin (Optionally prefixed with 'git+').
             branch: Optional branch to clone. If none, clone the whole repository.
 
         Raises:
-            ValueError: If entry_point is not of the form 'module:func'.
+            ValueError: If entry_point is not of the form 'module:function'.
         """
         try:
-            module, func = entry_point.split(":", 1)
-        except ValueError as err:
-            raise ValueError("entry_point must be of the form 'module:func'") from err
+            module, fn = entry_point.split(":", 1)
+        except ValueError as e:
+            raise ValueError("entry_point must be of the form 'module:function'.") from e
 
         self.module = module
-        self.func = func
+        self.fn = fn
 
         self.plugin = Plugin()
         self.plugin.setup(
-            plugins_root=Path(save_dir),
+            plugins_root=Path(repo_path),
             repo_url=repo_url,
             branch=branch,
             python_bin=Path(python_bin) if python_bin else None,
@@ -70,7 +69,7 @@ class ThirdPartyModel:
             ValueError: If the plugin response is not a numpy.ndarray.
         """
         kwargs["sequences"] = sequences
-        result = self.plugin.run(self.module, self.func, kwargs)
+        result = self.plugin.run(self.module, self.fn, kwargs)
         if not isinstance(result, np.ndarray):
             raise ValueError("Invalid plugin response: expected numpy.ndarray")
         return result
@@ -84,17 +83,17 @@ class Plugin:
     def setup(
         self,
         plugins_root: Path,
-        repo_url: str,
-        python_bin: Path | None = None,
-        branch: str | None = None,
+        python_bin: Path | None,
+        repo_url: str | None,
+        branch: str | None,
     ):
         """
         Create a virtual environment and install the plugin from its repository.
 
         Args:
-            plugins_root (Path): Root directory for plugin environments and repos.
-            repo_url (str): Git repository URL for the plugin.
+            plugins_root: Root directory for plugin environments and repos.
             python_bin: Optional path to a python executable. If None, creates a venv enviroment using the exposed python executable.
+            repo_url: Optional Git repository URL for the plugin to clone.
             branch: Optional branch to clone. If none, clone the whole repository.
         """
         plugins_root.mkdir(parents=True, exist_ok=True)
@@ -107,8 +106,14 @@ class Plugin:
             if not env_dir.exists():
                 subprocess.check_call([sys.executable, "-m", "venv", str(env_dir)])
                 subprocess.check_call([str(python_bin), "-m", "pip", "install", "--upgrade", "pip"])
+        else:
+            if not python_bin.is_file():
+                raise ValueError(f"Python executable not found: '{python_bin!r}'.")
 
         if not repo_dir.exists():
+            if repo_url is None:
+                raise ValueError(f"'{repo_dir}' does not exist. Correct the path or define a repository url to clone.")
+
             url = repo_url.removeprefix("git+")
 
             clone_cmd = ["git", "clone", url, str(repo_dir)]
@@ -123,19 +128,19 @@ class Plugin:
     def run(
         self,
         module: str,
-        func: str,
+        fn: str,
         arguments: dict,
     ) -> Any:
         """
         Run the specified function from the installed plugin.
 
         Args:
-            module (str): The module path containing the function to call.
-            func (str): The name of the function within the module.
-            arguments (dict): Dictionary of arguments passed to the function.
+            module: The module path containing the function to call.
+            fn: The name of the function within the module.
+            arguments: Dictionary of arguments passed to the function.
 
         Returns:
-            Any: The deserialized output of the plugin's function.
+            The deserialized output of the plugin's function.
         """
         with TemporaryDirectory() as tmpdir:
             in_path = Path(tmpdir) / "input.pkl"
@@ -150,7 +155,7 @@ class Plugin:
                 "import pickle, sys;"
                 f"import {module};"
                 "data = pickle.load(open(sys.argv[1],'rb'));"
-                f"result = {module}.{func}(**data);"
+                f"result = {module}.{fn}(**data);"
                 "pickle.dump(result, open(sys.argv[2],'wb'))"
             )
             cmd = [str(self.python_bin), "-c", code, str(in_path), str(out_path)]

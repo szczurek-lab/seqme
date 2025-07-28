@@ -37,6 +37,7 @@ doc = [
     "myst-parser",
     "myst_nb",
     "scanpydoc",
+    "seaborn",
     "sphinx-book-theme",
     "sphinx-gallery",
     "sphinx-copybutton",

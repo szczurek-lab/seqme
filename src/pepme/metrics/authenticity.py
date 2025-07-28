@@ -21,7 +21,6 @@ class Authenticity(Metric):
         embedder: Callable[[list[str]], np.ndarray],
         *,
         embedder_name: str | None = None,
-        strict: bool = True,
     ):
         """
         Initialize the Authenticity metric.
@@ -30,12 +29,10 @@ class Authenticity(Metric):
             train_set: List of sequences used to train the generative model.
             embedder: A function that maps a list of sequences to a 2D NumPy array of embeddings.
             embedder_name: Optional name for the embedder used.
-            strict: Enforce equal number of eval and train samples if True.
         """
         self.train_set = train_set
         self.embedder = embedder
         self.embedder_name = embedder_name
-        self.strict = strict
 
         self.train_set_embeddings = self.embedder(self.train_set)
 
@@ -55,11 +52,6 @@ class Authenticity(Metric):
 
         if len(sequences) == 0:
             raise ValueError("Sequences must contain at least one sample.")
-
-        if self.strict and len(sequences) != self.train_set_embeddings.shape[0]:
-            raise ValueError(
-                f"Number of sequences ({len(sequences)}) must match the number of sequences in the training set ({self.train_set_embeddings.shape[0]}). Set strict=False to disable this check."
-            )
 
         embeddings = self.embedder(sequences)
 

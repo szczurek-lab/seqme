@@ -19,6 +19,7 @@ def plot_hist(
     alpha: float = 1.0,
     edgecolor: str = "black",
     linewidth: float = 1.0,
+    label: str | None = None,
     ax: Axes | None = None,
 ):
     """
@@ -34,6 +35,7 @@ def plot_hist(
         alpha: Transparency level of the bars.
         edgecolor: Color of the bar edges.
         linewidth: Width of the bar edges.
+        label: Label for the plot legend.
         ax: Optional matplotlib Axes to plot on.
 
     Raises:
@@ -59,7 +61,11 @@ def plot_hist(
         edgecolor=edgecolor,
         linewidth=linewidth,
         density=(ytype == "density"),
+        label=label,
     )
+
+    if label is not None:
+        ax.legend()
 
     ax.set_axisbelow(True)
     ax.grid(True, linestyle="--", linewidth=0.5, alpha=0.7)
@@ -81,6 +87,8 @@ def plot_kde(
     num_points: int = 200,
     linewidth: float = 1.0,
     alpha: float = 0.8,
+    label: str | None = None,
+    xlim: tuple[float, float] | None = None,
     ax: Axes | None = None,
 ):
     """
@@ -91,10 +99,12 @@ def plot_kde(
         xlabel: Label for the x-axis.
         color: Fill color under the KDE curve.
         figsize: Size of the figure (if no Axes provided).
-        bandwidth: Bandwidth method for the KDE (passed to scipy).
+        bandwidth: Bandwidth method for the KDE.
         num_points: Number of points to evaluate the KDE on.
         linewidth: Width of the KDE curve line.
         alpha: Transparency level for the curve and fill.
+        label: Label for the plot legend.
+        xlim: Optional x-axis limits as a tuple [min, max].
         ax: Optional matplotlib Axes to plot on.
 
     Raises:
@@ -116,13 +126,19 @@ def plot_kde(
     y_vals = kde_est(x_vals)
 
     ax.plot(x_vals, y_vals, color="black", linewidth=linewidth, alpha=alpha)
-    ax.fill_between(x_vals, y_vals, color=color, alpha=alpha)
+    ax.fill_between(x_vals, y_vals, color=color, alpha=alpha, label=label)
 
-    ax.set_axisbelow(True)
-    ax.grid(True, linestyle="--", linewidth=0.5, alpha=0.7)
+    if label is not None:
+        ax.legend()
+
+    # ax.set_axisbelow(True)
+    # ax.grid(True, linestyle="--", linewidth=0.5, alpha=0.7)
 
     ax.set_xlabel(xlabel)
     ax.set_ylabel("Density")
+
+    if xlim is not None:
+        ax.set_xlim(xlim[0], xlim[1])
 
     if created_fig:
         plt.tight_layout()
@@ -134,7 +150,7 @@ def plot_violin(
     xlabel: str,
     color: str = "#68d6bc",
     figsize: tuple[int, int] = (4, 3),
-    bw_method=None,
+    bandwidth: float | Literal["scott", "silverman"] | None = None,
     widths: float = 0.7,
     edge_color: str = "black",
     linewidth: float = 1.0,
@@ -151,7 +167,7 @@ def plot_violin(
         xlabel: Label for the x-axis.
         color: Fill color for the violin body.
         figsize: Size of the figure (if no Axes provided).
-        bw_method: Bandwidth method for KDE (passed to matplotlib).
+        bandwidth: Bandwidth method for the KDE.
         widths: Width of the violin body.
         edge_color: Outline color of the violin.
         linewidth: Width of the violin edge lines.
@@ -177,7 +193,7 @@ def plot_violin(
         arr,
         vert=True,
         widths=widths,
-        bw_method=bw_method,
+        bw_method=bandwidth,
         showmeans=show_means,
         showmedians=show_medians,
     )
@@ -220,7 +236,7 @@ def pca(embeddings: np.ndarray | list[np.ndarray], seed: int = 42) -> np.ndarray
     """
 
     def _pca(embeds: np.ndarray) -> np.ndarray:
-        return PCA(n_components=2, random_state=seed).fit_transform(embeddings)
+        return PCA(n_components=2, random_state=seed).fit_transform(embeds)
 
     if isinstance(embeddings, list):
         embeddings, splits = _prepare_data_groups(embeddings)
@@ -233,17 +249,17 @@ def pca(embeddings: np.ndarray | list[np.ndarray], seed: int = 42) -> np.ndarray
 
 def tsne(embeddings: np.ndarray | list[np.ndarray], seed: int = 42) -> np.ndarray | list[np.ndarray]:
     """
-    Project embeddings into 2D using t‑SNE.
+    Project embeddings into 2D using t-SNE.
 
     Args:
         embeddings: 2D array where each row is a data point or list.
-        seed: Seed for reproducibility in t‑SNE.
+        seed: Seed for reproducibility in t-SNE.
 
     Returns:
         2D array of shape (n_samples, 2) or list.
 
     Notes:
-        t‑SNE is a nonlinear technique that preserves local neighborhood structure by minimizing KL‑divergence between high‑dimensional and low‑dim similarity distributions.
+        t-SNE is a nonlinear technique that preserves local neighborhood structure by minimizing KL-divergence between high-dimensional and low-dim similarity distributions.
     """
 
     def _tsne(embeds: np.ndarray) -> np.ndarray:
@@ -270,7 +286,7 @@ def umap(embeddings: np.ndarray | list[np.ndarray], seed: int = 42) -> np.ndarra
         2D array of shape (n_samples, 2) or list.
 
     Notes:
-        UMAP is a nonlinear manifold learning method that preserves both local and some global structure, offering speed and scalability comparable to or better than t‑SNE.
+        UMAP is a nonlinear manifold learning method that preserves both local and some global structure, offering speed and scalability comparable to or better than t-SNE.
     """
 
     def _umap(embeds: np.ndarray) -> np.ndarray:
@@ -312,7 +328,9 @@ def plot_embeddings(
     xlabel: str = "dim1",
     ylabel: str = "dim2",
     figsize: tuple[int, int] = (4, 3),
-    point_size: int = 20,
+    outline_width: float = 0,
+    point_size: float = 20,
+    legend_point_size: float | None = None,
     alpha: float = 0.6,
     show_ticks: bool = False,
 ):
@@ -325,11 +343,12 @@ def plot_embeddings(
         colors: Colors for each group of points.
         title: Optional plot title.
         ax: Optional matplotlib Axes to plot on.
-        figsize: Size of the figure (if no Axes provided).
         xlabel: x-axis label.
         ylabel: y-axis label.
-        figsize: Size of figure.
+        figsize: Size of the figure (if no Axes provided).
+        outline_width: Width of the outline around points.
         point_size: Size of scatter points.
+        legend_point_size: Size of scatter points in the legend.
         alpha: Transparency of points.
         show_ticks: Whether to show axis ticks.
     """
@@ -348,11 +367,16 @@ def plot_embeddings(
             s=point_size,
             alpha=alpha,
             edgecolor="black",
-            linewidth=0.4,
+            linewidth=outline_width,
         )
 
         if labels is not None:
-            ax.legend(frameon=True)
+            leg = ax.legend(frameon=True)
+
+            if legend_point_size is not None:
+                for lh in leg.legend_handles:
+                    lh.set_sizes([legend_point_size])  # type: ignore
+                    lh.set_alpha(1.0)
 
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)

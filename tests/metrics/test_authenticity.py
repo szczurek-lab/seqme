@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from pepme.metrics.authenticity import AuthPct
+from pepme.metrics import AuthPct
 
 
 def mock_embedder(sequences: list[str]) -> np.ndarray:
@@ -40,10 +40,3 @@ def test_empty_sequences_raises():
     # calling the metric on an empty list should error
     with pytest.raises(ValueError):
         metric([])
-
-
-def test_strict_mode_raises():
-    train_set = ["KKAA", "KKAA"]
-    metric = AuthPct(train_set=train_set, embedder=mock_embedder, strict=True)
-    with pytest.raises(ValueError):
-        metric(["KAAA"])
