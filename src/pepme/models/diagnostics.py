@@ -73,5 +73,5 @@ def plot_feature_alignment_score(
     ax.set_xlabel("N_neighbors")
     ax.set_ylabel("Score")
     ax.set_title("Feature alignment score")
-    ax.grid(True)
+    ax.grid(True, linestyle="--", linewidth=0.5, alpha=0.5)
     ax.set_ylim(0, 1)

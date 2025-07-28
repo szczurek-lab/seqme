@@ -236,7 +236,7 @@ def pca(embeddings: np.ndarray | list[np.ndarray], seed: int = 42) -> np.ndarray
     """
 
     def _pca(embeds: np.ndarray) -> np.ndarray:
-        return PCA(n_components=2, random_state=seed).fit_transform(embeddings)
+        return PCA(n_components=2, random_state=seed).fit_transform(embeds)
 
     if isinstance(embeddings, list):
         embeddings, splits = _prepare_data_groups(embeddings)
