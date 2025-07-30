@@ -3,14 +3,14 @@ repos:
     hooks:
       - id: mypy
         name: mypy
-        entry: mypy -p pepme
+        entry: mypy -p seqme
         language: system
         always_run: true
         pass_filenames: false
 
       - id: ruff-check
         name: ruff-check
-        entry: ruff check src/pepme --fix
+        entry: ruff check src/seqme --fix
         language: system
         always_run: true
         pass_filenames: false

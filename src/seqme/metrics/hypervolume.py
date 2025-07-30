@@ -5,7 +5,7 @@ import numpy as np
 import pymoo.indicators.hv as hv  # type: ignore
 from scipy.spatial import ConvexHull, QhullError
 
-from pepme.core import Metric, MetricResult
+from seqme.core import Metric, MetricResult
 
 
 class Hypervolume(Metric):

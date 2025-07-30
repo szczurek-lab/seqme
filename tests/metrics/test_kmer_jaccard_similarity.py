@@ -1,6 +1,6 @@
 import pytest
 
-from pepme.metrics import KmerJaccardSimilarity
+from seqme.metrics import KmerJaccardSimilarity
 
 
 def test_name_and_objective_default():

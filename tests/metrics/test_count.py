@@ -1,4 +1,4 @@
-from pepme.metrics import Count
+from seqme.metrics import Count
 
 
 def test_count_properties():

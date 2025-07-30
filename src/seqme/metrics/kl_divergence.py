@@ -4,7 +4,7 @@ from typing import Literal
 import numpy as np
 from sklearn.neighbors import KernelDensity
 
-from pepme.core import Metric, MetricResult
+from seqme.core import Metric, MetricResult
 
 
 class KLDivergence(Metric):

@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from pepme.models import KmerFrequencyEmbedding
+from seqme.models import KmerFrequencyEmbedding
 
 
 def test_single_sequence_shape():

@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from pepme.metrics import MMD
+from seqme.metrics import MMD
 
 
 def embedder(seqs: list[str]) -> np.ndarray:

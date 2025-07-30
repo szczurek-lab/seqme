@@ -1,6 +1,6 @@
 import pytest
 
-from pepme.metrics import Uniqueness
+from seqme.metrics import Uniqueness
 
 
 def test_name_and_objective():

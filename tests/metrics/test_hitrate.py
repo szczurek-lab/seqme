@@ -1,7 +1,7 @@
 import numpy as np
 
-from pepme.metrics import HitRate
-from pepme.models import Charge, Gravy
+from seqme.metrics import HitRate
+from seqme.models import Charge, Gravy
 
 
 def test_hitrate():

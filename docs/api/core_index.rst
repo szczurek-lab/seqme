@@ -5,8 +5,8 @@ Core
     :toctree:
     :nosignatures:
 
-    pepme.compute_metrics
-    pepme.combine_metric_dataframes
-    pepme.show_table
-    pepme.FeatureCache
-    pepme.barplot
+    seqme.compute_metrics
+    seqme.combine_metric_dataframes
+    seqme.show_table
+    seqme.FeatureCache
+    seqme.barplot

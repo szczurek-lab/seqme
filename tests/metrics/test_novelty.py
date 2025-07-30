@@ -1,6 +1,6 @@
 import pytest
 
-from pepme.metrics import Novelty
+from seqme.metrics import Novelty
 
 
 def test_compute_metric():

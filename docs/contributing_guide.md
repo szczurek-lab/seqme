@@ -1,6 +1,6 @@
 # Contributing
 
-Want to add new metrics, models, or other features to **pepme**? This guide will help you get started.
+Want to add new metrics, models, or other features to **seqme**? This guide will help you get started.
 
 ## Installation
 
@@ -14,7 +14,7 @@ pip install ".[dev,doc]"
 
 ### Testing
 
-Write tests in the [tests](https://github.com/szczurek-lab/pepme/tree/main/tests) directory. Follow the [`pytest`](#tooling) guidelines. Each file in the directory has to follow the naming convention.
+Write tests in the [tests](https://github.com/szczurek-lab/seqme/tree/main/tests) directory. Follow the [`pytest`](#tooling) guidelines. Each file in the directory has to follow the naming convention.
 
 <h5 a><strong><code>tests/test_foo.py</code></strong></h5>
 
@@ -40,7 +40,7 @@ ruff format
 Use [`mypy`](#tooling) for typing errors:
 
 ```shell
-mypy -p pepme
+mypy -p seqme
 ```
 
 Use [`pytest`](#tooling) to run tests:

@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from pepme.models import Esm2, Esm2Checkpoint
+from seqme.models import Esm2, Esm2Checkpoint
 
 
 @pytest.fixture(scope="module")

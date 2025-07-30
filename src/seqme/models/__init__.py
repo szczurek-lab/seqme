@@ -1,8 +1,8 @@
-from pepme.models.concatenate import Concatenate
-from pepme.models.ensemble import Ensemble
-from pepme.models.esm2 import Esm2, Esm2Checkpoint
-from pepme.models.kmers import KmerFrequencyEmbedding
-from pepme.models.physicochemical import (
+from seqme.models.concatenate import Concatenate
+from seqme.models.ensemble import Ensemble
+from seqme.models.esm2 import Esm2, Esm2Checkpoint
+from seqme.models.kmers import KmerFrequencyEmbedding
+from seqme.models.physicochemical import (
     AliphaticIndex,
     Aromaticity,
     BomanIndex,
@@ -14,7 +14,7 @@ from pepme.models.physicochemical import (
     IsoelectricPoint,
     MolecularWeight,
 )
-from pepme.models.third_party import ThirdPartyModel
+from seqme.models.third_party import ThirdPartyModel
 
 __all__ = [
     "Ensemble",

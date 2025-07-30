@@ -1,6 +1,6 @@
 import pytest
 
-from pepme.metrics import Count, Fold
+from seqme.metrics import Count, Fold
 
 
 def test_k_fold():
