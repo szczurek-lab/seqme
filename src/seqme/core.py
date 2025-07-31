@@ -252,7 +252,7 @@ def show_table(
         # get all indices with the same value as the best value
         value1 = top_two.values[0]
         indices1 = top_two.index[top_two == value1].tolist()
-        if len(indices1) > 2:
+        if len(indices1) >= 2:
             return indices1, []
 
         if len(top_two) < 2 or pd.isna(top_two.values[1]):
@@ -384,7 +384,7 @@ def barplot(
     fig.tight_layout()
 
 
-class FeatureCache:
+class ModelCache:
     """
     Caches model-generated feature representations for sequences.
 

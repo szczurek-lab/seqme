@@ -2,7 +2,7 @@
     <img src="docs/_static/logo_title.svg" alt="seqme logo" width="30%">
 </p>
 
-**seqme** is a modular and highly extendable python library containing model-agnostic metrics for biological sequences.
+**seqme** is a modular and highly extendable python library containing model-agnostic metrics for evaluating biological sequences.
 
 ## Installation
 
@@ -15,7 +15,7 @@ $ pip install git+https://github.com/szczurek-lab/seqme.git
 ## Quick start
 
 ```python
-from seqme import compute_metrics, show_table, FeatureCache
+from seqme import compute_metrics, show_table, ModelCache
 from seqme.metrics import Uniqueness, Novelty, FBD
 from seqme.models import Esm2
 
@@ -25,7 +25,7 @@ sequences = {
     "HydrAMP": ["MMRK", "RKSPL", "RRLSK", "RRLSK"],
 }
 
-cache = FeatureCache(
+cache = ModelCache(
     models={"esm2": Esm2(model_name="facebook/esm2_t6_8M_UR50D", batch_size=256, device="cpu")}
 )
 

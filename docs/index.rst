@@ -1,6 +1,6 @@
 seqme
 =====
-**seqme** is a modular and highly extendable python library containing model-agnostic metrics for biological sequences.
+**seqme** is a modular and highly extendable python library containing model-agnostic metrics for evaluating biological sequences.
 
 
 
@@ -11,7 +11,7 @@ Let's compute a few metrics on example sequences.
 
 .. code-block:: python
 
-    from seqme import compute_metrics, show_table, FeatureCache
+    from seqme import compute_metrics, show_table, ModelCache
     from seqme.metrics import Uniqueness, Novelty, FBD
     from seqme.models import Esm2
 
@@ -21,7 +21,7 @@ Let's compute a few metrics on example sequences.
         "HydrAMP": ["MMRK", "RKSPL", "RRLSK", "RRLSK"],
     }
 
-    cache = FeatureCache(
+    cache = ModelCache(
         models={"esm2": Esm2(model_name="facebook/esm2_t6_8M_UR50D", batch_size=256, device="cpu")}
     )
 

@@ -1,5 +1,5 @@
 from seqme.core import (
-    FeatureCache,
+    ModelCache,
     barplot,
     combine_metric_dataframes,
     compute_metrics,
@@ -7,7 +7,7 @@ from seqme.core import (
 )
 
 __all__ = [
-    "FeatureCache",
+    "ModelCache",
     "barplot",
     "combine_metric_dataframes",
     "compute_metrics",
