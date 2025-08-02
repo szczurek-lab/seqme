@@ -9,7 +9,7 @@
 You need to have Python 3.10 or newer installed on your system.
 
 ```bash
-$ pip install git+https://github.com/szczurek-lab/seqme.git
+$ pip install seqme
 ```
 
 ## Quick start
@@ -38,3 +38,6 @@ metrics = [
 df = compute_metrics(sequences, metrics)
 show_table(df)
 ```
+
+## Citation
+Preprint is coming soon.

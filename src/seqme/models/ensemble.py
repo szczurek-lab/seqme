@@ -48,5 +48,9 @@ class Ensemble:
             Array of weighted predictions, one value per input sequence.
         """
         predictions = np.stack([pred(sequences) for pred in self.predictors], axis=1)
+
+        if predictions.ndim != 2:
+            raise ValueError(f"Expected 2 dims, got {predictions.ndim} dims.")
+
         weighted = predictions * self.importance_weights
         return weighted.sum(axis=-1)
