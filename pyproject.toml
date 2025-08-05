@@ -22,7 +22,7 @@ urls.Source = "https://github.com/szczurek-lab/seqme"
 urls.Home-page = "https://github.com/szczurek-lab/seqme"
 
 classifiers = [
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: BSD License",
     "Development Status :: 3 - Alpha",
     "Environment :: Console",
     "Framework :: Jupyter",
@@ -50,7 +50,7 @@ dependencies = [
     "torch",
     "tqdm",
     "transformers",
-    "scikit-learn<1.7.0",
+    "scikit-learn",
     "umap-learn",
     "modlamp",
     "pylev",
