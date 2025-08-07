@@ -406,6 +406,7 @@ def plot_embedding_with_value(
     figsize: tuple[int, int] = (4, 3),
     point_size: int = 20,
     alpha: float = 0.6,
+    outline_width: float = 0.4,
     show_ticks: bool = False,
 ):
     """
@@ -422,6 +423,7 @@ def plot_embedding_with_value(
         figsize: Size of figure.
         point_size: Size of scatter points.
         alpha: Transparency of points.
+        outline_width: Width of the outline around points.
         show_ticks: Whether to show axis ticks.
     """
 
@@ -436,7 +438,7 @@ def plot_embedding_with_value(
         s=point_size,
         alpha=alpha,
         edgecolor="black",
-        linewidth=0.4,
+        linewidth=outline_width,
     )
     ax.figure.colorbar(sc, ax=ax)
 
