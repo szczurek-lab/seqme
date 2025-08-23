@@ -3,6 +3,7 @@ from seqme.metrics.conformity_score import ConformityScore
 from seqme.metrics.count import Count
 from seqme.metrics.diversity import Diversity
 from seqme.metrics.fbd import FBD
+from seqme.metrics.fkea import FKEA
 from seqme.metrics.fold import Fold
 from seqme.metrics.hitrate import HitRate
 from seqme.metrics.hypervolume import HV
@@ -21,6 +22,7 @@ __all__ = [
     "Count",
     "Diversity",
     "FBD",
+    "FKEA",
     "Fold",
     "HitRate",
     "HV",

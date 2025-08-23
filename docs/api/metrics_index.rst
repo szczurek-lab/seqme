@@ -27,6 +27,7 @@ Embedding-based
     seqme.metrics.Precision
     seqme.metrics.Recall
     seqme.metrics.AuthPct
+    seqme.metrics.FKEA
 
 Property-based
 --------------
