@@ -12,7 +12,7 @@ class FourierBasedKernelEntropyApproximation(Metric):
     """
     Fourier-based Kernel Entropy Approximation approximates the VENDI-score and RKE-score using random Fourier features.
 
-    A reference-free method to estimate sequence diversity. It is positively correlated with the number of modes/clusters in the embedding space.
+    A reference-free method to estimate diversity. It is positively correlated with the number of modes/clusters in the embedding space.
 
     Reference:
         Ospanov, Zhang, Jalali et al., "Towards a Scalable Reference-Free Evaluation of Generative Models"
@@ -36,7 +36,7 @@ class FourierBasedKernelEntropyApproximation(Metric):
 
         Args:
             embedder: A function that maps a list of sequences to a 2D NumPy array of embeddings.
-            n_random_fourier_features: Number of random Fourier features per sequence. Used to approximate the kernel function. Consider increasing this to get a better approximation.
+            n_random_fourier_features: Number of random Fourier features per sequence. Used to approximate the kernel function. Increase to get a better approximation.
             embedder_name: Optional name for the embedder used.
             alpha: alpha-norm of the normalized kernels eigenvalues. If `alpha=2` then it corresponds to the RKE-score otherwise VENDI-alpha.
             bandwidth: Bandwidth parameter for the Gaussian kernel.
@@ -93,7 +93,7 @@ class FKEA(FourierBasedKernelEntropyApproximation):
     """
     Fourier-based Kernel Entropy Approximation approximates the VENDI-score and RKE-score using random Fourier features.
 
-    A reference-free method to estimate sequence diversity. It is positively correlated with the number of modes/clusters in the embedding space.
+    A reference-free method to estimate diversity. It is positively correlated with the number of modes/clusters in the embedding space.
 
     Reference:
         Ospanov, Zhang, Jalali et al., "Towards a Scalable Reference-Free Evaluation of Generative Models"
