@@ -2,12 +2,11 @@ import numpy as np
 
 
 class KmerFrequencyEmbedding:
-    """
-    Computes normalized k-mer frequency embeddings for sequences.
-    """
+    """Computes normalized k-mer frequency embeddings for sequences."""
 
     def __init__(self, kmers: list[str]):
-        """
+        """Initialize KmerFrequencyEmbedding.
+
         Args:
             kmers: List of valid k-mers (same length).
         """
@@ -19,15 +18,11 @@ class KmerFrequencyEmbedding:
         self.kmer_to_idx = {kmer: idx for idx, kmer in enumerate(kmers)}
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
-        """
-        Embed a list of sequences as k-mer frequency vectors.
-        """
+        """Embed a list of sequences as k-mer frequency vectors."""
         return np.array([self._embed(seq, self.kmer_to_idx, self.k) for seq in sequences])
 
     def _embed(self, sequence: str, kmer_to_idx: dict[str, int], k: int) -> np.ndarray:
-        """
-        Embed one sequence as a k-mer frequency vector.
-        """
+        """Embed one sequence as a k-mer frequency vector."""
         embedding = np.zeros(len(kmer_to_idx))
         total = max(len(sequence) - k + 1, 0)
 

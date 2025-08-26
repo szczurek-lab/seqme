@@ -7,9 +7,7 @@ from seqme.core import Metric, MetricResult
 
 
 class Diversity(Metric):
-    """
-    Pairwise Levenshstein distance between the sequences, normalized by number of sequences and number of residues.
-    """
+    """Pairwise Levenshstein distance between the sequences, normalized by number of sequences and number of residues."""
 
     def __call__(self, sequences: list[str]) -> MetricResult:
         """

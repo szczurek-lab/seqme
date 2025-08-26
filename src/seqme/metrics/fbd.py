@@ -8,9 +8,7 @@ from seqme.core import Metric, MetricResult
 
 
 class FrechetBiologicalDistance(Metric):
-    """
-    Fréchet Biological Distance (FBD) between a set of generated
-    sequences and a reference dataset based on their embeddings.
+    """Fréchet Biological Distance (FBD) between a set of generated sequences and a reference dataset based on their embeddings.
 
     This metric estimates how similar the distributions of two sets of embeddings
     are using the 2-Wasserstein (Fréchet) distance.
@@ -115,9 +113,7 @@ def wasserstein_distance(e1: np.ndarray, e2: np.ndarray) -> float:
 
 
 class FBD(FrechetBiologicalDistance):
-    """
-    Fréchet Biological Distance (FBD) between a set of generated
-    sequences and a reference dataset based on their embeddings.
+    """Fréchet Biological Distance (FBD) between a set of generated sequences and a reference dataset based on their embeddings.
 
     This metric estimates how similar the distributions of two sets of embeddings
     are using the 2-Wasserstein (Fréchet) distance.

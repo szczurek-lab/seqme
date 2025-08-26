@@ -10,9 +10,19 @@ from seqme.core import Metric, MetricResult
 
 class FourierBasedKernelEntropyApproximation(Metric):
     """
-    Fourier-based Kernel Entropy Approximation approximates the VENDI-score and RKE-score using random Fourier features.
+    Fourier-based Kernel Entropy Approximation (FKEA) approximates the VENDI-score and RKE-score using random Fourier features.
 
-    A reference-free method to estimate sequence diversity. It is positively correlated with the number of modes/clusters in the embedding space.
+    This is a reference-free method to estimate diversity in a set of
+    generated sequences. It is positively correlated with the number of
+    distinct modes or clusters in the embedding space, without requiring
+    access to real/reference data.
+
+    The method works by projecting embeddings into a randomized Fourier
+    feature space, approximating the Gaussian kernel, and computing the
+    α-norm of the normalized kernel eigenvalues.
+
+    - If alpha=2, this corresponds to the RKE-score.
+    - If alpha≠2, this corresponds to the VENDI-α score.
 
     Reference:
         Ospanov, Zhang, Jalali et al., "Towards a Scalable Reference-Free Evaluation of Generative Models"
@@ -22,27 +32,28 @@ class FourierBasedKernelEntropyApproximation(Metric):
     def __init__(
         self,
         embedder: Callable[[list[str]], np.ndarray],
+        bandwidth: float,
         *,
         n_random_fourier_features: int = 256,
         embedder_name: str | None = None,
         alpha: float | int = 2,
-        bandwidth: float | Literal["scott", "silverman"] = "silverman",
         batch_size: int = 256,
         device: str = "cpu",
         seed: int = 42,
+        strict: bool = True,
     ):
-        """
-        Initializes the FKEA metric with an embedding function.
+        """Initializes the FKEA metric with an embedding function.
 
         Args:
             embedder: A function that maps a list of sequences to a 2D NumPy array of embeddings.
+            bandwidth: Bandwidth parameter for the Gaussian kernel.
             n_random_fourier_features: Number of random Fourier features per sequence. Used to approximate the kernel function. Consider increasing this to get a better approximation.
             embedder_name: Optional name for the embedder used.
             alpha: alpha-norm of the normalized kernels eigenvalues. If `alpha=2` then it corresponds to the RKE-score otherwise VENDI-alpha.
-            bandwidth: Bandwidth parameter for the Gaussian kernel.
             batch_size: Number of samples per batch when compute the kernel.
             device: Compute device, e.g., "cpu" or "cuda".
             seed: Seed for reproducible sampling.
+            strict: Enforce equal number of samples for computation.
         """
         self.embedder = embedder
         self.embedder_name = embedder_name
@@ -52,13 +63,15 @@ class FourierBasedKernelEntropyApproximation(Metric):
         self.batch_size = batch_size
         self.device = device
         self.seed = seed
+        self.strict = strict
+
+        self._n_sequences: int | None = None
 
         if self.alpha < 1:
             raise ValueError("Expected alpha >= 1.")
 
     def __call__(self, sequences: list[str]) -> MetricResult:
-        """
-        Computes FKEA of the input sequences.
+        """Computes FKEA of the input sequences.
 
         Args:
             sequences: A list of generated sequences to evaluate.
@@ -66,6 +79,13 @@ class FourierBasedKernelEntropyApproximation(Metric):
         Returns:
             MetricResult containing the FKEA score. Higher is better.
         """
+        if self.strict:
+            if self._n_sequences is None:
+                self._n_sequences = len(sequences)
+
+            if self._n_sequences != len(sequences):
+                raise ValueError("Computed the metric using different number of sequences.")
+
         seq_embeddings = self.embedder(sequences)
         score = calculate_fourier_vendi(
             torch.from_numpy(seq_embeddings).to(device=self.device),
@@ -91,9 +111,19 @@ class FourierBasedKernelEntropyApproximation(Metric):
 
 class FKEA(FourierBasedKernelEntropyApproximation):
     """
-    Fourier-based Kernel Entropy Approximation approximates the VENDI-score and RKE-score using random Fourier features.
+    Fourier-based Kernel Entropy Approximation (FKEA) approximates the VENDI-score and RKE-score using random Fourier features.
 
-    A reference-free method to estimate sequence diversity. It is positively correlated with the number of modes/clusters in the embedding space.
+    This is a reference-free method to estimate diversity in a set of
+    generated sequences. It is positively correlated with the number of
+    distinct modes or clusters in the embedding space, without requiring
+    access to real/reference data.
+
+    The method works by projecting embeddings into a randomized Fourier
+    feature space, approximating the Gaussian kernel, and computing the
+    α-norm of the normalized kernel eigenvalues.
+
+    - If alpha=2, this corresponds to the RKE-score.
+    - If alpha≠2, this corresponds to the VENDI-α score.
 
     Reference:
         Ospanov, Zhang, Jalali et al., "Towards a Scalable Reference-Free Evaluation of Generative Models"
@@ -103,11 +133,12 @@ class FKEA(FourierBasedKernelEntropyApproximation):
 
 def calculate_vendi(
     xs: torch.Tensor,
-    bandwidth: float | Literal["scott", "silverman"],
+    bandwidth: float,
     batch_size: int,
     alpha: float | int = 2,
 ):
-    K = _normalized_gaussian_kernel(xs, xs, _select_bandwidth(bandwidth, xs.shape[0], xs.shape[1]), batch_size)
+    std = math.sqrt(bandwidth / 2.0)
+    K = _normalized_gaussian_kernel(xs, xs, std, batch_size)
     eigenvalues, _ = torch.linalg.eigh(K)
     entropy = _calculate_renyi_entropy(eigenvalues, alpha)
     return entropy
@@ -116,12 +147,12 @@ def calculate_vendi(
 def calculate_fourier_vendi(
     xs: torch.Tensor,
     random_fourier_feature_dim: int,
-    bandwidth: float | Literal["scott", "silverman"],
+    bandwidth: float,
     batch_size: int,
     alpha: float = 2.0,
     seed: int = 42,
 ) -> float:
-    std = math.sqrt(_select_bandwidth(bandwidth, xs.shape[0], xs.shape[1]) / 2.0)
+    std = math.sqrt(bandwidth / 2.0)
     x_cov, _, _ = _cov_random_fourier_features(xs, random_fourier_feature_dim, std, batch_size, seed)
     eigenvalues, _ = torch.linalg.eigh(x_cov)
     entropy = _calculate_renyi_entropy(eigenvalues.real, alpha)
@@ -152,8 +183,8 @@ def _normalized_gaussian_kernel(xs: torch.Tensor, ys: torch.Tensor, std: float, 
     assert xs.shape[1:] == ys.shape[1:]
 
     total_res = torch.zeros((xs.shape[0], 0), device=xs.device)
-    for batchidx in range(batch_num):
-        y_slice = ys[batchidx * batch_size : min((batchidx + 1) * batch_size, ys.shape[0])]
+    for batch_idx in range(batch_num):
+        y_slice = ys[batch_idx * batch_size : min((batch_idx + 1) * batch_size, ys.shape[0])]
 
         res = torch.norm(xs.unsqueeze(1) - y_slice, dim=2, p=2).pow(2)
         res = torch.exp((-1 / (2 * std * std)) * res)
@@ -204,12 +235,3 @@ def _cov_cov_random_fourier_features2(
 
     assert cov.shape[0] == cov.shape[1] == feature_dim * 2
     return cov, batched_rff.squeeze()
-
-
-def _select_bandwidth(bandwidth: float | Literal["scott", "silverman"], n_samples: int, feature_dim: int) -> float:
-    if isinstance(bandwidth, str):
-        if bandwidth == "scott":
-            return n_samples ** (-1 / (feature_dim + 4))
-        elif bandwidth == "silverman":
-            return (n_samples * (feature_dim + 2) / 4) ** (-1 / (feature_dim + 4))
-    return bandwidth

@@ -23,7 +23,7 @@ class Novelty(Metric):
 
     def __call__(self, sequences: list[str]) -> MetricResult:
         """
-        Compute the novelty score as the proportion of input sequences that are not present in the reference set.
+        Compute the Novelty score as the proportion of input sequences that are not present in the reference set.
 
         Args:
             sequences: Generated sequences to evaluate for novelty.

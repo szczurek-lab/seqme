@@ -464,7 +464,6 @@ class ModelCache:
         Raises:
             ValueError: If the model already exists.
         """
-
         if callable(element):
             if model_name in self.model_to_callable:
                 raise ValueError("Model already exists.")

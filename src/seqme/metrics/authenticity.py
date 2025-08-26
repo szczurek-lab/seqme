@@ -49,7 +49,6 @@ class Authenticity(Metric):
         Returns:
             MetricResult contains the authenticity score, which represents the proportion of authentic samples.
         """
-
         if len(sequences) == 0:
             raise ValueError("Sequences must contain at least one sample.")
 

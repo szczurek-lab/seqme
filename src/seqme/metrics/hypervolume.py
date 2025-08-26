@@ -9,8 +9,8 @@ from seqme.core import Metric, MetricResult
 
 
 class Hypervolume(Metric):
-    """
-    Hypervolume (HV) metric for multi-objective optimization.
+    """Hypervolume (HV) metric for multi-objective optimization.
+
     Each predictor maps sequences to a numeric objective.
     """
 
@@ -24,6 +24,8 @@ class Hypervolume(Metric):
         include_objective_count_in_name: bool = True,
     ):
         """
+        Initialize the Hypervolume metric.
+
         Args:
             predictors: List of functions that output objective values for each sequence.
             method: Which HV computation method to use ("standard" or "convex-hull").
@@ -43,9 +45,7 @@ class Hypervolume(Metric):
             )
 
     def __call__(self, sequences: list[str]) -> MetricResult:
-        """
-        Evaluate hypervolume for the predicted properties of the input sequences.
-        """
+        """Evaluate hypervolume for the predicted properties of the input sequences."""
         values = np.stack([predictor(sequences) for predictor in self.predictors]).T
         hv_value = calculate_hypervolume(
             values,
@@ -123,8 +123,8 @@ def calculate_hypervolume(
 
 
 class HV(Hypervolume):
-    """
-    Hypervolume (HV) metric for multi-objective optimization.
+    """Hypervolume (HV) metric for multi-objective optimization.
+
     Each predictor maps sequences to a numeric objective.
     """
 

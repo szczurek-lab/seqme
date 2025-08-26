@@ -5,12 +5,11 @@ from modlamp.descriptors import GlobalDescriptor, PeptideDescriptor
 
 
 class AliphaticIndex:
-    """
-    Computes the aliphatic index of peptide sequences.
-    """
+    """Aliphatic index of peptide sequences."""
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
-        """
+        """Computes the Aliphatic index.
+
         Args:
             sequences: List of amino acid sequences.
 
@@ -23,12 +22,11 @@ class AliphaticIndex:
 
 
 class Aromaticity:
-    """
-    Computes the aromaticity of peptide sequences.
-    """
+    """Aromaticity of peptide sequences."""
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
-        """
+        """Compute the aromaticity.
+
         Args:
             sequences: List of amino acid sequences.
 
@@ -41,12 +39,11 @@ class Aromaticity:
 
 
 class BomanIndex:
-    """
-    Computes the Boman index, estimating binding potential to proteins.
-    """
+    """Boman index, estimating binding potential to proteins."""
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
-        """
+        """Computes the Boman index.
+
         Args:
             sequences: List of amino acid sequences.
 
@@ -59,19 +56,19 @@ class BomanIndex:
 
 
 class Charge:
-    """
-    Computes the net charge of peptides at a given pH.
-    """
+    """Net charge of peptides at a given pH."""
 
     def __init__(self, ph: float = 7.0):
-        """
+        """Initializes the Net charge.
+
         Args:
             ph: pH value at which to calculate the charge.
         """
         self.ph = ph
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
-        """
+        """Computes the net charge.
+
         Args:
             sequences: List of amino acid sequences.
 
@@ -84,12 +81,11 @@ class Charge:
 
 
 class Gravy:
-    """
-    Computes the GRAVY (hydropathy) score for peptide sequences.
-    """
+    """GRAVY (hydropathy) score for peptide sequences."""
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
-        """
+        """Computes the GRAVY.
+
         Args:
             sequences: List of amino acid sequences.
 
@@ -103,12 +99,11 @@ class Gravy:
 
 
 class Hydrophobicity:
-    """
-    Computes hydrophobicity using a selected scale.
-    """
+    """Hydrophobicity using a selected scale."""
 
     def __init__(self, scale: Literal["eisenberg", "hopp-woods", "janin", "kytedoolittle"] = "eisenberg"):
-        """
+        """Initialize the hydrophobicity.
+
         Args:
             scale: Name of the hydrophobicity scale to use.
         """
@@ -116,6 +111,8 @@ class Hydrophobicity:
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
         """
+        Computes the hydrophobicity.
+
         Args:
             sequences: List of amino acid sequences.
 
@@ -129,10 +126,7 @@ class Hydrophobicity:
 
 
 class HydrophobicMoment:
-    """
-    Compute the hydrophobic moment (i.e., amphiphilicity) for one or more peptide sequences
-    using a sliding-window approach.
-    """
+    """Hydrophobic moment (i.e., amphiphilicity) for one or more peptide sequences using a sliding-window approach."""
 
     def __init__(
         self,
@@ -141,7 +135,8 @@ class HydrophobicMoment:
         angle: int = 100,
         modality: Literal["max", "mean"] = "mean",
     ):
-        """
+        """Initialize the hydrophobic moment.
+
         Args:
             scale: Name of the hydrophobicity scale to use.
             window: Size of window
@@ -154,7 +149,8 @@ class HydrophobicMoment:
         self.modality = modality
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
-        """
+        """Computes the hydrophobic moment.
+
         Args:
             sequences: List of amino acid sequences.
 
@@ -168,12 +164,11 @@ class HydrophobicMoment:
 
 
 class InstabilityIndex:
-    """
-    Computes the instability index, predicting in vitro protein stability.
-    """
+    """Instability index, predicting in vitro protein stability."""
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
-        """
+        """Computes the instability index.
+
         Args:
             sequences: List of amino acid sequences.
 
@@ -186,12 +181,11 @@ class InstabilityIndex:
 
 
 class IsoelectricPoint:
-    """
-    Computes the isoelectric point of peptide sequences.
-    """
+    """Isoelectric point of peptide sequences."""
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
-        """
+        """Computes the isoelectric point of peptide sequences.
+
         Args:
             sequences: List of amino acid sequences.
 
@@ -204,12 +198,11 @@ class IsoelectricPoint:
 
 
 class MolecularWeight:
-    """
-    Computes the molecular weight of peptide sequences.
-    """
+    """Molecular weight of peptide sequences."""
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
-        """
+        """Computes the molecular weight of peptide sequences.
+
         Args:
             sequences: List of amino acid sequences.
 

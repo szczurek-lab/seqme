@@ -8,9 +8,7 @@ from seqme.core import Metric, MetricResult
 
 
 class KLDivergence(Metric):
-    """
-    KL-divergence between samples and reference for a single property.
-    """
+    """KL-divergence between samples and reference for a single property."""
 
     def __init__(
         self,
@@ -79,8 +77,7 @@ def continuous_kl_mc(
     seed: int = 0,
 ) -> tuple[float, float]:
     """
-    Monte-Carlo estimate of D_KL(P || Q) plus its standard error, where
-    P ≈ KDE(x_reference), Q ≈ KDE(x_samples).
+    Monte-Carlo estimate of D_KL(P || Q) plus its standard error, where P ≈ KDE(x_reference), Q ≈ KDE(x_samples).
 
     Args:
         x_reference: Array of samples drawn from the reference distribution P.
@@ -94,7 +91,6 @@ def continuous_kl_mc(
             kl_estimate: The estimated KL divergence between P and Q.
             se: The Monte Carlo standard error of the estimate.
     """
-
     kde_p = KernelDensity(kernel="gaussian", bandwidth=kde_bandwidth).fit(x_reference[:, None])
     kde_q = KernelDensity(kernel="gaussian", bandwidth=kde_p.bandwidth_).fit(x_samples[:, None])
 
