@@ -9,7 +9,7 @@ from seqme.core import Metric, MetricResult
 
 
 class Hypervolume(Metric):
-    """Hypervolume (HV) metric for multi-objective optimization.
+    """Hypervolume metric for multi-objective optimization.
 
     Each predictor maps sequences to a numeric objective.
     """
@@ -28,7 +28,7 @@ class Hypervolume(Metric):
 
         Args:
             predictors: List of functions that output objective values for each sequence.
-            method: Which HV computation method to use ("standard" or "convex-hull").
+            method: Which Hypervolume computation method to use ("standard" or "convex-hull").
             nadir: Worst acceptable value in each objective dimension.
             ideal: Best value in each objective dimension (used for normalization).
             include_objective_count_in_name: Whether to append the number of objectives to the metric's name.
@@ -47,13 +47,13 @@ class Hypervolume(Metric):
     def __call__(self, sequences: list[str]) -> MetricResult:
         """Evaluate hypervolume for the predicted properties of the input sequences."""
         values = np.stack([predictor(sequences) for predictor in self.predictors]).T
-        hv_value = calculate_hypervolume(
+        hypervolume = calculate_hypervolume(
             values,
             nadir=self.nadir,
             ideal=self.ideal,
             method=self.method,
         )
-        return MetricResult(hv_value)
+        return MetricResult(hypervolume)
 
     @property
     def name(self) -> str:
@@ -85,7 +85,7 @@ def calculate_hypervolume(
         method: Either "standard" using pymoo, or "convex-hull" using scipy.
 
     Returns:
-        Hypervolume (float)
+        Hypervolume
     """
     if points.shape[1] != nadir.shape[0]:
         raise ValueError("Points must have the same number of dimensions as the reference point.")
@@ -120,12 +120,3 @@ def calculate_hypervolume(
         raise ValueError(f"Unknown method: {method}")
 
     return hypervolume
-
-
-class HV(Hypervolume):
-    """Hypervolume (HV) metric for multi-objective optimization.
-
-    Each predictor maps sequences to a numeric objective.
-    """
-
-    pass

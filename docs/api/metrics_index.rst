@@ -39,7 +39,7 @@ Property-based
     seqme.metrics.ID
     seqme.metrics.Threshold
     seqme.metrics.HitRate
-    seqme.metrics.HV
+    seqme.metrics.Hypervolume
     seqme.metrics.ConformityScore
     seqme.metrics.KLDivergence
 

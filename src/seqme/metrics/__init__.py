@@ -6,7 +6,7 @@ from seqme.metrics.fbd import FBD
 from seqme.metrics.fkea import FKEA
 from seqme.metrics.fold import Fold
 from seqme.metrics.hitrate import HitRate
-from seqme.metrics.hypervolume import HV
+from seqme.metrics.hypervolume import Hypervolume
 from seqme.metrics.id import ID
 from seqme.metrics.jaccard_similarity import KmerJaccardSimilarity
 from seqme.metrics.kl_divergence import KLDivergence
@@ -25,7 +25,7 @@ __all__ = [
     "FKEA",
     "Fold",
     "HitRate",
-    "HV",
+    "Hypervolume",
     "ID",
     "KmerJaccardSimilarity",
     "KLDivergence",

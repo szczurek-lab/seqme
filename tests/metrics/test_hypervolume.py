@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from seqme.metrics import HV
+from seqme.metrics import Hypervolume
 
 
 def p_count_aa(sequences: list[str], aa: str) -> np.ndarray:
@@ -9,7 +9,7 @@ def p_count_aa(sequences: list[str], aa: str) -> np.ndarray:
 
 
 def test_standard_hv():
-    metric = HV(
+    metric = Hypervolume(
         predictors=[
             lambda seqs: p_count_aa(seqs, aa="K"),
             lambda seqs: p_count_aa(seqs, aa="R"),
@@ -28,7 +28,7 @@ def test_standard_hv():
 
 
 def test_convex_hull_hv():
-    metric = HV(
+    metric = Hypervolume(
         predictors=[
             lambda seqs: p_count_aa(seqs, aa="K"),
             lambda seqs: p_count_aa(seqs, aa="R"),
@@ -47,7 +47,7 @@ def test_convex_hull_hv():
 
 
 def test_standard_with_ideal_hv():
-    metric = HV(
+    metric = Hypervolume(
         predictors=[
             lambda seqs: p_count_aa(seqs, aa="K"),
             lambda seqs: p_count_aa(seqs, aa="R"),
