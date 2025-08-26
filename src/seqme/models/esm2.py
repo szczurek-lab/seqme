@@ -26,7 +26,7 @@ class Esm2:
     Wrapper for the ESM2 protein/peptide embedding model from Hugging Face.
 
     Computes sequence-level embeddings by averaging token embeddings,
-    excluding [BOS] and [EOS] tokens.
+    excluding [CLS] and [EOS] tokens.
     """
 
     def __init__(
@@ -63,7 +63,7 @@ class Esm2:
     def __call__(self, sequences: list[str]) -> np.ndarray:
         return self.embed(sequences)
 
-    def embed(self, sequences: list[str]) -> np.ndarray:
+    def embed(self, sequences: list[str], layer: int = -1) -> np.ndarray:
         """
         Compute embeddings for a list of sequences.
 
@@ -72,6 +72,7 @@ class Esm2:
 
         Args:
             sequences: List of input amino acid sequences.
+            layer: Layer to retrieve embeddings from.
 
         Returns:
             A NumPy array of shape (n_sequences, embedding_dim) containing the embeddings.
@@ -85,7 +86,7 @@ class Esm2:
                 batch = sequences[i : i + self.batch_size]
                 tokens = self.tokenizer(batch, return_tensors="pt", padding=True, truncation=False)
                 tokens = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in tokens.items()}
-                hidden_state = self.model(**tokens, output_hidden_states=True).hidden_states[-1]
+                hidden_state = self.model(**tokens, output_hidden_states=True).hidden_states[layer]
 
                 counts = tokens["attention_mask"].sum(dim=-1)
                 mask = tokens["attention_mask"]
