@@ -76,9 +76,7 @@ class ThirdPartyModel:
 
 
 class Plugin:
-    """
-    Manages the environment and execution of a third-party plugin.
-    """
+    """Manages the environment and execution of a third-party plugin."""
 
     def setup(
         self,

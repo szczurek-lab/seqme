@@ -7,10 +7,7 @@ from seqme.core import Metric, MetricResult
 
 
 class Identity(Metric):
-    """
-    Applies a user-provided predictor to a list of sequences
-    and returns the mean and standard deviation of the predictor's outputs.
-    """
+    """Applies a user-provided predictor to a list of sequences and returns the mean and standard deviation of the predictor's outputs."""
 
     def __init__(
         self,
@@ -60,9 +57,6 @@ class Identity(Metric):
 
 
 class ID(Identity):
-    """
-    Applies a user-provided predictor to a list of sequences
-    and returns the average and standard deviation of the predictor's outputs.
-    """
+    """Applies a user-provided predictor to a list of sequences and returns the average and standard deviation of the predictor's outputs."""
 
     pass

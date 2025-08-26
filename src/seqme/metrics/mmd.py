@@ -55,8 +55,7 @@ class MaximumMeanDiscrepancy(Metric):
             raise ValueError("Reference embeddings must contain at least one sample.")
 
     def __call__(self, sequences: list[str]) -> MetricResult:
-        """
-        Compute the MMD between embeddings of the input sequences and the reference.
+        """Compute the MMD between embeddings of the input sequences and the reference.
 
         Args:
             sequences: Generated sequences to evaluate.
@@ -64,7 +63,6 @@ class MaximumMeanDiscrepancy(Metric):
         Returns:
             MetricResult contains the MMD score, where lower values indicate better performance.
         """
-
         if len(sequences) == 0:
             raise ValueError("Sequences must contain at least one sample.")
 
@@ -119,7 +117,6 @@ def mmd(
     Returns:
         The MMD distance between x and y embedding sets.
     """
-
     x_tensor = torch.from_numpy(x).to(device, dtype=torch.float)
     y_tensor = torch.from_numpy(y).to(device, dtype=torch.float)
 

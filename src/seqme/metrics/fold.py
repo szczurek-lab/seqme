@@ -6,9 +6,9 @@ from seqme.core import Metric, MetricResult
 
 
 class Fold(Metric):
-    """
-    A cross-validation wrapper for any Metric, splitting data into k folds or fixed-size splits,
-    with optional shuffling, then aggregating the results.
+    """A cross-validation wrapper for any Metric.
+
+    Fold splits the data into k folds or fixed-size splits, with optional shuffling, then aggregates the results.
     """
 
     def __init__(

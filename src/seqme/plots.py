@@ -41,7 +41,6 @@ def plot_hist(
     Raises:
         ValueError: If the input array is empty.
     """
-
     arr = np.asarray(data).ravel()
     if arr.size == 0:
         raise ValueError("Input array is empty.")
@@ -179,7 +178,6 @@ def plot_violin(
     Raises:
         ValueError: If the input array is empty.
     """
-
     arr = np.asarray(data).ravel()
     if arr.size == 0:
         raise ValueError("Input array is empty.")
@@ -302,9 +300,7 @@ def umap(embeddings: np.ndarray | list[np.ndarray], seed: int = 42) -> np.ndarra
 
 
 def _prepare_data_groups(data_groups: list[np.ndarray]) -> tuple[np.ndarray, list[int]]:
-    """
-    Stacks a list of 2D arrays and returns the combined array and group split indices.
-    """
+    """Stacks a list of 2D arrays and returns the combined array and group split indices."""
     processed: list[np.ndarray] = []
     lengths: list[int] = []
     for arr in data_groups:
@@ -352,7 +348,6 @@ def plot_embeddings(
         alpha: Transparency of points.
         show_ticks: Whether to show axis ticks.
     """
-
     if ax is None:
         fig, ax = plt.subplots(figsize=figsize)
 
@@ -426,7 +421,6 @@ def plot_embedding_with_value(
         outline_width: Width of the outline around points.
         show_ticks: Whether to show axis ticks.
     """
-
     if ax is None:
         fig, ax = plt.subplots(figsize=figsize)
 

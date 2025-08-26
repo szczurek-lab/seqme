@@ -9,9 +9,7 @@ from seqme.core import Metric, MetricResult
 
 
 class ConformityScore(Metric):
-    """
-    Conformity score similar to https://prescient-design.github.io/walk-jump/
-    """
+    """Conformity score similar to https://prescient-design.github.io/walk-jump/."""
 
     def __init__(
         self,

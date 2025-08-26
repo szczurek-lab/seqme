@@ -5,10 +5,9 @@ from seqme.core import Metric, MetricResult
 
 class KmerJaccardSimilarity(Metric):
     r"""
-    Average Jaccard similarity between each generated sequence
-    and a reference corpus, based on n-grams of size `n`, using
-    \|A ∩ R\| / \|A ∪ R\|. You can choose to 'minimize' (novelty)
-    or 'maximize' (overlap) via the `objective` parameter.
+    Average Jaccard similarity between each generated sequence and a reference corpus, based on n-grams of size `n`, using \|A ∩ R\| / \|A ∪ R\|.
+
+    You can choose to 'minimize' (novelty) or 'maximize' (overlap) via the `objective` parameter.
     """
 
     def __init__(
@@ -19,7 +18,8 @@ class KmerJaccardSimilarity(Metric):
         objective: Literal["minimize", "maximize"] = "minimize",
         reference_name: str | None = None,
     ):
-        """
+        """Initialize the KmerJaccardSimilarity metric.
+
         Args:
             reference: list of strings to build the reference n-gram set.
             n: size of the n-grams.
@@ -44,9 +44,7 @@ class KmerJaccardSimilarity(Metric):
         return {seq[i : i + self.n] for i in range(L - self.n + 1)}
 
     def __call__(self, sequences: list[str]) -> MetricResult:
-        """
-        Computes the average Jaccard similarity between each generated sequence
-        and a reference corpus, based on n-grams of size `n`.
+        """Computes the average Jaccard similarity between each generated sequence and a reference corpus, based on n-grams of size `n`.
 
         Args:
             sequences: A list of generated sequences to evaluate.

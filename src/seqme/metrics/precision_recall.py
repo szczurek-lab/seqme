@@ -293,6 +293,8 @@ class ManifoldEstimator:
         device: str = "cpu",
     ):
         """
+        Estimates the local manifold.
+
         Args:
             features: Data points to build the manifold, shape [N, D].
             neighborhood_size: k in k-NN.
