@@ -15,6 +15,7 @@ class Fold(Metric):
         self,
         metric: Metric,
         *,
+        deviation: Literal["standard-error", "variance"] = "standard-error",
         n_splits: int | None = None,
         split_size: int | None = None,
         drop_last: bool = False,
@@ -27,6 +28,7 @@ class Fold(Metric):
 
         Args:
             metric: The underlying metric to evaluate per fold.
+            deviation: Type of deviation to compute.
             n_splits: Number of folds to create (exclusive with split_size).
             split_size: Fixed size for each fold (exclusive with n_splits).
             drop_last: Drop final fold if smaller than split_size.
@@ -35,10 +37,11 @@ class Fold(Metric):
             seed: Seed for reproducible shuffling.
         """
         self.metric = metric
-        self.strict = strict
+        self.deviation = deviation
         self.n_splits = n_splits
         self.split_size = split_size
         self.drop_last = drop_last
+        self.strict = strict
         self.shuffle = shuffle
         self.seed = seed
 
@@ -55,7 +58,7 @@ class Fold(Metric):
             sequences: Input data to split into folds.
 
         Returns:
-            Aggregated mean value and standard error across folds.
+            Aggregated mean value and standard error or variance across folds.
         """
         n = len(sequences)
         indices = np.arange(n)
@@ -90,10 +93,19 @@ class Fold(Metric):
             results.append(result)
 
         values = np.array([result.value for result in results], float)
-        return MetricResult(
-            value=values.mean().item(),
-            deviation=float(values.std(ddof=0)) / (len(values) ** 0.5) if len(results) > 1 else results[0].deviation,
-        )
+
+        if len(results) > 1:
+            if self.deviation == "variance":
+                deviation = float(values.var(ddof=0))
+            elif self.deviation == "standard-error":
+                deviation = float(values.std(ddof=0)) / (len(values) ** 0.5)
+            else:
+                raise ValueError(f"invalid deviation: {self.deviation}")
+        else:
+            assert len(results) == 1
+            deviation = results[0].deviation
+
+        return MetricResult(value=values.mean().item(), deviation=deviation)
 
     @property
     def name(self) -> str:
