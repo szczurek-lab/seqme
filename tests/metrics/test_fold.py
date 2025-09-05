@@ -14,6 +14,17 @@ def test_k_fold():
     assert result.deviation == 0.5 / (2**0.5)
 
 
+def test_std():
+    metric = Fold(metric=Count(), n_splits=2, deviation="standard-deviation")
+    assert metric.name == "Count"
+    assert metric.objective == "maximize"
+
+    sequences = ["AA", "AAA", "AAAA", "AAA", "AAAAAA"]
+    result = metric(sequences)
+    assert result.value == 2.5
+    assert result.deviation == 0.25 ** (1 / 2)
+
+
 def test_variance():
     metric = Fold(metric=Count(), n_splits=2, deviation="variance")
     assert metric.name == "Count"
