@@ -6,6 +6,7 @@ Tutorials on using seqme for peptide evaluation, adding new metrics, and integra
 .. nbgallery::
 
     getting_started
+    time_series
     benchmark_peptides
     benchmark_rna
     diagnostics
