@@ -208,11 +208,11 @@ def combine_metric_dataframes(dfs: list[pd.DataFrame], on_overlap: Literal["fail
 
     # construct combined dataframe
     row_index = (
-        pd.MultiIndex.from_tuples(combined_rows, names=None)
+        pd.MultiIndex.from_tuples(combined_rows)
         if len(combined_rows) > 0 and isinstance(combined_rows[0], tuple)
-        else pd.Index(combined_rows, name=None)
+        else pd.Index(combined_rows)
     )
-    col_index = pd.MultiIndex.from_tuples(combined_columns, names=dfs[0].columns.names)  # type: ignore
+    col_index = pd.MultiIndex.from_tuples(combined_columns)  # type: ignore
 
     combined_df = pd.DataFrame(index=row_index, columns=col_index, dtype=float)
     combined_df.attrs["objective"] = combined_objectives
