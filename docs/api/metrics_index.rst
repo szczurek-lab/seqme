@@ -13,7 +13,7 @@ Sequence-based
     seqme.metrics.Diversity
     seqme.metrics.Uniqueness
     seqme.metrics.Novelty
-    seqme.metrics.KmerJaccardSimilarity
+    seqme.metrics.NGramJaccardSimilarity
 
 Embedding-based
 ---------------

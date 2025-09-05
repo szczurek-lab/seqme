@@ -8,7 +8,7 @@ from seqme.metrics.fold import Fold
 from seqme.metrics.hitrate import HitRate
 from seqme.metrics.hypervolume import Hypervolume
 from seqme.metrics.id import ID
-from seqme.metrics.jaccard_similarity import KmerJaccardSimilarity
+from seqme.metrics.jaccard_similarity import NGramJaccardSimilarity
 from seqme.metrics.kl_divergence import KLDivergence
 from seqme.metrics.mmd import MMD
 from seqme.metrics.novelty import Novelty
@@ -27,7 +27,7 @@ __all__ = [
     "HitRate",
     "Hypervolume",
     "ID",
-    "KmerJaccardSimilarity",
+    "NGramJaccardSimilarity",
     "KLDivergence",
     "MMD",
     "Novelty",

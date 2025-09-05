@@ -3,7 +3,7 @@ from typing import Literal
 from seqme.core import Metric, MetricResult
 
 
-class KmerJaccardSimilarity(Metric):
+class NGramJaccardSimilarity(Metric):
     r"""
     Average Jaccard similarity between each generated sequence and a reference corpus, based on n-grams of size `n`, using \|A ∩ R\| / \|A ∪ R\|.
 
@@ -18,7 +18,7 @@ class KmerJaccardSimilarity(Metric):
         objective: Literal["minimize", "maximize"] = "minimize",
         reference_name: str | None = None,
     ):
-        """Initialize the KmerJaccardSimilarity metric.
+        """Initialize the NGramJaccardSimilarity metric.
 
         Args:
             reference: list of strings to build the reference n-gram set.
