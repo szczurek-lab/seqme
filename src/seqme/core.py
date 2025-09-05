@@ -1,7 +1,8 @@
 import abc
+from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Literal
+from typing import Any, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -129,12 +130,16 @@ def compute_metrics(
     return df
 
 
-def combine_metric_dataframes(dfs: list[pd.DataFrame]) -> pd.DataFrame:
+def combine_metric_dataframes(dfs: list[pd.DataFrame], on_overlap: Literal["fail", "mean"] = "fail") -> pd.DataFrame:
     """
     Combine multiple DataFrames with metrics results into a single DataFrame.
 
     Args:
         dfs: list of DataFrames, each with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], and an 'objective' attribute.
+        on_overlap: How to handle cells with multiple values.
+
+            - "fail": raises an exception on overlap.
+            - "mean": sets the cell value to the mean and the deviation to the std of the values.
 
     Returns:
         A single DataFrame with combined metrics, ensuring no overlapping cells and converting all values to float.
@@ -145,55 +150,75 @@ def combine_metric_dataframes(dfs: list[pd.DataFrame]) -> pd.DataFrame:
     if not dfs:
         raise ValueError("The list of DataFrames is empty.")
 
-    # Prepare lists for ordered index and columns
-    combined_index = []  # maintain order of first occurrence
-    seen_idx = set()
+    for df in dfs:
+        if "objective" not in df.attrs:
+            raise ValueError("Each DataFrame must have an 'objective' attribute.")
+
+    # preserve column and row order
+    combined_rows = []
+    seen_rows = set()
 
     combined_columns = []
     seen_cols = set()
 
     combined_objectives: dict[str, str] = {}
 
-    # Collect indices, columns, and objectives preserving order
     for df in dfs:
-        if "objective" not in df.attrs:
-            raise ValueError("Each DataFrame must have an 'objective' attribute.")
-
-        # Merge objectives
         for key, value in df.attrs["objective"].items():
             if key in combined_objectives and combined_objectives[key] != value:
                 raise ValueError(f"Conflicting objective for metric '{key}': {combined_objectives[key]} vs {value}")
             combined_objectives[key] = value
 
-        # Index order
         for idx in df.index:
-            if idx not in seen_idx:
-                seen_idx.add(idx)
-                combined_index.append(idx)
+            if idx not in seen_rows:
+                seen_rows.add(idx)
+                combined_rows.append(idx)
 
-        # Column order
         for col in df.columns:
             if col not in seen_cols:
                 seen_cols.add(col)
                 combined_columns.append(col)
 
-    # Reconstruct MultiIndex with original level names
-    col_index = pd.MultiIndex.from_tuples(combined_columns, names=dfs[0].columns.names)  # type: ignore
-
-    combined_df = pd.DataFrame(index=combined_index, columns=col_index, dtype=float)
-    combined_df.attrs["objective"] = combined_objectives
-
-    # Populate and check for overlapping values
+    # extract cell values
+    values: dict[tuple[Any, tuple[str, str]], list[float]] = defaultdict(list)
     for df in dfs:
         for col in df.columns:
             for idx, val in df[col].items():
                 if pd.isna(val):
                     continue
-                if pd.notna(combined_df.at[idx, col]):
-                    raise ValueError(
-                        f"Overlap detected at index '{idx}', column '{col}' (value: {combined_df.at[idx, col]} vs {val})."
-                    )
-                combined_df.at[idx, col] = float(val)
+                values[(idx, col)].append(val)  # type: ignore
+
+    # handle on_overlap
+    res: dict[tuple[Any, tuple[str, str]], float] = {}
+    if on_overlap == "fail":
+        for cell_name, vs in values.items():
+            if len(vs) > 1:
+                raise ValueError(f"Multiple values in cell: [{cell_name[0]}, {cell_name[1]}]")
+            res[cell_name] = vs[0]
+    elif on_overlap == "mean":
+        for cell_name, vs in values.items():
+            col_subname = cell_name[1][1]  # either "value" or "deviation"
+            if col_subname == "value":
+                res[cell_name] = np.mean(vs).item()
+
+                dev_cell = (cell_name[0], (cell_name[1][0], "deviation"))
+                res[dev_cell] = np.std(vs).item()
+    else:
+        raise ValueError(f"{on_overlap} not supported.")
+
+    # construct combined dataframe
+    row_index = (
+        pd.MultiIndex.from_tuples(combined_rows, names=None)
+        if len(combined_rows) > 0 and isinstance(combined_rows[0], tuple)
+        else pd.Index(combined_rows, name=None)
+    )
+    col_index = pd.MultiIndex.from_tuples(combined_columns, names=dfs[0].columns.names)  # type: ignore
+
+    combined_df = pd.DataFrame(index=row_index, columns=col_index, dtype=float)
+    combined_df.attrs["objective"] = combined_objectives
+
+    for (row, col), val in res.items():  # type: ignore
+        combined_df.at[row, col] = val
 
     return combined_df
 
