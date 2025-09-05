@@ -73,7 +73,7 @@ html_show_sphinx = False
 
 nbsphinx_thumbnails = {
     "tutorials/getting_started": "_static/logo.svg",
-    "tutorials/time-series": "_static/logo.svg",
+    "tutorials/time_series": "_static/logo.svg",
     "tutorials/benchmark_peptides": "_static/logo.svg",
     "tutorials/benchmark_rna": "_static/logo.svg",
     "tutorials/diagnostics": "_static/logo.svg",
