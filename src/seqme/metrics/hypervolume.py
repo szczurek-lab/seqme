@@ -82,7 +82,7 @@ def calculate_hypervolume(
         points: Array of shape [N, D] with objective values.
         nadir: Reference point (worse than or equal to all actual points).
         ideal: Optional ideal point for normalization.
-        method: Either "standard" using pymoo, or "convex-hull" using scipy.
+        method: Either hypervolume indicator ("standard") or "convex-hull".
 
     Returns:
         Hypervolume
@@ -90,18 +90,21 @@ def calculate_hypervolume(
     if points.shape[1] != nadir.shape[0]:
         raise ValueError("Points must have the same number of dimensions as the reference point.")
 
+    if points.shape[0] <= 1:
+        return float("nan")
+
+    # replace NaN values with nadir
+    points = np.where(np.isnan(points), nadir, points)
+
     min_points = points.min(axis=0)
     if (nadir > min_points).any():
         raise ValueError(
-            f"Invalid nadir: each component must be less than or equal to the minimum value in that dimension.\n"
+            f"Invalid nadir. Each component must be less than or equal to the minimum value in that dimension.\n"
             f"Provided nadir: {nadir}\n"
             f"Minimum required values: {min_points}"
         )
 
-    if points.shape[0] <= 1:
-        return float("nan")
-
-    points = points.copy() - nadir
+    points = points - nadir
     ref_point = np.zeros(points.shape[1])
 
     if ideal is not None:
