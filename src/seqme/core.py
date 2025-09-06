@@ -349,6 +349,7 @@ def show_table(
 def barplot(
     df: pd.DataFrame,
     metric: str,
+    show_deviation: bool = True,
     color: str = "#68d6bc",
     x_ticks_label_rotation: float = 45,
     ylim: tuple[float, float] | None = None,
@@ -362,6 +363,7 @@ def barplot(
     Args:
         df: A DataFrame with a MultiIndex column [metric, {"value", "deviation"}].
         metric: The name of the metric to plot.
+        show_deviation: Whether to plot the deviation if available.
         color: Bar color (optional, default is teal).
         x_ticks_label_rotation: Rotation angle for x-axis tick labels.
         ylim: Y-axis limits (optional).
@@ -390,7 +392,7 @@ def barplot(
 
     ax.bar(values.index, values, color=color, edgecolor="black")
 
-    if deviations.notna().all():
+    if show_deviation:
         ax.errorbar(values.index, values, yerr=deviations, fmt="none", ecolor="black", capsize=4, lw=1)
 
     arrows = {"maximize": "↑", "minimize": "↓"}
@@ -415,6 +417,7 @@ def barplot(
 def plot_series(
     df: pd.DataFrame,
     metric: str,
+    show_deviation: bool = True,
     figsize: tuple[int, int] = (4, 3),
     marker: str | None = "x",
     xlabel: str = "Iteration",
@@ -428,6 +431,7 @@ def plot_series(
     Args:
         df: A DataFrame with a MultiIndex column [metric, {"value", "deviation"}].
         metric: The name of the metric to plot.
+        show_deviation: Whether to the plot deviation if available.
         marker: Marker type for graphs.
         xlabel: Name of x-label.
         alpha: opacity level of deviation intervals.
@@ -461,7 +465,9 @@ def plot_series(
         vs = df_model[metric]["value"]
         dev = df_model[metric]["deviation"]
 
-        ax.fill_between(xs, vs - dev, vs + dev, alpha=alpha)
+        if show_deviation:
+            ax.fill_between(xs, vs - dev, vs + dev, alpha=alpha)
+
         ax.plot(xs, vs, marker=marker, label=model_name)
 
     objective = df.attrs["objective"][metric]
