@@ -7,6 +7,7 @@ from typing import Any, Literal
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib.axes import Axes
 from pandas.io.formats.style import Styler
 from tqdm import tqdm
 
@@ -158,7 +159,7 @@ def combine_metric_dataframes(dfs: list[pd.DataFrame], on_overlap: Literal["fail
     combined_rows = []
     seen_rows = set()
 
-    combined_columns = []
+    combined_cols = []
     seen_cols = set()
 
     combined_objectives: dict[str, str] = {}
@@ -177,7 +178,7 @@ def combine_metric_dataframes(dfs: list[pd.DataFrame], on_overlap: Literal["fail
         for col in df.columns:
             if col not in seen_cols:
                 seen_cols.add(col)
-                combined_columns.append(col)
+                combined_cols.append(col)
 
     # extract cell values
     values: dict[tuple[Any, tuple[str, str]], list[float]] = defaultdict(list)
@@ -200,7 +201,6 @@ def combine_metric_dataframes(dfs: list[pd.DataFrame], on_overlap: Literal["fail
             col_subname = cell_name[1][1]  # either "value" or "deviation"
             if col_subname == "value":
                 res[cell_name] = np.mean(vs).item()
-
                 dev_cell = (cell_name[0], (cell_name[1][0], "deviation"))
                 res[dev_cell] = np.std(vs).item()
     else:
@@ -212,7 +212,7 @@ def combine_metric_dataframes(dfs: list[pd.DataFrame], on_overlap: Literal["fail
         if len(combined_rows) > 0 and isinstance(combined_rows[0], tuple)
         else pd.Index(combined_rows)
     )
-    col_index = pd.MultiIndex.from_tuples(combined_columns)  # type: ignore
+    col_index = pd.MultiIndex.from_tuples(combined_cols)  # type: ignore
 
     combined_df = pd.DataFrame(index=row_index, columns=col_index, dtype=float)
     combined_df.attrs["objective"] = combined_objectives
@@ -354,6 +354,7 @@ def barplot(
     ylim: tuple[float, float] | None = None,
     figsize: tuple[int, int] = (4, 3),
     show_arrow: bool = True,
+    ax: Axes | None = None,
 ):
     """
     Plot a bar chart for a given metric, optionally with error bars.
@@ -366,9 +367,13 @@ def barplot(
         ylim: Y-axis limits (optional).
         figsize: Size of the figure.
         show_arrow: Whether to show an arrow indicating maximize/minimize (default is True).
+        ax: Optional matplotlib Axes to plot on.
     """
     if metric not in df.columns.get_level_values(0):
         raise ValueError(f"'{metric}' is not a column in the DataFrame.")
+
+    if df.index.nlevels != 1:
+        raise ValueError("sequences should have non-tuple names.")
 
     values = df[(metric, "value")]
     deviations = df[(metric, "deviation")]
@@ -378,19 +383,15 @@ def barplot(
     values = values[valid_mask]
     deviations = deviations[valid_mask]
 
-    fig, ax = plt.subplots(figsize=figsize)
+    created_fig = False
+    if ax is None:
+        _, ax = plt.subplots(figsize=figsize)
+        created_fig = True
+
     ax.bar(values.index, values, color=color, edgecolor="black")
 
     if deviations.notna().all():
-        ax.errorbar(
-            values.index,
-            values,
-            yerr=deviations,
-            fmt="none",
-            ecolor="black",
-            capsize=4,
-            lw=1,
-        )
+        ax.errorbar(values.index, values, yerr=deviations, fmt="none", ecolor="black", capsize=4, lw=1)
 
     arrows = {"maximize": "↑", "minimize": "↓"}
     arrow = arrows[df.attrs["objective"][metric]]
@@ -406,7 +407,75 @@ def barplot(
     ax.grid(axis="y", linestyle="--", alpha=0.7)
     ax.set_axisbelow(True)
 
-    fig.tight_layout()
+    if created_fig:
+        plt.tight_layout()
+        plt.show()
+
+
+def plot_series(
+    df: pd.DataFrame,
+    metric: str,
+    figsize: tuple[int, int] = (4, 3),
+    marker: str | None = "x",
+    xlabel: str = "Iteration",
+    alpha: float = 0.4,
+    show_arrow: bool = True,
+    ax: Axes | None = None,
+):
+    """
+    Plot a graph for a given metric across multiple iterations/steps, optionally with error bars.
+
+    Args:
+        df: A DataFrame with a MultiIndex column [metric, {"value", "deviation"}].
+        metric: The name of the metric to plot.
+        marker: Marker type for graphs.
+        xlabel: Name of x-label.
+        alpha: opacity level of deviation intervals.
+        figsize: Size of the figure.
+        show_arrow: Whether to show an arrow indicating maximize/minimize (default is True).
+        ax: Optional matplotlib Axes to plot on.
+    """
+    if metric not in df.columns.get_level_values(0):
+        raise ValueError(f"'{metric}' is not a column in the DataFrame.")
+
+    if df.index.nlevels != 2:
+        raise ValueError("sequences should have tuple names: (model name, iteration).")
+
+    for model_name, iteration in df.index:
+        if not isinstance(model_name, str) or not isinstance(iteration, int | float):
+            raise ValueError(
+                "Expected a tuple of type (str, int | float), "
+                f"but got ({model_name!r}, {iteration!r}) "
+                f"with types ({type(model_name).__name__}, {type(iteration).__name__})."
+            )
+
+    created_fig = False
+    if ax is None:
+        _, ax = plt.subplots(figsize=figsize)
+        created_fig = True
+
+    model_names = {v[0] for v in df.index}
+    for model_name in model_names:
+        df_model = df.loc[model_name]
+        xs = df_model.index
+        vs = df_model[metric]["value"]
+        dev = df_model[metric]["deviation"]
+
+        ax.fill_between(xs, vs - dev, vs + dev, alpha=alpha)
+        ax.plot(xs, vs, marker=marker, label=model_name)
+
+    objective = df.attrs["objective"][metric]
+    arrows = {"maximize": "↑", "minimize": "↓"}
+
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(f"{metric}{arrows[objective]}" if show_arrow else metric)
+
+    ax.grid(True, linestyle="--", alpha=0.7)
+    ax.legend()
+
+    if created_fig:
+        plt.tight_layout()
+        plt.show()
 
 
 class ModelCache:

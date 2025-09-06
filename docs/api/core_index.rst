@@ -10,3 +10,4 @@ Core
     seqme.show_table
     seqme.ModelCache
     seqme.barplot
+    seqme.plot_series
