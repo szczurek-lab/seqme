@@ -7,8 +7,7 @@ from sklearn.neighbors import NearestNeighbors
 
 
 def feature_alignment_score(xs: np.ndarray, labels: np.ndarray, n_neighbors: int = 5) -> float:
-    """
-    Compute the feature alignment score of an embedding model.
+    """Compute the feature alignment score of an embedding model.
 
     Args:
         xs: Sequence embeddings.
@@ -28,8 +27,7 @@ def feature_alignment_score(xs: np.ndarray, labels: np.ndarray, n_neighbors: int
 
 
 def spearman_correlation_coefficient(xs_a: np.ndarray, xs_b: np.ndarray) -> float:
-    """
-    Compute the Spearman correlation coefficient using the pairwise distance between embedding spaces.
+    """Compute the Spearman correlation coefficient using the pairwise distance between embedding spaces.
 
     Args:
         xs_a: Sequence embeddings for space A.

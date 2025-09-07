@@ -19,8 +19,7 @@ class MetricResult:
 
 
 class Metric(abc.ABC):
-    """
-    Abstract base for metrics evaluating lists of text sequences.
+    """Abstract base for metrics evaluating lists of text sequences.
 
     Subclasses implement a callable interface to compute a score and
     specify a name and optimization direction.
@@ -28,8 +27,7 @@ class Metric(abc.ABC):
 
     @abc.abstractmethod
     def __call__(self, sequences: list[str]) -> MetricResult:
-        """
-        Calculate the metric over provided sequences.
+        """Calculate the metric over provided sequences.
 
         Args:
             sequences: Text inputs to evaluate.
@@ -42,8 +40,7 @@ class Metric(abc.ABC):
     @property
     @abc.abstractmethod
     def name(self) -> str:
-        """
-        A short identifier for this metric, used in reporting.
+        """A short identifier for this metric, used in reporting.
 
         Returns:
             The metric name.
@@ -53,8 +50,7 @@ class Metric(abc.ABC):
     @property
     @abc.abstractmethod
     def objective(self) -> Literal["minimize", "maximize"]:
-        """
-        Whether lower or higher scores indicate better performance.
+        """Whether lower or higher scores indicate better performance.
 
         Returns:
             The optimization goal ('minimize' or 'maximize').
@@ -63,17 +59,16 @@ class Metric(abc.ABC):
 
 
 def compute_metrics(
-    sequences: dict[str, list[str]],
+    sequences: dict[str, list[str]] | dict[tuple[str, ...], list[str]],
     metrics: list[Metric],
     verbose: bool = True,
 ) -> pd.DataFrame:
-    """
-    Compute a set of metrics on multiple sequence groups.
+    """Compute a set of metrics on multiple sequence groups.
 
     Args:
         sequences: A dict mapping group names to lists of sequences.
         metrics: A list of Metric instances to apply.
-        verbose: Whether to show progressbar.
+        verbose: Whether to show a progress-bar.
 
     Returns:
         A DataFrame where each row corresponds to a sequence group (dict key)
@@ -91,7 +86,7 @@ def compute_metrics(
         )
 
     # Prepare nested results: group -> metric -> {value, deviation}
-    nested: dict[str, dict[str, dict[str, float | None]]] = {}
+    nested: dict[str | tuple[str, ...], dict[str, dict[str, float | None]]] = {}
     total = len(sequences) * len(metrics)
     with tqdm(total=total, disable=(not verbose)) as pbar:
         for group_name, seqs in sequences.items():
@@ -132,8 +127,7 @@ def compute_metrics(
 
 
 def combine_metric_dataframes(dfs: list[pd.DataFrame], on_overlap: Literal["fail", "mean"] = "fail") -> pd.DataFrame:
-    """
-    Combine multiple DataFrames with metrics results into a single DataFrame.
+    """Combine multiple DataFrames with metrics results into a single DataFrame.
 
     Args:
         dfs: list of DataFrames, each with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], and an 'objective' attribute.
@@ -143,10 +137,10 @@ def combine_metric_dataframes(dfs: list[pd.DataFrame], on_overlap: Literal["fail
             - "mean": sets the cell value to the mean and the deviation to the std of the values.
 
     Returns:
-        A single DataFrame with combined metrics, ensuring no overlapping cells and converting all values to float.
+        A single DataFrame combining multiple metric dataframes.
 
     Raises:
-        ValueError: If dfs is empty, any DataFrame lacks 'objective', objectives conflict, or overlapping non-null cells.
+        ValueError: If dfs is empty, any DataFrame lacks 'objective', objectives conflict, or potentially overlapping non-null cells.
     """
     if not dfs:
         raise ValueError("The list of DataFrames is empty.")
@@ -201,8 +195,9 @@ def combine_metric_dataframes(dfs: list[pd.DataFrame], on_overlap: Literal["fail
             col_subname = cell_name[1][1]  # either "value" or "deviation"
             if col_subname == "value":
                 res[cell_name] = np.mean(vs).item()
-                dev_cell = (cell_name[0], (cell_name[1][0], "deviation"))
-                res[dev_cell] = np.std(vs).item()
+                if len(vs) > 1:
+                    dev_cell = (cell_name[0], (cell_name[1][0], "deviation"))
+                    res[dev_cell] = np.std(vs).item()
     else:
         raise ValueError(f"{on_overlap} not supported.")
 
@@ -225,8 +220,8 @@ def combine_metric_dataframes(dfs: list[pd.DataFrame], on_overlap: Literal["fail
 
 def show_table(
     df: pd.DataFrame,
-    decimals: int | list[int] = 2,
-    notations: Literal["e", "f"] | list[Literal["e", "f"]] = "f",
+    n_decimals: int | list[int] = 2,
+    notation: Literal["decimals", "exponent"] | list[Literal["decimals", "exponent"]] = "decimals",
     color: str = "#68d6bc",
     missing_value: str = "-",
 ) -> Styler:
@@ -241,9 +236,9 @@ def show_table(
 
     Args:
         df: DataFrame with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], attributed with 'objective'.
-        decimals: Decimal precision for formatting.
+        n_decimals: Decimal precision for formatting.
         color: Color for highlighting best scores.
-        notations: Whether to use scientific notation (e) or not (f).
+        notation: Whether to use scientific notation (exponent) or fixed-point notation (decimals).
         missing_value: str to show for cells with no metric value, i.e., cells with NaN values.
 
     Returns:
@@ -255,19 +250,19 @@ def show_table(
     objectives = df.attrs["objective"]
 
     n_metrics = df.shape[1] // 2
-    decimals = [decimals] * n_metrics if isinstance(decimals, int) else decimals
-    notations = [notations] * n_metrics if isinstance(notations, str) else notations
+    n_decimals = [n_decimals] * n_metrics if isinstance(n_decimals, int) else n_decimals
+    notation = [notation] * n_metrics if isinstance(notation, str) else notation
 
-    if len(decimals) != n_metrics:
+    if len(n_decimals) != n_metrics:
         raise ValueError(
-            f"Expected {n_metrics} decimals, got {len(decimals)}. Provide a single int or a list matching the number of metrics."
+            f"Expected {n_metrics} decimals, got {len(n_decimals)}. Provide a single int or a list matching the number of metrics."
         )
 
     metrics = pd.unique(df.columns.get_level_values(0)).tolist()
     arrows = {"maximize": "↑", "minimize": "↓"}
 
     df_display = pd.DataFrame(index=df.index)
-    df_rounded = df.round(dict(zip(df.columns, [d for d in decimals for _ in range(2)], strict=True)))
+    df_rounded = df.round(dict(zip(df.columns, [d for d in n_decimals for _ in range(2)], strict=True)))
 
     ## Extract top sequence indices
     def get_top_indices(top_two: pd.Series) -> tuple[list[int], list[int]]:
@@ -304,20 +299,29 @@ def show_table(
             raise ValueError(f"Unknown objective '{objectives[m]}' for metric '{m}")
 
     ## Format cell values
-    def format_cell(val: float, dev: float, n_decimals: int, notation: str, no_value: str = missing_value) -> str:
+    def format_cell(
+        val: float,
+        dev: float,
+        n_decimals: int,
+        notation: Literal["decimals", "exponent"],
+        no_value: str,
+    ) -> str:
+        notation_formatters = {"decimals": "f", "exponent": "e"}
+        suffix_notation = notation_formatters[notation]
+
         if pd.isna(val):
             return no_value
         if pd.isna(dev):
-            return f"{val:.{n_decimals}{notation}}"
-        return f"{val:.{n_decimals}{notation}}±{dev:.{n_decimals}{notation}}"
+            return f"{val:.{n_decimals}{suffix_notation}}"
+        return f"{val:.{n_decimals}{suffix_notation}}±{dev:.{n_decimals}{suffix_notation}}"
 
     for i, m in enumerate(metrics):
         vals, devs = df_rounded[(m, "value")], df_rounded[(m, "deviation")]
-        decimal, notation = decimals[i], notations[i]
-
         arrow = arrows[objectives[m]]
-        df_display[f"{m}{arrow}"] = [
-            format_cell(val, dev, decimal, notation) for val, dev in zip(vals, devs, strict=True)
+        col_name = f"{m}{arrow}"
+        df_display[col_name] = [
+            format_cell(val, dev, n_decimals[i], notation[i], missing_value)
+            for val, dev in zip(vals, devs, strict=True)
         ]
 
     ## Apply cell styles per column
@@ -357,8 +361,7 @@ def barplot(
     show_arrow: bool = True,
     ax: Axes | None = None,
 ):
-    """
-    Plot a bar chart for a given metric, optionally with error bars.
+    """Plot a bar chart for a given metric, optionally with error bars.
 
     Args:
         df: A DataFrame with a MultiIndex column [metric, {"value", "deviation"}].
@@ -374,9 +377,6 @@ def barplot(
     if metric not in df.columns.get_level_values(0):
         raise ValueError(f"'{metric}' is not a column in the DataFrame.")
 
-    if df.index.nlevels != 1:
-        raise ValueError("sequences should have non-tuple names.")
-
     values = df[(metric, "value")]
     deviations = df[(metric, "deviation")]
 
@@ -390,16 +390,22 @@ def barplot(
         _, ax = plt.subplots(figsize=figsize)
         created_fig = True
 
-    ax.bar(values.index, values, color=color, edgecolor="black")
+    bar_names = (
+        [" ".join(map(str, row_index)) for row_index in values.index.to_flat_index()]
+        if df.index.nlevels > 1
+        else values.index
+    )
+
+    ax.bar(bar_names, values, color=color, edgecolor="black")
 
     if show_deviation:
-        ax.errorbar(values.index, values, yerr=deviations, fmt="none", ecolor="black", capsize=4, lw=1)
+        ax.errorbar(bar_names, values, yerr=deviations, fmt="none", ecolor="black", capsize=4, lw=1)
 
     arrows = {"maximize": "↑", "minimize": "↓"}
     arrow = arrows[df.attrs["objective"][metric]]
 
     ax.set_xticks(range(len(values)))
-    ax.set_xticklabels(values.index, rotation=x_ticks_label_rotation, ha="center")
+    ax.set_xticklabels(bar_names, rotation=x_ticks_label_rotation, ha="center")
 
     ax.set_ylabel(f"{metric}{arrow}" if show_arrow else metric)
 
@@ -425,8 +431,7 @@ def plot_series(
     show_arrow: bool = True,
     ax: Axes | None = None,
 ):
-    """
-    Plot a graph for a given metric across multiple iterations/steps, optionally with error bars.
+    """Plot a graph for a given metric across multiple iterations/steps, optionally with error bars.
 
     Args:
         df: A DataFrame with a MultiIndex column [metric, {"value", "deviation"}].
@@ -485,8 +490,7 @@ def plot_series(
 
 
 class ModelCache:
-    """
-    Caches model-generated feature representations for sequences.
+    """Caches model-generated feature representations of sequences.
 
     Allows storing and retrieving embeddings per model to avoid
     recomputation, with support for adding models and precomputed values.
@@ -497,8 +501,7 @@ class ModelCache:
         models: dict[str, Callable[[list[str]], np.ndarray]] | None = None,
         init_cache: dict[str, dict[str, np.ndarray]] | None = None,
     ):
-        """
-        Initialize the cache with optional models and precomputed representations.
+        """Initialize the cache with optional models and precomputed representations.
 
         Args:
             models: Mapping from model name to callable for generating embeddings.
@@ -512,8 +515,7 @@ class ModelCache:
                 self.model_to_cache[name] = {}
 
     def __call__(self, sequences: list[str], model_name: str) -> np.ndarray:
-        """
-        Return embeddings for the given sequences using the specified model.
+        """Return embeddings for the given sequences using the specified model.
 
         Uncached sequences are computed and stored automatically.
 
@@ -540,8 +542,7 @@ class ModelCache:
         return np.stack([sequence_to_rep[seq] for seq in sequences])
 
     def model(self, model_name: str) -> Callable[[list[str]], np.ndarray]:
-        """
-        Return a callable interface for a given model name.
+        """Return a callable interface for a given model name.
 
         Args:
             model_name: Name of the model to use.
@@ -554,8 +555,7 @@ class ModelCache:
         return lambda sequence: self(sequence, model_name)
 
     def add(self, model_name: str, element: Callable[[list[str]], np.ndarray] | dict[str, np.ndarray]):
-        """
-        Add a new model or precomputed embeddings to the cache.
+        """Add a new model or precomputed embeddings to the cache.
 
         Args:
             model_name: Name of the model to use.
@@ -587,8 +587,7 @@ class ModelCache:
             )
 
     def remove(self, model_name: str):
-        """
-        Removes the cache of a model and the model callable if defined.
+        """Remove the cache of a model and the model callable if defined.
 
         Args:
             model_name: Name of the model to use.
@@ -599,8 +598,7 @@ class ModelCache:
             del self.model_to_callable[model_name]
 
     def get(self) -> dict[str, dict[str, np.ndarray]]:
-        """
-        Return a copy of the current cache.
+        """Return a copy of the current cache.
 
         Returns:
             A nested dictionary of cached embeddings.
