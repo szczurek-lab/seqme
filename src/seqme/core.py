@@ -466,6 +466,8 @@ def plot_series(
     model_names = {v[0] for v in df.index}
     for model_name in model_names:
         df_model = df.loc[model_name]
+        df_model = df_model.sort_index()
+
         xs = df_model.index
         vs = df_model[metric]["value"]
         dev = df_model[metric]["deviation"]

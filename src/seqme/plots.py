@@ -22,8 +22,7 @@ def plot_hist(
     label: str | None = None,
     ax: Axes | None = None,
 ):
-    """
-    Plot a histogram from array-like input.
+    """Plot a histogram from array-like input.
 
     Args:
         data: Input values to plot.
@@ -90,8 +89,7 @@ def plot_kde(
     xlim: tuple[float, float] | None = None,
     ax: Axes | None = None,
 ):
-    """
-    Plot a kernel density estimate (KDE) from array-like input.
+    """Plot a kernel density estimate (KDE) from array-like input.
 
     Args:
         data: Input values to estimate density from.
@@ -115,7 +113,7 @@ def plot_kde(
 
     created_fig = False
     if ax is None:
-        fig, ax = plt.subplots(figsize=figsize)
+        _, ax = plt.subplots(figsize=figsize)
         created_fig = True
 
     kde_est = gaussian_kde(arr, bw_method=bandwidth)
@@ -158,8 +156,7 @@ def plot_violin(
     show_medians: bool = True,
     ax: Axes | None = None,
 ):
-    """
-    Plot a violin plot from array-like input.
+    """Plot a violin plot from array-like input.
 
     Args:
         data: Input values to visualize.
@@ -184,7 +181,7 @@ def plot_violin(
 
     created_fig = False
     if ax is None:
-        fig, ax = plt.subplots(figsize=figsize)
+        _, ax = plt.subplots(figsize=figsize)
         created_fig = True
 
     parts = ax.violinplot(
@@ -219,8 +216,7 @@ def plot_violin(
 
 
 def pca(embeddings: np.ndarray | list[np.ndarray], seed: int = 42) -> np.ndarray | list[np.ndarray]:
-    """
-    Project embeddings into 2D using PCA.
+    """Project embeddings into 2D using PCA.
 
     Args:
         embeddings: 2D array where each row is a data point.
@@ -246,8 +242,7 @@ def pca(embeddings: np.ndarray | list[np.ndarray], seed: int = 42) -> np.ndarray
 
 
 def tsne(embeddings: np.ndarray | list[np.ndarray], seed: int = 42) -> np.ndarray | list[np.ndarray]:
-    """
-    Project embeddings into 2D using t-SNE.
+    """Project embeddings into 2D using t-SNE.
 
     Args:
         embeddings: 2D array where each row is a data point or list.
@@ -273,8 +268,7 @@ def tsne(embeddings: np.ndarray | list[np.ndarray], seed: int = 42) -> np.ndarra
 
 
 def umap(embeddings: np.ndarray | list[np.ndarray], seed: int = 42) -> np.ndarray | list[np.ndarray]:
-    """
-    Project embeddings into 2D using UMAP.
+    """Project embeddings into 2D using UMAP.
 
     Args:
         embeddings: 2D array where each row is a data point.
@@ -330,8 +324,7 @@ def plot_embeddings(
     alpha: float = 0.6,
     show_ticks: bool = False,
 ):
-    """
-    Plot projections for one or more groups.
+    """Plot projections for one or more groups.
 
     Args:
         projections: List of arrays, each containing vectors to embed.
@@ -348,8 +341,10 @@ def plot_embeddings(
         alpha: Transparency of points.
         show_ticks: Whether to show axis ticks.
     """
+    created_fig = False
     if ax is None:
-        fig, ax = plt.subplots(figsize=figsize)
+        _, ax = plt.subplots(figsize=figsize)
+        created_fig = True
 
     for i, seg in enumerate(projections):
         color = colors[i] if colors is not None else None
@@ -386,8 +381,9 @@ def plot_embeddings(
     if title is not None:
         ax.set_title(title)
 
-    if ax.figure:
-        ax.figure.tight_layout()  # type: ignore
+    if created_fig:
+        plt.tight_layout()
+        plt.show()
 
 
 def plot_embedding_with_value(
@@ -404,8 +400,7 @@ def plot_embedding_with_value(
     outline_width: float = 0.4,
     show_ticks: bool = False,
 ):
-    """
-    Plot projections and color by value.
+    """Plot projections and color by value.
 
     Args:
         projections: Arrays of projected embeddings.
@@ -421,8 +416,10 @@ def plot_embedding_with_value(
         outline_width: Width of the outline around points.
         show_ticks: Whether to show axis ticks.
     """
+    created_fig = False
     if ax is None:
-        fig, ax = plt.subplots(figsize=figsize)
+        _, ax = plt.subplots(figsize=figsize)
+        created_fig = True
 
     sc = ax.scatter(
         projections[:, 0],
@@ -449,5 +446,6 @@ def plot_embedding_with_value(
     if title is not None:
         ax.set_title(title)
 
-    if ax.figure:
-        ax.figure.tight_layout()  # type: ignore
+    if created_fig:
+        plt.tight_layout()
+        plt.show()
