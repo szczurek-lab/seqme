@@ -365,8 +365,8 @@ def to_latex(
     objectives = df.attrs["objective"]
     arrows = {"maximize": "↑", "minimize": "↓"}
 
-    def no_escapes(vs):
-        return [NoEscape(v) for v in vs]
+    def no_escapes(values: list[Any]) -> list[NoEscape]:
+        return [NoEscape(v) for v in values]
 
     col_names = list(df_rounded.columns.get_level_values(0).unique())
     n_cols = len(col_names)
