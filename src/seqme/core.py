@@ -261,10 +261,8 @@ def show_table(
             f"Expected {n_metrics} notations, got {len(notation)}. Provide a single int or a list matching the number of metrics."
         )
 
-    df_rounded = _prepare_for_visualization(df, n_decimals)
-
-    best_indices = df_rounded.attrs["best_indices"]
-    second_best_indices = df_rounded.attrs["second_best_indices"]
+    df_rounded = df.round(dict(zip(df.columns, [d for d in n_decimals for _ in range(2)], strict=True)))
+    best_indices, second_best_indices = get_top_indices(df_rounded)
 
     arrows = {"maximize": "↑", "minimize": "↓"}
     metrics = pd.unique(df.columns.get_level_values(0)).tolist()
@@ -361,13 +359,10 @@ def to_latex(
             f"Expected {n_metrics} notations, got {len(notation)}. Provide a single int or a list matching the number of metrics."
         )
 
-    df_rounded = _prepare_for_visualization(df, n_decimals)
-
-    best_indices = df_rounded.attrs["best_indices"]
-    second_best_indices = df_rounded.attrs["second_best_indices"]
+    df_rounded = df.round(dict(zip(df.columns, [d for d in n_decimals for _ in range(2)], strict=True)))
+    best_indices, second_best_indices = get_top_indices(df_rounded)
 
     objectives = df.attrs["objective"]
-
     arrows = {"maximize": "↑", "minimize": "↓"}
 
     def no_escapes(vs):
@@ -394,7 +389,7 @@ def to_latex(
         values = []
         for col_name, val, dev in zip(col_names, row[::2], row[1::2], strict=True):
             if pd.isna(val):
-                values.append(NoEscape(missing_value))
+                values.append(missing_value)
                 continue
 
             value = f"{val}" if pd.isna(dev) else f"{val} \\pm {dev}"
@@ -426,8 +421,8 @@ def to_latex(
     output_path.write_text(latex_code)
 
 
-def _prepare_for_visualization(df: pd.DataFrame, n_decimals: list[int]) -> pd.DataFrame:
-    def get_top_indices(top_two: pd.Series) -> tuple[set[int], set[int]]:
+def get_top_indices(df: pd.DataFrame) -> tuple[dict[str, set[int]], dict[str, set[int]]]:
+    def get_column_top_indices(top_two: pd.Series) -> tuple[set[int], set[int]]:
         if pd.isna(top_two.values[0]):
             return set(), set()
 
@@ -449,29 +444,24 @@ def _prepare_for_visualization(df: pd.DataFrame, n_decimals: list[int]) -> pd.Da
     if "objective" not in df.attrs:
         raise ValueError("DataFrame must have an 'objective' attribute. Use compute_metrics to create the DataFrame.")
 
-    df_rounded = df.round(dict(zip(df.columns, [d for d in n_decimals for _ in range(2)], strict=True)))
+    objectives = df.attrs["objective"]
+    metrics = pd.unique(df.columns.get_level_values(0)).tolist()
 
     best_indices = {}
     second_best_indices = {}
 
-    objectives = df.attrs["objective"]
-    metrics = pd.unique(df.columns.get_level_values(0)).tolist()
-
     for m in metrics:
-        vals = df_rounded[(m, "value")]
+        vals = df[(m, "value")]
         if objectives[m] == "maximize":
             best_cells = vals.nlargest(2, keep="all")
-            best_indices[m], second_best_indices[m] = get_top_indices(best_cells)
+            best_indices[m], second_best_indices[m] = get_column_top_indices(best_cells)
         elif objectives[m] == "minimize":
             best_cells = vals.nsmallest(2, keep="all")
-            best_indices[m], second_best_indices[m] = get_top_indices(best_cells)
+            best_indices[m], second_best_indices[m] = get_column_top_indices(best_cells)
         else:
             raise ValueError(f"Unknown objective '{objectives[m]}' for metric '{m}")
 
-    df_rounded.attrs["best_indices"] = best_indices
-    df_rounded.attrs["second_best_indices"] = best_indices
-
-    return df_rounded
+    return best_indices, second_best_indices
 
 
 def barplot(
