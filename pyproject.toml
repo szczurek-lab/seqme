@@ -54,6 +54,7 @@ dependencies = [
     "umap-learn",
     "modlamp",
     "pylev",
+    "pylatex",
 ]
 
 [project.optional-dependencies]

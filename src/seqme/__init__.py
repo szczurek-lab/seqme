@@ -5,6 +5,7 @@ from seqme.core import (
     compute_metrics,
     plot_series,
     show_table,
+    to_latex,
 )
 
 __all__ = [
@@ -14,4 +15,5 @@ __all__ = [
     "compute_metrics",
     "plot_series",
     "show_table",
+    "to_latex",
 ]
