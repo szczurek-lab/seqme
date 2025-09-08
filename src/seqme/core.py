@@ -227,6 +227,7 @@ def show_table(
     color: str | None = "#68d6bc",
     notation: Literal["decimals", "exponent"] | list[Literal["decimals", "exponent"]] = "decimals",
     missing_value: str = "-",
+    show_arrow: bool = True,
 ) -> Styler:
     """Visualize a table of a metric dataframe.
 
@@ -240,9 +241,10 @@ def show_table(
     Args:
         df: DataFrame with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], attributed with 'objective'.
         n_decimals: Decimal precision for formatting.
-        color: Color for highlighting best scores.
+        color: Color (hex) for highlighting best scores.
         notation: Whether to use scientific notation (exponent) or fixed-point notation (decimals).
         missing_value: str to show for cells with no metric value, i.e., cells with NaN values.
+        show_arrow: Whether to include the objective arrow in the column names.
 
     Returns:
         Styler: pandas Styler object.
@@ -262,7 +264,7 @@ def show_table(
         )
 
     df_rounded = df.round(dict(zip(df.columns, [d for d in n_decimals for _ in range(2)], strict=True)))
-    best_indices, second_best_indices = get_top_indices(df_rounded)
+    best_indices, second_best_indices = _get_top_indices(df_rounded)
 
     arrows = {"maximize": "↑", "minimize": "↓"}
     metrics = pd.unique(df.columns.get_level_values(0)).tolist()
@@ -288,7 +290,7 @@ def show_table(
     for i, m in enumerate(metrics):
         vals, devs = df_rounded[(m, "value")], df_rounded[(m, "deviation")]
         arrow = arrows[objectives[m]]
-        col_name = f"{m}{arrow}"
+        col_name = f"{m}{arrow}" if show_arrow else m
         df_styled[col_name] = [
             format_cell(val, dev, n_decimals[i], notation[i], missing_value)
             for val, dev in zip(vals, devs, strict=True)
@@ -325,9 +327,10 @@ def to_latex(
     fname: str | Path,
     df: pd.DataFrame,
     n_decimals: int | list[int] = 2,
-    color: str | None = "#68d6bc",
+    color: str | None = None,
     notation: Literal["decimals", "exponent"] | list[Literal["decimals", "exponent"]] = "decimals",  # TODO: unused
     missing_value: str = "-",
+    show_arrow: bool = True,
     caption: str = None,
 ):
     """Convert a metric dataframe to a LaTeX table.
@@ -336,9 +339,10 @@ def to_latex(
         fname: Output filename, e.g., "table.tex".
         df: DataFrame with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], attributed with 'objective'.
         n_decimals: Decimal precision for formatting.
-        color: Color for highlighting best scores.
+        color: Color (hex) for highlighting best scores. Defined as a hexadecimal.
         notation: Whether to use scientific notation (exponent) or fixed-point notation (decimals).
         missing_value: str to show for cells with no metric value, i.e., cells with NaN values.
+        show_arrow: Whether to include the objective arrow in the column names.
         caption: Latex table caption.
     """
     # @TODO: support multi-index rows
@@ -360,33 +364,48 @@ def to_latex(
         )
 
     df_rounded = df.round(dict(zip(df.columns, [d for d in n_decimals for _ in range(2)], strict=True)))
-    best_indices, second_best_indices = get_top_indices(df_rounded)
+    best_indices, second_best_indices = _get_top_indices(df_rounded)
 
     objectives = df.attrs["objective"]
     arrows = {"maximize": "↑", "minimize": "↓"}
-
-    def no_escapes(values: list[Any]) -> list[NoEscape]:
-        return [NoEscape(v) for v in values]
 
     col_names = list(df_rounded.columns.get_level_values(0).unique())
     n_cols = len(col_names)
     n_row_levels = df_rounded.index.nlevels
     n_cols_and_row_levels = n_row_levels + n_cols
 
+    # LaTeX formatting
+
+    def no_escapes(values: list[Any]) -> list[NoEscape]:
+        return [NoEscape(v) for v in values]
+
+    def macro(command: str, *args) -> str:
+        vs = "".join(["{" + v + "}" for v in args])
+        return f"\\{command}{vs}"
+
+    def imath(value: str) -> str:
+        return f"${value}$"
+
+    def format_column_header(metric: str) -> str:
+        arrow = arrows[objectives[metric]]
+        text = f"{metric} ({arrow})" if show_arrow else metric
+        return macro("textbf", text)
+
     table = Table()
-    table.append(NoEscape(r"\centering"))
+    table.append(NoEscape(macro("centering")))
 
     col_header = "c" * n_cols_and_row_levels
     tabular = Tabular(col_header)
 
-    tabular.append(NoEscape("\\toprule"))
+    tabular.append(NoEscape(macro("toprule")))
 
-    t_col_names = [f"{m}{arrows[objectives[m]]}" for m in col_names]
-    tabular.add_row(no_escapes(["Method"] + t_col_names))
-    tabular.append(NoEscape("\\midrule"))
+    t_col_names = [format_column_header(metric) for metric in col_names]
+    tabular.add_row(no_escapes([macro("textbf", "Method")] + t_col_names))
+
+    tabular.append(NoEscape(macro("midrule")))
 
     for row_name, row in df_rounded.iterrows():
-        values = []
+        values = [row_name]
         for col_name, val, dev in zip(col_names, row[::2], row[1::2], strict=True):
             if pd.isna(val):
                 values.append(missing_value)
@@ -397,18 +416,17 @@ def to_latex(
             best = row_name in best_indices[col_name]
             second_best = row_name in second_best_indices[col_name]
             if best:
-                value = f"\\mathbf{{{value}}}"
+                value = macro("mathbf", value)
                 if color:
-                    value = f"\\cellcolor[HTML]{{{color[1:]}}}{{{value}}}"
+                    value = macro("cellcolor[HTML]", color[1:], value)
             elif second_best:
-                value = f"\\underline{{{value}}}"
+                value = macro("underline", value)
 
-            value = f"${value}$"
-            values.append(value)
+            values.append(imath(value))
 
-        tabular.add_row(no_escapes([row_name] + values))
+        tabular.add_row(no_escapes(values))
 
-    tabular.append(NoEscape("\\bottomrule"))
+    tabular.append(NoEscape(macro("bottomrule")))
     table.append(tabular)
 
     if caption:
@@ -419,49 +437,6 @@ def to_latex(
     output_path = Path(fname)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(latex_code)
-
-
-def get_top_indices(df: pd.DataFrame) -> tuple[dict[str, set[int]], dict[str, set[int]]]:
-    def get_column_top_indices(top_two: pd.Series) -> tuple[set[int], set[int]]:
-        if pd.isna(top_two.values[0]):
-            return set(), set()
-
-        # get all indices with the same value as the best value
-        value1 = top_two.values[0]
-        indices1 = top_two.index[top_two == value1].tolist()
-        if len(indices1) >= 2:
-            return set(indices1), set()
-
-        if len(top_two) < 2 or pd.isna(top_two.values[1]):
-            return set(indices1), set()
-
-        # get all indices with the same value as the second best value
-        value2 = top_two.values[1]
-        indices2 = top_two.index[top_two == value2].tolist()
-
-        return set(indices1), set(indices2)
-
-    if "objective" not in df.attrs:
-        raise ValueError("DataFrame must have an 'objective' attribute. Use compute_metrics to create the DataFrame.")
-
-    objectives = df.attrs["objective"]
-    metrics = pd.unique(df.columns.get_level_values(0)).tolist()
-
-    best_indices = {}
-    second_best_indices = {}
-
-    for m in metrics:
-        vals = df[(m, "value")]
-        if objectives[m] == "maximize":
-            best_cells = vals.nlargest(2, keep="all")
-            best_indices[m], second_best_indices[m] = get_column_top_indices(best_cells)
-        elif objectives[m] == "minimize":
-            best_cells = vals.nsmallest(2, keep="all")
-            best_indices[m], second_best_indices[m] = get_column_top_indices(best_cells)
-        else:
-            raise ValueError(f"Unknown objective '{objectives[m]}' for metric '{m}")
-
-    return best_indices, second_best_indices
 
 
 def barplot(
@@ -720,3 +695,46 @@ class ModelCache:
             A nested dictionary of cached embeddings.
         """
         return self.model_to_cache.copy()
+
+
+def _get_top_indices(df: pd.DataFrame) -> tuple[dict[str, set[int]], dict[str, set[int]]]:
+    def get_column_top_indices(top_two: pd.Series) -> tuple[set[int], set[int]]:
+        if pd.isna(top_two.values[0]):
+            return set(), set()
+
+        # get all indices with the same value as the best value
+        value1 = top_two.values[0]
+        indices1 = top_two.index[top_two == value1].tolist()
+        if len(indices1) >= 2:
+            return set(indices1), set()
+
+        if len(top_two) < 2 or pd.isna(top_two.values[1]):
+            return set(indices1), set()
+
+        # get all indices with the same value as the second best value
+        value2 = top_two.values[1]
+        indices2 = top_two.index[top_two == value2].tolist()
+
+        return set(indices1), set(indices2)
+
+    if "objective" not in df.attrs:
+        raise ValueError("DataFrame must have an 'objective' attribute. Use compute_metrics to create the DataFrame.")
+
+    objectives = df.attrs["objective"]
+    metrics = pd.unique(df.columns.get_level_values(0)).tolist()
+
+    best_indices = {}
+    second_best_indices = {}
+
+    for m in metrics:
+        vals = df[(m, "value")]
+        if objectives[m] == "maximize":
+            best_cells = vals.nlargest(2, keep="all")
+            best_indices[m], second_best_indices[m] = get_column_top_indices(best_cells)
+        elif objectives[m] == "minimize":
+            best_cells = vals.nsmallest(2, keep="all")
+            best_indices[m], second_best_indices[m] = get_column_top_indices(best_cells)
+        else:
+            raise ValueError(f"Unknown objective '{objectives[m]}' for metric '{m}")
+
+    return best_indices, second_best_indices
