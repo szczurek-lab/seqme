@@ -266,7 +266,6 @@ def show_table(
     best_indices = df_rounded.attrs["best_indices"]
     second_best_indices = df_rounded.attrs["second_best_indices"]
 
-    ## Formatting
     arrows = {"maximize": "↑", "minimize": "↓"}
     metrics = pd.unique(df.columns.get_level_values(0)).tolist()
 
@@ -333,7 +332,7 @@ def to_latex(
     missing_value: str = "-",
     caption: str = None,
 ):
-    """Convert a metric table to latex.
+    """Convert a metric dataframe to a LaTeX table.
 
     Args:
         fname: Output filename, e.g., "table.tex".
@@ -382,18 +381,15 @@ def to_latex(
     table = Table()
     table.append(NoEscape(r"\centering"))
 
-    # col_header = "|" + "c|" * n_cols_and_row_levels
-    col_header = "c" * n_cols_and_row_levels
+    col_header = "|" + "c|" * n_cols_and_row_levels
+    # col_header = "c" * n_cols_and_row_levels
 
     tabular = Tabular(col_header)
 
-    # tabular.add_hline()
     tabular.append(NoEscape("\\toprule"))
 
     t_col_names = [f"{m}{arrows[objectives[m]]}" for m in col_names]
     tabular.add_row(no_escapes(["Method"] + t_col_names))
-
-    # tabular.add_hline()
     tabular.append(NoEscape("\\midrule"))
 
     for row_name, row in df_rounded.iterrows():
@@ -419,9 +415,7 @@ def to_latex(
 
         tabular.add_row(no_escapes([row_name] + values))
 
-    # tabular.add_hline()
     tabular.append(NoEscape("\\bottomrule"))
-
     table.append(tabular)
 
     if caption:
@@ -435,13 +429,6 @@ def to_latex(
 
 
 def _prepare_for_visualization(df: pd.DataFrame, n_decimals: list[int]) -> pd.DataFrame:
-    if "objective" not in df.attrs:
-        raise ValueError("DataFrame must have an 'objective' attribute. Use compute_metrics to create the DataFrame.")
-
-    objectives = df.attrs["objective"]
-    df_rounded = df.round(dict(zip(df.columns, [d for d in n_decimals for _ in range(2)], strict=True)))
-
-    ## Extract top sequence indices
     def get_top_indices(top_two: pd.Series) -> tuple[set[int], set[int]]:
         if pd.isna(top_two.values[0]):
             return set(), set()
@@ -461,9 +448,15 @@ def _prepare_for_visualization(df: pd.DataFrame, n_decimals: list[int]) -> pd.Da
 
         return set(indices1), set(indices2)
 
+    if "objective" not in df.attrs:
+        raise ValueError("DataFrame must have an 'objective' attribute. Use compute_metrics to create the DataFrame.")
+
+    df_rounded = df.round(dict(zip(df.columns, [d for d in n_decimals for _ in range(2)], strict=True)))
+
     best_indices = {}
     second_best_indices = {}
 
+    objectives = df.attrs["objective"]
     metrics = pd.unique(df.columns.get_level_values(0)).tolist()
 
     for m in metrics:
