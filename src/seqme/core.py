@@ -381,9 +381,7 @@ def to_latex(
     table = Table()
     table.append(NoEscape(r"\centering"))
 
-    col_header = "|" + "c|" * n_cols_and_row_levels
-    # col_header = "c" * n_cols_and_row_levels
-
+    col_header = "c" * n_cols_and_row_levels
     tabular = Tabular(col_header)
 
     tabular.append(NoEscape("\\toprule"))
