@@ -247,11 +247,6 @@ def show_table(
     Returns:
         Styler: pandas Styler object.
     """
-    if "objective" not in df.attrs:
-        raise ValueError("DataFrame must have an 'objective' attribute. Use compute_metrics to create the DataFrame.")
-
-    objectives = df.attrs["objective"]
-
     n_metrics = df.shape[1] // 2
     n_decimals = [n_decimals] * n_metrics if isinstance(n_decimals, int) else n_decimals
     notation = [notation] * n_metrics if isinstance(notation, str) else notation
@@ -291,6 +286,7 @@ def show_table(
             return f"{val:.{n_decimals}{suffix_notation}}"
         return f"{val:.{n_decimals}{suffix_notation}}±{dev:.{n_decimals}{suffix_notation}}"
 
+    objectives = df.attrs["objective"]
     df_styled = pd.DataFrame(index=df.index)
     for i, m in enumerate(metrics):
         vals, devs = df_rounded[(m, "value")], df_rounded[(m, "deviation")]
@@ -352,11 +348,6 @@ def to_latex(
     if df.index.nlevels != 1:
         raise ValueError("to_latex() does not support tuple sequence names.")
 
-    if "objective" not in df.attrs:
-        raise ValueError("DataFrame must have an 'objective' attribute. Use compute_metrics to create the DataFrame.")
-
-    objectives = df.attrs["objective"]
-
     n_metrics = df.shape[1] // 2
     n_decimals = [n_decimals] * n_metrics if isinstance(n_decimals, int) else n_decimals
     notation = [notation] * n_metrics if isinstance(notation, str) else notation
@@ -375,6 +366,8 @@ def to_latex(
 
     best_indices = df_rounded.attrs["best_indices"]
     second_best_indices = df_rounded.attrs["second_best_indices"]
+
+    objectives = df.attrs["objective"]
 
     arrows = {"maximize": "↑", "minimize": "↓"}
 
