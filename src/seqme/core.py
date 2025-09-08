@@ -3,6 +3,7 @@ from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
+from pathlib import Path
 from typing import Any, Literal
 
 import matplotlib.pyplot as plt
@@ -328,6 +329,7 @@ def show_table(
 
 
 def to_latex(
+    fname: str | Path,
     df: pd.DataFrame,
     n_decimals: int | list[int] = 2,
     color: str | None = "#68d6bc",
@@ -338,6 +340,7 @@ def to_latex(
     """Convert a metric table to latex.
 
     Args:
+        fname: Output filename, e.g., "table.tex".
         df: DataFrame with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], attributed with 'objective'.
         n_decimals: Decimal precision for formatting.
         color: Color for highlighting best scores.
@@ -431,7 +434,11 @@ def to_latex(
     if caption:
         table.add_caption(caption)
 
-    return table.dumps()
+    latex_code = table.dumps()
+
+    output_path = Path(fname)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(latex_code)
 
 
 def _prepare_for_visualization(df: pd.DataFrame, n_decimals: list[int]) -> pd.DataFrame:
