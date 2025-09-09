@@ -64,6 +64,7 @@ class Metric(abc.ABC):
 def compute_metrics(
     sequences: dict[str, list[str]] | dict[tuple[str, ...], list[str]],
     metrics: list[Metric],
+    *,
     verbose: bool = True,
 ) -> pd.DataFrame:
     """Compute a set of metrics on multiple sequence groups.
@@ -129,7 +130,7 @@ def compute_metrics(
     return df
 
 
-def combine_metric_dataframes(dfs: list[pd.DataFrame], on_overlap: Literal["fail", "mean"] = "fail") -> pd.DataFrame:
+def combine_metric_dataframes(dfs: list[pd.DataFrame], *, on_overlap: Literal["fail", "mean"] = "fail") -> pd.DataFrame:
     """Combine multiple DataFrames with metrics results into a single DataFrame.
 
     Args:
@@ -223,6 +224,7 @@ def combine_metric_dataframes(dfs: list[pd.DataFrame], on_overlap: Literal["fail
 
 def show_table(
     df: pd.DataFrame,
+    *,
     n_decimals: int | list[int] = 2,
     color: str | None = "#68d6bc",
     notation: Literal["decimals", "exponent"] | list[Literal["decimals", "exponent"]] = "decimals",
@@ -326,6 +328,7 @@ def show_table(
 def to_latex(
     fname: str | Path,
     df: pd.DataFrame,
+    *,
     n_decimals: int | list[int] = 2,
     color: str | None = None,
     notation: Literal["decimals", "exponent"] | list[Literal["decimals", "exponent"]] = "decimals",  # TODO: unused
@@ -339,7 +342,7 @@ def to_latex(
         fname: Output filename, e.g., "table.tex".
         df: DataFrame with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], attributed with 'objective'.
         n_decimals: Decimal precision for formatting.
-        color: Color (hex) for highlighting best scores. Defined as a hexadecimal.
+        color: Color (hex) for highlighting best scores.
         notation: Whether to use scientific notation (exponent) or fixed-point notation (decimals).
         missing_value: str to show for cells with no metric value, i.e., cells with NaN values.
         show_arrow: Whether to include the objective arrow in the column names.
@@ -442,6 +445,7 @@ def to_latex(
 def barplot(
     df: pd.DataFrame,
     metric: str,
+    *,
     show_deviation: bool = True,
     color: str = "#68d6bc",
     x_ticks_label_rotation: float = 45,
@@ -512,6 +516,7 @@ def barplot(
 def plot_series(
     df: pd.DataFrame,
     metric: str,
+    *,
     show_deviation: bool = True,
     figsize: tuple[int, int] = (4, 3),
     marker: str | None = "x",
