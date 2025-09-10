@@ -2,17 +2,14 @@ from collections.abc import Callable
 from typing import Literal
 
 import numpy as np
-import pymoo.indicators.hv as hv  # type: ignore
+import pymoo.indicators.hv as hv
 from scipy.spatial import ConvexHull, QhullError
 
 from seqme.core import Metric, MetricResult
 
 
 class Hypervolume(Metric):
-    """Hypervolume metric for multi-objective optimization.
-
-    Each predictor maps sequences to a numeric objective.
-    """
+    """Hypervolume metric for multi-objective optimization."""
 
     def __init__(
         self,
@@ -21,22 +18,25 @@ class Hypervolume(Metric):
         method: Literal["standard", "convex-hull"] = "standard",
         nadir: np.ndarray | None = None,
         ideal: np.ndarray | None = None,
+        strict: bool = True,
         include_objective_count_in_name: bool = True,
     ):
         """
         Initialize the Hypervolume metric.
 
         Args:
-            predictors: List of functions that output objective values for each sequence.
+            predictors: A list of functions. Each function maps a sequence to a numeric value aimed to be maximized.
             method: Which Hypervolume computation method to use ("standard" or "convex-hull").
             nadir: Worst acceptable value in each objective dimension.
-            ideal: Best value in each objective dimension (used for normalization).
+            ideal: Best value in each objective dimension (used for normalizing points to [0;1]).
+            strict: If true, if values < nadir (or values > ideal) raise an exception.
             include_objective_count_in_name: Whether to append the number of objectives to the metric's name.
         """
         self.predictors = predictors
         self.method = method
         self.nadir = nadir if nadir is not None else np.zeros(len(predictors))
         self.ideal = ideal
+        self.strict = strict
         self.include_objective_count_in_name = include_objective_count_in_name
 
         if self.nadir.shape[0] != len(predictors):
@@ -47,12 +47,7 @@ class Hypervolume(Metric):
     def __call__(self, sequences: list[str]) -> MetricResult:
         """Evaluate hypervolume for the predicted properties of the input sequences."""
         values = np.stack([predictor(sequences) for predictor in self.predictors]).T
-        hypervolume = calculate_hypervolume(
-            values,
-            nadir=self.nadir,
-            ideal=self.ideal,
-            method=self.method,
-        )
+        hypervolume = calculate_hypervolume(values, self.nadir, self.ideal, self.method, self.strict)
         return MetricResult(hypervolume)
 
     @property
@@ -74,6 +69,7 @@ def calculate_hypervolume(
     nadir: np.ndarray,
     ideal: np.ndarray | None = None,
     method: Literal["standard", "convex-hull"] = "standard",
+    strict: bool = True,
 ) -> float:
     """
     Compute hypervolume from a set of points in objective space.
@@ -81,8 +77,9 @@ def calculate_hypervolume(
     Args:
         points: Array of shape [N, D] with objective values.
         nadir: Reference point (worse than or equal to all actual points).
-        ideal: Optional ideal point for normalization.
+        ideal: Best value in each objective dimension (used for normalizing points to [0;1]).
         method: Either hypervolume indicator ("standard") or "convex-hull".
+        strict: If true, if values < nadir (or values > ideal) raise an exception.
 
     Returns:
         Hypervolume
@@ -90,19 +87,22 @@ def calculate_hypervolume(
     if points.shape[1] != nadir.shape[0]:
         raise ValueError("Points must have the same number of dimensions as the reference point.")
 
-    if points.shape[0] <= 1:
-        return float("nan")
-
     # replace NaN values with nadir
     points = np.where(np.isnan(points), nadir, points)
 
-    min_points = points.min(axis=0)
-    if (nadir > min_points).any():
-        raise ValueError(
-            f"Invalid nadir. Each component must be less than or equal to the minimum value in that dimension.\n"
-            f"Provided nadir: {nadir}\n"
-            f"Minimum required values: {min_points}"
-        )
+    if strict:
+        min_elements = points.min(axis=0)
+        if (nadir > min_elements).any():
+            raise ValueError(f"Value smaller than nadir. Point: {min_elements}. nadir: {nadir}")
+
+        if ideal is not None:
+            max_elements = points.min(axis=0)
+            if (ideal < max_elements).any():
+                raise ValueError(f"Value larger than ideal. Point: {max_elements}. ideal: {ideal}")
+
+    points = np.maximum(points, nadir)
+    if ideal is not None:
+        points = np.minimum(points, ideal)
 
     points = points - nadir
     ref_point = np.zeros(points.shape[1])

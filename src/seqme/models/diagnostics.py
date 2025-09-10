@@ -55,7 +55,7 @@ def plot_feature_alignment_score(
 
     Args:
         xs: Sequence embeddings.
-        labels: Group label for each sequence.
+        labels: Label for each sequence.
         n_neighbors: Number of neighbors used by k-NN.
         label: Model name.
         ax: Optional Axes.
@@ -63,8 +63,10 @@ def plot_feature_alignment_score(
     """
     scores = [feature_alignment_score(xs, labels, k) for k in n_neighbors]
 
+    created_fig = False
     if ax is None:
-        fig, ax = plt.subplots(figsize=(4, 3))
+        _, ax = plt.subplots(figsize=(4, 3))
+        created_fig = True
 
     ax.plot(n_neighbors, scores, label=label)
     ax.legend()
@@ -73,3 +75,7 @@ def plot_feature_alignment_score(
     ax.set_title("Feature alignment score")
     ax.grid(True, linestyle="--", linewidth=0.5, alpha=0.5)
     ax.set_ylim(0, 1)
+
+    if created_fig:
+        plt.tight_layout()
+        plt.show()
