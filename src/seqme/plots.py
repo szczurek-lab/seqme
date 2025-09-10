@@ -12,6 +12,7 @@ from umap import UMAP
 def plot_hist(
     data: np.ndarray,
     xlabel: str,
+    *,
     color: str = "#68d6bc",
     ytype: Literal["frequency", "density"] = "density",
     figsize: tuple[int, int] = (4, 3),
@@ -79,6 +80,7 @@ def plot_hist(
 def plot_kde(
     data: np.ndarray,
     xlabel: str,
+    *,
     color: str = "#68d6bc",
     figsize: tuple[int, int] = (4, 3),
     bandwidth: float | Literal["scott", "silverman"] | None = None,
@@ -145,6 +147,7 @@ def plot_kde(
 def plot_violin(
     data: np.ndarray,
     xlabel: str,
+    *,
     color: str = "#68d6bc",
     figsize: tuple[int, int] = (4, 3),
     bandwidth: float | Literal["scott", "silverman"] | None = None,

@@ -96,7 +96,7 @@ def calculate_hypervolume(
             raise ValueError(f"Value smaller than nadir. Point: {min_elements}. nadir: {nadir}")
 
         if ideal is not None:
-            max_elements = points.min(axis=0)
+            max_elements = points.max(axis=0)
             if (ideal < max_elements).any():
                 raise ValueError(f"Value larger than ideal. Point: {max_elements}. ideal: {ideal}")
 

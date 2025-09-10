@@ -94,7 +94,7 @@ def test_not_strict():
         method="standard",
         nadir=np.zeros(2),
         ideal=np.ones(2) * 3,
-        strict=True,
+        strict=False,
     )
 
     # Name and objective properties

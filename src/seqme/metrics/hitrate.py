@@ -9,7 +9,7 @@ from seqme.core import Metric, MetricResult
 class HitRate(Metric):
     """Fraction of sequences that satisfy a given filter condition."""
 
-    def __init__(self, condition_fn: Callable[[list[str]], np.ndarray], name: str = "Hit-rate"):
+    def __init__(self, condition_fn: Callable[[list[str]], np.ndarray], *, name: str = "Hit-rate"):
         """
         Initializes the hit‐rate metric.
 
