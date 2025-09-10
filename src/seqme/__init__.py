@@ -1,3 +1,4 @@
+from seqme import metrics, models
 from seqme.core import (
     ModelCache,
     barplot,
@@ -16,4 +17,6 @@ __all__ = [
     "plot_series",
     "show_table",
     "to_latex",
+    "metrics",
+    "models",
 ]
