@@ -31,6 +31,14 @@ def test_empty_metrics_list_raises():
         compute_metrics(sequences, metrics)
 
 
+def test_empty_sequence_list_raises():
+    sequences = {"random": []}
+    metrics = [Novelty(reference=["KKW", "RKSPL"])]
+
+    with pytest.raises(ValueError, match=r"^'random' has no sequences.$"):
+        compute_metrics(sequences, metrics)
+
+
 def test_duplicate_metric_names_raises():
     sequences = {"random": ["MKQW", "RKSPL"]}
 
@@ -41,6 +49,6 @@ def test_duplicate_metric_names_raises():
 
     with pytest.raises(
         ValueError,
-        match=r"^Metrics must have unique names\. Found duplicates: Novelty, Novelty$",
+        match=r"^Metrics must have unique names\. Found duplicates: 'Novelty'$",
     ):
         compute_metrics(sequences, metrics)

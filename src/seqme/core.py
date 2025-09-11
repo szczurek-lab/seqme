@@ -1,5 +1,5 @@
 import abc
-from collections import defaultdict
+from collections import Counter, defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
@@ -83,13 +83,15 @@ def compute_metrics(
     if len(metrics) == 0:
         raise ValueError("No metrics provided")
 
-    # ensure all metrics have unique names
     metric_names = [m.name for m in metrics]
-    if len(metric_names) != len(set(metric_names)):
-        raise ValueError(
-            "Metrics must have unique names. Found duplicates: "
-            + ", ".join(name for name in metric_names if metric_names.count(name) > 1)
-        )
+    metric_duplicates = [name for name, c in Counter(metric_names).items() if c > 1]
+    if len(metric_duplicates) > 0:
+        duplicate_names = ", ".join(metric_duplicates)
+        raise ValueError(f"Metrics must have unique names. Found duplicates: '{duplicate_names}'")
+
+    for name, seqs in sequences.items():
+        if len(seqs) == 0:
+            raise ValueError(f"'{name}' has no sequences.")
 
     # Prepare nested results: group -> metric -> {value, deviation}
     nested: dict[str | tuple[str, ...], dict[str, dict[str, float | None]]] = {}
@@ -167,7 +169,7 @@ def combine_metric_dataframes(dfs: list[pd.DataFrame], *, on_overlap: Literal["f
     for df in dfs:
         for key, value in df.attrs["objective"].items():
             if key in combined_objectives and combined_objectives[key] != value:
-                raise ValueError(f"Conflicting objective for metric '{key}': {combined_objectives[key]} vs {value}")
+                raise ValueError(f"Conflicting objective for metric '{key}': '{combined_objectives[key]}' vs '{value}'")
             combined_objectives[key] = value
 
         for idx in df.index:
@@ -205,7 +207,7 @@ def combine_metric_dataframes(dfs: list[pd.DataFrame], *, on_overlap: Literal["f
                     dev_cell = (cell_name[0], (cell_name[1][0], "deviation"))
                     res[dev_cell] = np.std(vs).item()
     else:
-        raise ValueError(f"{on_overlap} not supported.")
+        raise ValueError(f"'{on_overlap}' not supported.")
 
     # construct combined dataframe
     row_index = (
@@ -552,7 +554,7 @@ def plot_series(
         if not isinstance(model_name, str) or not isinstance(iteration, int | float):
             raise ValueError(
                 "Expected a tuple of type (str, int | float), "
-                f"but got ({model_name!r}, {iteration!r}) "
+                f"but got ({model_name}, {iteration}) "
                 f"with types ({type(model_name).__name__}, {type(iteration).__name__})."
             )
 
@@ -651,7 +653,7 @@ class ModelCache:
             ValueError: If the model is unknown.
         """
         if model_name not in self.model_to_cache:
-            raise ValueError(f"{model_name} is not callable nor has any pre-cached sequences.")
+            raise ValueError(f"'{model_name}' is not callable nor has any pre-cached sequences.")
         return lambda sequence: self(sequence, model_name)
 
     def add(self, model_name: str, element: Callable[[list[str]], np.ndarray] | dict[str, np.ndarray]):
