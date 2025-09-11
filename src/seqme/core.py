@@ -427,10 +427,10 @@ def to_latex(
                 if color:
                     value = macro("cellcolor[HTML]", color[1:], value)
             elif second_best:
-                value = f"{value}" if pd.isna(dev) else f"{value} \\pm {dev}"
+                value = f"{val}" if pd.isna(dev) else f"{val} \\pm {dev}"
                 value = macro("underline", value)
             else:
-                value = f"{value}" if pd.isna(dev) else f"{value} \\pm {dev}"
+                value = f"{val}" if pd.isna(dev) else f"{val} \\pm {dev}"
 
             values.append(imath(value))
 
