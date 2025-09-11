@@ -571,7 +571,7 @@ def plot_series(
         _, ax = plt.subplots(figsize=figsize)
         created_fig = True
 
-    model_names = {v[0] for v in df.index}
+    model_names = list(df.index.get_level_values(0).unique())
     for model_name in model_names:
         df_model = df.loc[model_name]
         df_model = df_model.sort_index()
@@ -591,7 +591,7 @@ def plot_series(
     ax.set_xlabel(xlabel)
     ax.set_ylabel(f"{metric}{arrows[objective]}" if show_arrow else metric)
 
-    ax.grid(True, linestyle="--", alpha=0.7)
+    ax.grid(True, linestyle="--", alpha=0.4)
     ax.legend()
 
     if created_fig:
