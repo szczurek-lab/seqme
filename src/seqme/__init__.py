@@ -1,5 +1,7 @@
-from seqme import metrics, models
+from seqme import metrics, models, utils
 from seqme.core import (
+    Metric,
+    MetricResult,
     ModelCache,
     barplot,
     combine_metric_dataframes,
@@ -10,6 +12,8 @@ from seqme.core import (
 )
 
 __all__ = [
+    "Metric",
+    "MetricResult",
     "ModelCache",
     "barplot",
     "combine_metric_dataframes",
@@ -19,4 +23,7 @@ __all__ = [
     "to_latex",
     "metrics",
     "models",
+    "plots",
+    "plots",
+    "utils",
 ]

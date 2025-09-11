@@ -2,6 +2,7 @@ from seqme.models.concatenate import Concatenate
 from seqme.models.ensemble import Ensemble
 from seqme.models.esm2 import Esm2, Esm2Checkpoint
 from seqme.models.kmers import KmerFrequencyEmbedding
+from seqme.models.normalizers import MinMaxNorm
 from seqme.models.physicochemical import (
     AliphaticIndex,
     Aromaticity,
@@ -31,6 +32,7 @@ __all__ = [
     "Esm2Checkpoint",
     "Esm2",
     "KmerFrequencyEmbedding",
+    "MinMaxNorm",
     "Concatenate",
     "ThirdPartyModel",
 ]

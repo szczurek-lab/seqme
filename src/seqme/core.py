@@ -17,6 +17,8 @@ from tqdm import tqdm
 
 @dataclass
 class MetricResult:
+    """Data structure to store metric result."""
+
     value: float | int
     deviation: float | None = None
 
@@ -414,7 +416,9 @@ def to_latex(
                 values.append(missing_value)
                 continue
 
-            value = f"{val}" if pd.isna(dev) else f"{val} \\pm {dev}"
+            value = macro("mathbf", val)
+            if not pd.isna(dev):
+                value += " \\pm" + macro("mathbf", dev)
 
             best = row_name in best_indices[col_name]
             second_best = row_name in second_best_indices[col_name]

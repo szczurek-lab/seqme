@@ -81,7 +81,7 @@ docs/api/*
 !docs/api/core_index.rst
 !docs/api/metrics_index.rst
 !docs/api/models_index.rst
-!docs/api/models_plots_index.rst
+!docs/api/utils_index.rst
 
 # PyBuilder
 .pybuilder/

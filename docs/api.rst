@@ -10,4 +10,4 @@ At its core, pepme consists of three main components: metrics, property and embe
     api/core_index
     api/metrics_index
     api/models_index
-    api/models_plots_index
+    api/utils_index

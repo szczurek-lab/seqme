@@ -5,6 +5,8 @@ Core
     :toctree:
     :nosignatures:
 
+    seqme.Metric
+    seqme.MetricResult
     seqme.compute_metrics
     seqme.combine_metric_dataframes
     seqme.show_table

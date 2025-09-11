@@ -31,15 +31,4 @@ Miscellaneous
     seqme.models.ThirdPartyModel
     seqme.models.Ensemble
     seqme.models.Concatenate
-    seqme.models.normalizers.MinMaxNorm
-
-
-Diagnostics
------------
-.. autosummary::
-    :toctree:
-    :nosignatures:
-
-    seqme.models.diagnostics.feature_alignment_score
-    seqme.models.diagnostics.spearman_correlation_coefficient
-    seqme.models.diagnostics.plot_feature_alignment_score
+    seqme.models.MinMaxNorm
