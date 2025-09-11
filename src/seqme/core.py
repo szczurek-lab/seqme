@@ -84,45 +84,37 @@ def compute_metrics(
         raise ValueError("No metrics provided")
 
     metric_names = [m.name for m in metrics]
-    metric_duplicates = [name for name, c in Counter(metric_names).items() if c > 1]
+    metric_duplicates = [name for name, count in Counter(metric_names).items() if count > 1]
     if len(metric_duplicates) > 0:
         duplicate_names = ", ".join(metric_duplicates)
         raise ValueError(f"Metrics must have unique names. Found duplicates: {duplicate_names}")
 
-    for name, seqs in sequences.items():
+    for group_name, seqs in sequences.items():
         if len(seqs) == 0:
-            raise ValueError(f"'{name}' has no sequences.")
+            raise ValueError(f"'{group_name}' has no sequences.")
 
-    # Prepare nested results: group -> metric -> {value, deviation}
-    nested: dict[str | tuple[str, ...], dict[str, dict[str, float | None]]] = {}
+    # Prepare nested results: model -> metric -> {value, deviation}
+    nested = {}
     total = len(sequences) * len(metrics)
     with tqdm(total=total, disable=(not verbose)) as pbar:
         for group_name, seqs in sequences.items():
-            group_results: dict[str, dict[str, float | None]] = {}
+            group_results = {}
             for metric in metrics:
                 pbar.set_postfix(data=group_name, metric=metric.name)
-                result: MetricResult = metric(seqs)
-                group_results[metric.name] = {
-                    "value": result.value,
-                    "deviation": result.deviation,
-                }
+                result = metric(seqs)
+                group_results[metric.name] = {"value": result.value, "deviation": result.deviation}
                 pbar.update()
 
             nested[group_name] = group_results
 
-    # Convert to a DataFrame with MultiIndex columns
-    # First, create a dict of DataFrames per metric
-    df_parts: list[pd.DataFrame] = []
+    # Create to a DataFrame with MultiIndex columns
+    df_parts = []
     for metric in metrics:
-        name = metric.name
-        # DataFrame with two columns: (name, 'value') and (name, 'deviation')
-        df_metric = pd.DataFrame(
-            {
-                (name, "value"): {g: nested[g][name]["value"] for g in nested},
-                (name, "deviation"): {g: nested[g][name]["deviation"] for g in nested},
-            },
-            dtype=float,
-        )
+        data = {
+            (metric.name, key): {group_name: nested[group_name][metric.name][key] for group_name in nested}
+            for key in ("value", "deviation")
+        }
+        df_metric = pd.DataFrame(data, dtype=float)
         df_parts.append(df_metric)
 
     df = pd.concat(df_parts, axis=1)
@@ -335,7 +327,7 @@ def to_latex(
     *,
     n_decimals: int | list[int] = 2,
     color: str | None = None,
-    notation: Literal["decimals", "exponent"] | list[Literal["decimals", "exponent"]] = "decimals",  # TODO: unused
+    notation: Literal["decimals", "exponent"] | list[Literal["decimals", "exponent"]] = "decimals",
     missing_value: str = "-",
     show_arrow: bool = True,
     caption: str = None,
@@ -387,11 +379,21 @@ def to_latex(
         return [NoEscape(v) for v in values]
 
     def macro(command: str, *args) -> str:
-        vs = "".join(["{" + v + "}" for v in args])
+        vs = "".join(["{" + str(v) + "}" for v in args])
         return f"\\{command}{vs}"
 
     def imath(value: str) -> str:
         return f"${value}$"
+
+    def format_notation(value: str, notation: Literal["decimals", "exponent"], n_decimal: int) -> str:
+        if notation == "decimals":
+            return value
+        elif notation == "exponent":
+            base, exp = f"{value:.{n_decimal}e}".split("e")
+            exp_abs = abs(int(exp))
+            f_exp_sign = macro("text", exp[0])
+            return f"{base} e{f_exp_sign}{exp_abs}" if exp_abs != 0 else base
+        raise ValueError(f"Unsupported notation '{notation}'.")
 
     def format_column_header(metric: str) -> str:
         arrow = arrows[objectives[metric]]
@@ -413,26 +415,31 @@ def to_latex(
 
     for row_name, row in df_rounded.iterrows():
         values = [row_name]
-        for col_name, val, dev in zip(col_names, row[::2], row[1::2], strict=True):
+        for i, (col_name, val, dev) in enumerate(zip(col_names, row[::2], row[1::2], strict=True)):
             if pd.isna(val):
                 values.append(missing_value)
                 continue
 
             best = row_name in best_indices[col_name]
             second_best = row_name in second_best_indices[col_name]
-            if best:
-                value = macro("mathbf", val)
-                if not pd.isna(dev):
-                    value += " \\pm " + macro("mathbf", dev)
-                if color:
-                    value = macro("cellcolor[HTML]", color[1:], value)
-            elif second_best:
-                value = f"{val}" if pd.isna(dev) else f"{val} \\pm {dev}"
-                value = macro("underline", value)
-            else:
-                value = f"{val}" if pd.isna(dev) else f"{val} \\pm {dev}"
 
-            values.append(imath(value))
+            fval = format_notation(val, notation[i], n_decimals[i])
+            if not pd.isna(dev):
+                fdev = format_notation(dev, notation[i], n_decimals[i])
+
+            if best:
+                fvalue = macro("mathbf", fval)
+                if not pd.isna(dev):
+                    fvalue += " \\pm " + macro("mathbf", fdev)
+                if color:
+                    fvalue = macro("cellcolor[HTML]", color[1:], fvalue)
+            elif second_best:
+                fvalue = f"{fval}" if pd.isna(dev) else f"{fval} \\pm {fdev}"
+                fvalue = macro("underline", fvalue)
+            else:
+                fvalue = f"{fval}" if pd.isna(dev) else f"{fval} \\pm {fdev}"
+
+            values.append(imath(fvalue))
 
         tabular.add_row(no_escapes(values))
 
