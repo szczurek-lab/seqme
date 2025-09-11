@@ -49,6 +49,6 @@ def test_duplicate_metric_names_raises():
 
     with pytest.raises(
         ValueError,
-        match=r"^Metrics must have unique names\. Found duplicates: 'Novelty'$",
+        match=r"^Metrics must have unique names\. Found duplicates: Novelty$",
     ):
         compute_metrics(sequences, metrics)

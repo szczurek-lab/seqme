@@ -87,7 +87,7 @@ def compute_metrics(
     metric_duplicates = [name for name, c in Counter(metric_names).items() if c > 1]
     if len(metric_duplicates) > 0:
         duplicate_names = ", ".join(metric_duplicates)
-        raise ValueError(f"Metrics must have unique names. Found duplicates: '{duplicate_names}'")
+        raise ValueError(f"Metrics must have unique names. Found duplicates: {duplicate_names}")
 
     for name, seqs in sequences.items():
         if len(seqs) == 0:
@@ -418,18 +418,19 @@ def to_latex(
                 values.append(missing_value)
                 continue
 
-            value = macro("mathbf", val)
-            if not pd.isna(dev):
-                value += " \\pm " + macro("mathbf", dev)
-
             best = row_name in best_indices[col_name]
             second_best = row_name in second_best_indices[col_name]
             if best:
-                value = macro("mathbf", value)
+                value = macro("mathbf", val)
+                if not pd.isna(dev):
+                    value += " \\pm " + macro("mathbf", dev)
                 if color:
                     value = macro("cellcolor[HTML]", color[1:], value)
             elif second_best:
+                value = f"{value}" if pd.isna(dev) else f"{value} \\pm {dev}"
                 value = macro("underline", value)
+            else:
+                value = f"{value}" if pd.isna(dev) else f"{value} \\pm {dev}"
 
             values.append(imath(value))
 
@@ -746,6 +747,6 @@ def _get_top_indices(df: pd.DataFrame) -> tuple[dict[str, set[int]], dict[str, s
             best_cells = vals.nsmallest(2, keep="all")
             best_indices[m], second_best_indices[m] = get_column_top_indices(best_cells)
         else:
-            raise ValueError(f"Unknown objective '{objectives[m]}' for metric '{m}")
+            raise ValueError(f"Unknown objective '{objectives[m]}' for metric '{m}'.")
 
     return best_indices, second_best_indices
