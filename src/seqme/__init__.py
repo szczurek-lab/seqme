@@ -23,7 +23,5 @@ __all__ = [
     "to_latex",
     "metrics",
     "models",
-    "plots",
-    "plots",
     "utils",
 ]
