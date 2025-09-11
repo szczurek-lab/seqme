@@ -418,7 +418,7 @@ def to_latex(
 
             value = macro("mathbf", val)
             if not pd.isna(dev):
-                value += " \\pm" + macro("mathbf", dev)
+                value += " \\pm " + macro("mathbf", dev)
 
             best = row_name in best_indices[col_name]
             second_best = row_name in second_best_indices[col_name]
