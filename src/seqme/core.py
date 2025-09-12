@@ -264,8 +264,8 @@ def show_table(
             f"Expected {n_metrics} notations, got {len(notation)}. Provide a single int or a list matching the number of metrics."
         )
 
-    df_rounded = df.round(dict(zip(df.columns, [d for d in n_decimals for _ in range(2)], strict=True)))
-    best_indices, second_best_indices = _get_top_indices(df_rounded)
+    df = df.round(dict(zip(df.columns, [d for d in n_decimals for _ in range(2)], strict=True)))
+    best_indices, second_best_indices = _get_top_indices(df)
 
     arrows = {"maximize": "↑", "minimize": "↓"}
     metrics = pd.unique(df.columns.get_level_values(0)).tolist()
@@ -289,7 +289,7 @@ def show_table(
     objectives = df.attrs["objective"]
     df_styled = pd.DataFrame(index=df.index)
     for i, m in enumerate(metrics):
-        vals, devs = df_rounded[(m, "value")], df_rounded[(m, "deviation")]
+        vals, devs = df[(m, "value")], df[(m, "deviation")]
         arrow = arrows[objectives[m]]
         col_name = f"{m}{arrow}" if show_arrow else m
         df_styled[col_name] = [
@@ -305,8 +305,7 @@ def show_table(
         t = (val - min_value) / (max_value - min_value)
         return 1 - t if objective == "minimize" else t
 
-    # @TODO: text color based on background (for all decorate_cell)
-    def decorate_solid(idx: int, metric: str, df: pd.DataFrame) -> str:
+    def decorate_solid(idx: int, metric: str) -> str:
         if idx in best_indices[metric]:
             fmts = ["font-weight:bold"]
             if color:
@@ -316,10 +315,10 @@ def show_table(
             return "text-decoration:underline"
         return ""
 
-    def decorate_gradient(idx: int, metric: str, df: pd.DataFrame) -> str:
-        def gradient_lerp(hex_color1: str, hex_color2: str, value: float) -> str:
+    def decorate_gradient(idx: int, metric: str) -> str:
+        def gradient_lerp(hex_color1: str, hex_color2: str, t: float) -> str:
             cmap = mpl.colors.LinearSegmentedColormap.from_list(None, [hex_color1, hex_color2])
-            return mpl.colors.to_hex(cmap(value))
+            return mpl.colors.to_hex(cmap(t))
 
         fmts = []
         if color:
@@ -340,7 +339,7 @@ def show_table(
 
         return "; ".join(fmts)
 
-    def decorate_bar(idx: int, metric: str, df: pd.DataFrame) -> str:
+    def decorate_bar(idx: int, metric: str) -> str:
         fmts = []
         if color:
             objective = df.attrs["objective"][metric]
@@ -361,8 +360,8 @@ def show_table(
 
         return "; ".join(fmts)
 
-    def decorate_col(col_series, metric: str, df: pd.DataFrame, fn: Callable) -> list[str]:
-        return [fn(idx, metric, df) for idx in col_series.index]
+    def decorate_col(col_series, metric: str, fn: Callable) -> list[str]:
+        return [fn(idx, metric) for idx in col_series.index]
 
     decorators = {"solid": decorate_solid, "gradient": decorate_gradient, "bar": decorate_bar}
     decorator = decorators[color_style]
@@ -370,7 +369,7 @@ def show_table(
     styler = df_styled.style
 
     for col, metric in zip(df_styled.columns, metrics, strict=True):
-        styler = styler.apply(partial(decorate_col, metric=metric, df=df_rounded, fn=decorator), axis=0, subset=[col])
+        styler = styler.apply(partial(decorate_col, metric=metric, fn=decorator), axis=0, subset=[col])
 
     table_styles = [
         {"selector": "th.col_heading", "props": [("text-align", "center")]},
@@ -423,15 +422,15 @@ def to_latex(
             f"Expected {n_metrics} notations, got {len(notation)}. Provide a single int or a list matching the number of metrics."
         )
 
-    df_rounded = df.round(dict(zip(df.columns, [d for d in n_decimals for _ in range(2)], strict=True)))
-    best_indices, second_best_indices = _get_top_indices(df_rounded)
+    df = df.round(dict(zip(df.columns, [d for d in n_decimals for _ in range(2)], strict=True)))
+    best_indices, second_best_indices = _get_top_indices(df)
 
     objectives = df.attrs["objective"]
     arrows = {"maximize": "↑", "minimize": "↓"}
 
-    col_names = list(df_rounded.columns.get_level_values(0).unique())
+    col_names = list(df.columns.get_level_values(0).unique())
     n_cols = len(col_names)
-    n_row_levels = df_rounded.index.nlevels
+    n_row_levels = df.index.nlevels
     n_cols_and_row_levels = n_row_levels + n_cols
 
     # LaTeX formatting
@@ -474,7 +473,7 @@ def to_latex(
 
     tabular.append(NoEscape(macro("midrule")))
 
-    for row_name, row in df_rounded.iterrows():
+    for row_name, row in df.iterrows():
         values = [row_name]
         for i, (col_name, val, dev) in enumerate(zip(col_names, row[::2], row[1::2], strict=True)):
             if pd.isna(val):
