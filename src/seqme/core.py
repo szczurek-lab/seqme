@@ -6,10 +6,12 @@ from functools import partial
 from pathlib import Path
 from typing import Any, Literal
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib.axes import Axes
+from matplotlib.colors import to_hex
 from pandas.io.formats.style import Styler
 from pylatex import NoEscape, Table, Tabular
 from tqdm import tqdm
@@ -87,7 +89,7 @@ def compute_metrics(
     metric_duplicates = [name for name, count in Counter(metric_names).items() if count > 1]
     if len(metric_duplicates) > 0:
         duplicate_names = ", ".join(metric_duplicates)
-        raise ValueError(f"Metrics must have unique names. Found duplicates: {duplicate_names}")
+        raise ValueError(f"Metrics must have unique names. Found duplicates: {duplicate_names}.")
 
     for group_name, seqs in sequences.items():
         if len(seqs) == 0:
@@ -226,6 +228,7 @@ def show_table(
     notation: Literal["decimals", "exponent"] | list[Literal["decimals", "exponent"]] = "decimals",
     missing_value: str = "-",
     show_arrow: bool = True,
+    color_style: Literal["solid", "gradient", "bar"] = "solid",
 ) -> Styler:
     """Visualize a table of a metric dataframe.
 
@@ -243,6 +246,7 @@ def show_table(
         notation: Whether to use scientific notation (exponent) or fixed-point notation (decimals).
         missing_value: str to show for cells with no metric value, i.e., cells with NaN values.
         show_arrow: Whether to include the objective arrow in the column names.
+        color_style: Style of the coloring. Ignored if color is None.
 
     Returns:
         Styler: pandas Styler object.
@@ -294,7 +298,16 @@ def show_table(
             for val, dev in zip(vals, devs, strict=True)
         ]
 
-    def decorate_cell(idx: int, metric: str) -> str:
+    def _fraction(val: float, min_value: float, max_value, objective: str) -> float:
+        if pd.isna(val):
+            return 0.0
+        if max_value <= min_value:
+            return 1.0
+        t = (val - min_value) / (max_value - min_value)
+        return 1 - t if objective == "minimize" else t
+
+    # @TODO: text color based on background (for all decorate_cell)
+    def decorate_solid(idx: int, metric: str, df: pd.DataFrame) -> str:
         if idx in best_indices[metric]:
             fmts = ["font-weight:bold"]
             if color:
@@ -304,12 +317,69 @@ def show_table(
             return "text-decoration:underline"
         return ""
 
-    def decorate_col(col_series, metric):
-        return [decorate_cell(idx, metric) for idx in col_series.index]
+    def decorate_gradient(idx: int, metric: str, df: pd.DataFrame) -> str:
+        def gradient_lerp(hex_color1: str, hex_color2: str, value: float) -> str:
+            cmap = mpl.colors.LinearSegmentedColormap.from_list(None, [hex_color1, hex_color2])
+            return to_hex(cmap(value))
+
+        fmts = []
+        if color:
+            objective = df.attrs["objective"][metric]
+            values = df[metric]["value"]
+            val = values.at[idx]
+            min_value, max_value = values.min(), values.max()
+
+            frac = _fraction(val, min_value, max_value, objective)
+            gradient = gradient_lerp("#ffffff", color, frac)
+            fmts.append(f"background-color:{gradient}")
+
+        if idx in best_indices[metric]:
+            fmts += ["font-weight:bold"]
+
+        if idx in second_best_indices[metric]:
+            fmts += ["text-decoration:underline"]
+
+        return "; ".join(fmts)
+
+    def decorate_bar(idx: int, metric: str, df: pd.DataFrame) -> str:
+        def css_bar(start: float, end: float, color: str) -> str:
+            cell_css = ""
+            if end > start:
+                cell_css += "background: linear-gradient(90deg,"
+                if start > 0:
+                    cell_css += f" transparent {start * 100:.1f}%, {color} {start * 100:.1f}%,"
+                cell_css += f" {color} {end * 100:.1f}%, transparent {end * 100:.1f}%)"
+            return cell_css
+
+        fmts = []
+        if color:
+            objective = df.attrs["objective"][metric]
+            values = df[metric]["value"]
+            val = values.at[idx]
+            min_value, max_value = values.min(), values.max()
+
+            frac = _fraction(val, min_value, max_value, objective)
+            bar = css_bar(0, frac, color)
+            fmts.append(bar)
+
+        if idx in best_indices[metric]:
+            fmts += ["font-weight:bold"]
+
+        if idx in second_best_indices[metric]:
+            fmts += ["text-decoration:underline"]
+
+        return "; ".join(fmts)
+
+    def decorate_col(col_series, metric: str, df: pd.DataFrame, fn: Callable) -> list[str]:
+        return [fn(idx, metric, df) for idx in col_series.index]
+
+    decorators = {"solid": decorate_solid, "gradient": decorate_gradient, "bar": decorate_bar}
+    decorator = decorators[color_style]
 
     styler = df_styled.style
+
     for col, metric in zip(df_styled.columns, metrics, strict=True):
-        styler = styler.apply(partial(decorate_col, metric=metric), axis=0, subset=[col])
+        styler = styler.apply(partial(decorate_col, metric=metric, df=df_rounded, fn=decorator), axis=0, subset=[col])
 
     table_styles = [
         {"selector": "th.col_heading", "props": [("text-align", "center")]},
