@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib.axes import Axes
-from matplotlib.colors import to_hex
 from pandas.io.formats.style import Styler
 from pylatex import NoEscape, Table, Tabular
 from tqdm import tqdm
@@ -311,7 +310,7 @@ def show_table(
         if idx in best_indices[metric]:
             fmts = ["font-weight:bold"]
             if color:
-                fmts.append(f"background-color:{color}")
+                fmts += [f"background-color:{color}"]
             return "; ".join(fmts)
         if idx in second_best_indices[metric]:
             return "text-decoration:underline"
@@ -320,7 +319,7 @@ def show_table(
     def decorate_gradient(idx: int, metric: str, df: pd.DataFrame) -> str:
         def gradient_lerp(hex_color1: str, hex_color2: str, value: float) -> str:
             cmap = mpl.colors.LinearSegmentedColormap.from_list(None, [hex_color1, hex_color2])
-            return to_hex(cmap(value))
+            return mpl.colors.to_hex(cmap(value))
 
         fmts = []
         if color:
@@ -331,7 +330,7 @@ def show_table(
 
             frac = _fraction(val, min_value, max_value, objective)
             gradient = gradient_lerp("#ffffff", color, frac)
-            fmts.append(f"background-color:{gradient}")
+            fmts += [f"background-color:{gradient}"]
 
         if idx in best_indices[metric]:
             fmts += ["font-weight:bold"]
@@ -342,15 +341,6 @@ def show_table(
         return "; ".join(fmts)
 
     def decorate_bar(idx: int, metric: str, df: pd.DataFrame) -> str:
-        def css_bar(start: float, end: float, color: str) -> str:
-            cell_css = ""
-            if end > start:
-                cell_css += "background: linear-gradient(90deg,"
-                if start > 0:
-                    cell_css += f" transparent {start * 100:.1f}%, {color} {start * 100:.1f}%,"
-                cell_css += f" {color} {end * 100:.1f}%, transparent {end * 100:.1f}%)"
-            return cell_css
-
         fmts = []
         if color:
             objective = df.attrs["objective"][metric]
@@ -359,8 +349,9 @@ def show_table(
             min_value, max_value = values.min(), values.max()
 
             frac = _fraction(val, min_value, max_value, objective)
-            bar = css_bar(0, frac, color)
-            fmts.append(bar)
+            if frac > 0:
+                percentile = f"{frac * 100:.1f}"
+                fmts += [f"background: linear-gradient(90deg, {color} {percentile}%, transparent {percentile}%)"]
 
         if idx in best_indices[metric]:
             fmts += ["font-weight:bold"]
