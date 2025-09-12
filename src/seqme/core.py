@@ -224,10 +224,11 @@ def show_table(
     *,
     n_decimals: int | list[int] = 2,
     color: str | None = "#68d6bc",
+    color_style: Literal["solid", "gradient", "bar"] = "solid",
     notation: Literal["decimals", "exponent"] | list[Literal["decimals", "exponent"]] = "decimals",
     missing_value: str = "-",
     show_arrow: bool = True,
-    color_style: Literal["solid", "gradient", "bar"] = "solid",
+    caption: str | None = None,
 ) -> Styler:
     """Visualize a table of a metric dataframe.
 
@@ -242,10 +243,11 @@ def show_table(
         df: DataFrame with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], attributed with 'objective'.
         n_decimals: Decimal precision for formatting.
         color: Color (hex) for highlighting best scores.
+        color_style: Style of the coloring. Ignored if color is None.
         notation: Whether to use scientific notation (exponent) or fixed-point notation (decimals).
         missing_value: str to show for cells with no metric value, i.e., cells with NaN values.
         show_arrow: Whether to include the objective arrow in the column names.
-        color_style: Style of the coloring. Ignored if color is None.
+        caption: Bottom caption text.
 
     Returns:
         Styler: pandas Styler object.
@@ -376,6 +378,11 @@ def show_table(
         {"selector": "td", "props": [("border-right", "1px solid #ccc")]},
         {"selector": "th.row_heading", "props": [("border-right", "1px solid #ccc")]},
     ]
+
+    if caption:
+        styler = styler.set_caption(caption)
+        table_styles += [{"selector": "caption", "props": "caption-side: bottom; margin-top: 0.75em;"}]
+
     styler = styler.set_table_styles(table_styles, overwrite=False)  # type: ignore
 
     return styler
@@ -402,7 +409,7 @@ def to_latex(
         notation: Whether to use scientific notation (exponent) or fixed-point notation (decimals).
         missing_value: str to show for cells with no metric value, i.e., cells with NaN values.
         show_arrow: Whether to include the objective arrow in the column names.
-        caption: Latex table caption.
+        caption: Bottom caption text.
     """
     # @TODO: support multi-index rows
     if df.index.nlevels != 1:
