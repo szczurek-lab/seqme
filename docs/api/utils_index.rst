@@ -15,8 +15,8 @@ Plots
     seqme.utils.plot_kde
     seqme.utils.plot_violin
 
-Projection
-----------
+Projections
+-----------
 .. autosummary::
     :toctree:
     :nosignatures:
@@ -35,4 +35,24 @@ Diagnostics
     seqme.utils.feature_alignment_score
     seqme.utils.spearman_correlation_coefficient
     seqme.utils.plot_feature_alignment_score
+
+
+Sequence manipulation
+---------------------
+.. autosummary::
+    :toctree:
+    :nosignatures:
+
+    seqme.utils.shuffle_sequences
+    seqme.utils.random_subset
+
+
+IO
+---
+.. autosummary::
+    :toctree:
+    :nosignatures:
+
+    seqme.utils.read_fasta_file
+    seqme.utils.write_to_fasta_file
     

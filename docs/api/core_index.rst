@@ -1,5 +1,6 @@
 Core
 ####
+Functionality to manipulate and visualize metric tables, and add new metrics.
 
 .. autosummary::
     :toctree:

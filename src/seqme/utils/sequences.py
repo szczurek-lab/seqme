@@ -44,6 +44,7 @@ def random_subset(sequences: list[str], n_samples: int, seed: int = 42) -> list[
 
 
 def read_fasta_file(path: str) -> list[str]:
+    """Retrieve sequences from a fasta file."""
     sequences: list[str] = []
     current_seq: list[str] = []
 
@@ -70,11 +71,8 @@ def read_fasta_file(path: str) -> list[str]:
     return sequences
 
 
-def write_to_fasta_file(
-    sequences: list[str],
-    path: str,
-    headers: list[str] | None = None,
-):
+def write_to_fasta_file(sequences: list[str], path: str, headers: list[str] | None = None):
+    """Write sequences to a fasta file."""
     with open(path, "w") as f:
         for i, seq in enumerate(sequences):
             header = headers[i] if headers else f">sequence_{i + 1}"

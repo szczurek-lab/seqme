@@ -350,8 +350,8 @@ def show_table(
 
             frac = _fraction(val, min_value, max_value, objective)
             if frac > 0:
-                percentile = f"{frac * 100:.1f}"
-                fmts += [f"background: linear-gradient(90deg, {color} {percentile}%, transparent {percentile}%)"]
+                width = f"{frac * 100:.1f}%"
+                fmts += [f"background: linear-gradient(90deg, {color} {width}, transparent {width})"]
 
         if idx in best_indices[metric]:
             fmts += ["font-weight:bold"]
