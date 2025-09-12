@@ -215,13 +215,13 @@ def plot_violin(
         plt.show()
 
 
-def plot_embeddings(
-    projections: list[np.ndarray],
+def plot_2d_embeddings(
+    projections: np.ndarray | list[np.ndarray],
     *,
-    colors: list[str] | None = None,
-    labels: list[str] | None = None,
+    groups_or_values: (str | np.ndarray) | (list[str] | list[np.ndarray]) | None = None,
+    group_colors: str | list[str] | None = None,
+    cmap: str | None = None,
     title: str | None = None,
-    ax: Axes | None = None,
     xlabel: str = "dim1",
     ylabel: str = "dim2",
     figsize: tuple[int, int] = (4, 3),
@@ -230,13 +230,15 @@ def plot_embeddings(
     legend_point_size: float | None = None,
     alpha: float = 0.6,
     show_ticks: bool = False,
+    ax: Axes | None = None,
 ):
     """Plot projections for one or more groups.
 
     Args:
-        projections: List of arrays, each containing vectors to embed.
-        labels: Labels corresponding to each set in data.
-        colors: Colors for each group of points.
+        projections: Groups of arrays, each containing 2d embeddings.
+        groups_or_values: Either group names or values for each individual embedding.
+        group_colors: Colors for each group of points.
+        cmap: Colors used for values.
         title: Optional plot title.
         ax: Optional matplotlib Axes to plot on.
         xlabel: x-axis label.
@@ -253,92 +255,86 @@ def plot_embeddings(
         _, ax = plt.subplots(figsize=figsize)
         created_fig = True
 
-    for i, seg in enumerate(projections):
-        color = colors[i] if colors is not None else None
-        label = labels[i] if labels is not None else None
-        ax.scatter(
-            seg[:, 0],
-            seg[:, 1],
-            label=label,
-            c=color,
-            s=point_size,
-            alpha=alpha,
-            edgecolor="black",
-            linewidth=outline_width,
-        )
+    # try making the parameters lists then parse those normally.
 
-        if labels is not None:
-            leg = ax.legend(frameon=True)
+    if isinstance(projections, np.ndarray):
+        projections = [projections]
 
-            if legend_point_size is not None:
-                for lh in leg.legend_handles:
-                    lh.set_sizes([legend_point_size])  # type: ignore
-                    lh.set_alpha(1.0)
+    if isinstance(groups_or_values, str) or isinstance(projections, np.ndarray):
+        groups_or_values = [groups_or_values]
 
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
+    if isinstance(group_colors, str):
+        group_colors = [group_colors]
 
-    if not show_ticks:
-        ax.set_xticks([])
-        ax.set_yticks([])
+    projections = list(projections)
+    groups_or_values = list(groups_or_values) if groups_or_values else None  # type: ignore
+    group_colors = list(group_colors) if group_colors else None
 
-    ax.set_axisbelow(True)
-    ax.grid(True, linestyle="--", linewidth=0.5, alpha=0.5)
+    for projection in projections:
+        if projection.ndim != 2:
+            raise ValueError(
+                f"All projection groups should have two dimensions [embeddings, 2], but a group has {projection.ndim} dimensions."
+            )
+        if projection.shape[-1] != 2:
+            raise ValueError(f"Only 2D embeddings can be plotted, but got {projection.shape[-1]}D embeddings.")
 
-    if title is not None:
-        ax.set_title(title)
+    if groups_or_values is not None:
+        if len(groups_or_values) != len(projections):
+            raise ValueError(
+                f"'group_or_values' has {len(groups_or_values)} list elements. 'projections' has {len(projections)} list elements. Required the same sizes."
+            )
 
-    if created_fig:
-        plt.tight_layout()
-        plt.show()
+    if groups_or_values:
+        if isinstance(groups_or_values[0], np.ndarray):
+            group = np.vstack(projections)
+            c = np.vstack(groups_or_values)
+            sc = ax.scatter(
+                group[:, 0],
+                group[:, 1],
+                c=c,
+                s=point_size,
+                alpha=alpha,
+                edgecolor="black",
+                linewidth=outline_width,
+                cmap=cmap,
+            )
+            ax.figure.colorbar(sc, ax=ax)
+        else:
+            if group_colors:
+                if len(group_colors) != len(groups_or_values):
+                    raise ValueError(
+                        f"'group_colors' has {len(group_colors)} list elements. 'group_or_values' has {len(groups_or_values)} list elements. Required the same sizes."
+                    )
 
+            for i, group in enumerate(projections):
+                ax.scatter(
+                    group[:, 0],
+                    group[:, 1],
+                    label=groups_or_values[i],
+                    c=group_colors[i] if group_colors else None,
+                    s=point_size,
+                    alpha=alpha,
+                    edgecolor="black",
+                    linewidth=outline_width,
+                )
 
-def plot_embedding_with_value(
-    projections: np.ndarray,
-    *,
-    values: np.ndarray | None = None,
-    title: str | None = None,
-    ax: Axes | None = None,
-    xlabel: str = "dim1",
-    ylabel: str = "dim2",
-    figsize: tuple[int, int] = (4, 3),
-    point_size: int = 20,
-    alpha: float = 0.6,
-    outline_width: float = 0.4,
-    show_ticks: bool = False,
-):
-    """Plot projections and color by value.
+                leg = ax.legend(frameon=True)
 
-    Args:
-        projections: Arrays of projected embeddings.
-        values: Attribute values.
-        title: Optional plot title.
-        ax: Optional matplotlib Axes to plot on.
-        figsize: Size of the figure (if no Axes provided).
-        xlabel: x-axis label.
-        ylabel: y-axis label.
-        figsize: Size of figure.
-        point_size: Size of scatter points.
-        alpha: Transparency of points.
-        outline_width: Width of the outline around points.
-        show_ticks: Whether to show axis ticks.
-    """
-    created_fig = False
-    if ax is None:
-        _, ax = plt.subplots(figsize=figsize)
-        created_fig = True
-
-    sc = ax.scatter(
-        projections[:, 0],
-        projections[:, 1],
-        label=None,
-        c=values,
-        s=point_size,
-        alpha=alpha,
-        edgecolor="black",
-        linewidth=outline_width,
-    )
-    ax.figure.colorbar(sc, ax=ax)
+                if legend_point_size is not None:
+                    for lh in leg.legend_handles:
+                        lh.set_sizes([legend_point_size])  # type: ignore
+                        lh.set_alpha(1.0)
+    else:
+        for i, group in enumerate(projections):
+            ax.scatter(
+                group[:, 0],
+                group[:, 1],
+                c=group_colors[i] if group_colors else None,
+                s=point_size,
+                alpha=alpha,
+                edgecolor="black",
+                linewidth=outline_width,
+            )
 
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
@@ -346,9 +342,6 @@ def plot_embedding_with_value(
     if not show_ticks:
         ax.set_xticks([])
         ax.set_yticks([])
-
-    ax.set_axisbelow(True)
-    ax.grid(True, linestyle="--", linewidth=0.5, alpha=0.5)
 
     if title is not None:
         ax.set_title(title)

@@ -381,7 +381,7 @@ def show_table(
 
     if caption:
         styler = styler.set_caption(caption)
-        table_styles += [{"selector": "caption", "props": "caption-side: bottom; margin-top: 0.75em;"}]
+        table_styles += [{"selector": "caption", "props": [("caption-side", "bottom"), ("margin-top", "0.75em")]}]
 
     styler = styler.set_table_styles(table_styles, overwrite=False)  # type: ignore
 
