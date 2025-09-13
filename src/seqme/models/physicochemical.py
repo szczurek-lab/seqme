@@ -1,7 +1,6 @@
 from typing import Literal
 
 import numpy as np
-from modlamp.descriptors import GlobalDescriptor, PeptideDescriptor
 
 
 class AliphaticIndex:
@@ -16,6 +15,8 @@ class AliphaticIndex:
         Returns:
             Aliphatic index for each sequence.
         """
+        from modlamp.descriptors import GlobalDescriptor
+
         d = GlobalDescriptor(sequences)
         d.aliphatic_index()
         return d.descriptor.squeeze(axis=-1)
@@ -33,6 +34,8 @@ class Aromaticity:
         Returns:
             Aromaticity value for each sequence.
         """
+        from modlamp.descriptors import GlobalDescriptor
+
         d = GlobalDescriptor(sequences)
         d.aromaticity()
         return d.descriptor.squeeze(axis=-1)
@@ -50,6 +53,8 @@ class BomanIndex:
         Returns:
             Boman index value for each sequence.
         """
+        from modlamp.descriptors import GlobalDescriptor
+
         d = GlobalDescriptor(sequences)
         d.boman_index()
         return d.descriptor.squeeze(axis=-1)
@@ -75,6 +80,8 @@ class Charge:
         Returns:
             Net charge for each sequence.
         """
+        from modlamp.descriptors import GlobalDescriptor
+
         d = GlobalDescriptor(sequences)
         d.calculate_charge(ph=self.ph)
         return d.descriptor.squeeze(axis=-1)
@@ -92,6 +99,8 @@ class Gravy:
         Returns:
             GRAVY score for each sequence.
         """
+        from modlamp.descriptors import PeptideDescriptor
+
         d = PeptideDescriptor(sequences)
         d.load_scale("gravy")
         d.calculate_global()
@@ -119,6 +128,8 @@ class Hydrophobicity:
         Returns:
             Hydrophobicity score for each sequence.
         """
+        from modlamp.descriptors import PeptideDescriptor
+
         d = PeptideDescriptor(sequences)
         d.load_scale(self.scale)
         d.calculate_global()
@@ -157,6 +168,8 @@ class HydrophobicMoment:
         Returns:
             hydrophobic moment for each sequence.
         """
+        from modlamp.descriptors import PeptideDescriptor
+
         d = PeptideDescriptor(sequences)
         d.load_scale(self.scale)
         d.calculate_moment(window=self.window, angle=self.angle, modality=self.modality)
@@ -175,6 +188,8 @@ class InstabilityIndex:
         Returns:
             Instability index for each sequence.
         """
+        from modlamp.descriptors import GlobalDescriptor
+
         d = GlobalDescriptor(sequences)
         d.instability_index()
         return d.descriptor.squeeze(axis=-1)
@@ -192,6 +207,8 @@ class IsoelectricPoint:
         Returns:
             Isoelectric point for each sequence.
         """
+        from modlamp.descriptors import GlobalDescriptor
+
         d = GlobalDescriptor(sequences)
         d.isoelectric_point()
         return d.descriptor.squeeze(axis=-1)
@@ -209,6 +226,8 @@ class MolecularWeight:
         Returns:
             Molecular weight for each sequence.
         """
+        from modlamp.descriptors import GlobalDescriptor
+
         d = GlobalDescriptor(sequences)
         d.calculate_MW()
         return d.descriptor.squeeze(axis=-1)

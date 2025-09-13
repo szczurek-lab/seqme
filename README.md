@@ -6,11 +6,21 @@
 
 ## Installation
 
-You need to have Python 3.10 or newer installed on your system.
+You need to have Python 3.10 or newer installed on your system. To install the base package do:
 
 ```bash
 $ pip install seqme
 ```
+
+To also install domain-specific models, use `molecule`, `dna`, `rna`, `peptide` and/or `protein`.
+
+Example:
+
+```bash
+$ pip install seqme[protein]
+```
+
+See the [docs](https://seqme.readthedocs.io/en/latest/api/models_index.html) for more information on using domain-specific models.
 
 ## Quick start
 
@@ -38,6 +48,8 @@ metrics = [
 df = sm.compute_metrics(sequences, metrics)
 sm.show_table(df)
 ```
+
+See the [docs](https://seqme.readthedocs.io/en/latest/tutorials/index.html) for more tutorials and examples.
 
 ## Citation
 

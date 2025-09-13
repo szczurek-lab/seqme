@@ -4,8 +4,6 @@ from itertools import islice
 import numpy as np
 import torch
 from tqdm import tqdm
-from transformers import AutoModelForMaskedLM, AutoTokenizer
-from transformers.utils import logging
 
 
 class Esm2Checkpoint(str, Enum):
@@ -23,7 +21,7 @@ class Esm2Checkpoint(str, Enum):
 
 class Esm2:
     """
-    Wrapper for the ESM2 protein/peptide embedding model from Hugging Face.
+    Wrapper for the ESM2 protein/peptide embedding model from HuggingFace.
 
     Computes sequence-level embeddings by averaging token embeddings,
     excluding [CLS] and [EOS] tokens.
@@ -32,8 +30,9 @@ class Esm2:
     def __init__(
         self,
         model_name: Esm2Checkpoint | str,
-        device: str,
-        batch_size: int,
+        *,
+        device: str | None = None,
+        batch_size: int = 256,
         verbose: bool = False,
     ):
         """
@@ -48,13 +47,17 @@ class Esm2:
         if isinstance(model_name, Esm2Checkpoint):
             model_name = model_name.value
 
+        if device is None:
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+
+        from transformers import AutoModelForMaskedLM, AutoTokenizer
+        from transformers.utils import logging
+
         prev = logging.get_verbosity()
         logging.set_verbosity_error()
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self.model = AutoModelForMaskedLM.from_pretrained(model_name)
+        self.model = AutoModelForMaskedLM.from_pretrained(model_name).to(device)
         logging.set_verbosity(prev)
-
-        self.model.to(device)
 
         self.batch_size = batch_size
         self.device = device

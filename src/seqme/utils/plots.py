@@ -250,18 +250,13 @@ def plot_2d_embeddings(
         alpha: Transparency of points.
         show_ticks: Whether to show axis ticks.
     """
-    created_fig = False
-    if ax is None:
-        _, ax = plt.subplots(figsize=figsize)
-        created_fig = True
-
     # try making the parameters lists then parse those normally.
 
     if isinstance(projections, np.ndarray):
         projections = [projections]
 
-    if isinstance(groups_or_values, str) or isinstance(projections, np.ndarray):
-        groups_or_values = [groups_or_values]
+    if isinstance(groups_or_values, str) or isinstance(groups_or_values, np.ndarray):
+        groups_or_values = [groups_or_values]  # type: ignore
 
     if isinstance(group_colors, str):
         group_colors = [group_colors]
@@ -283,6 +278,11 @@ def plot_2d_embeddings(
             raise ValueError(
                 f"'group_or_values' has {len(groups_or_values)} list elements. 'projections' has {len(projections)} list elements. Required the same sizes."
             )
+
+    created_fig = False
+    if ax is None:
+        _, ax = plt.subplots(figsize=figsize)
+        created_fig = True
 
     if groups_or_values:
         if isinstance(groups_or_values[0], np.ndarray):

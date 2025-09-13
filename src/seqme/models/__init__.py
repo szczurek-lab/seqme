@@ -15,6 +15,7 @@ from seqme.models.physicochemical import (
     IsoelectricPoint,
     MolecularWeight,
 )
+from seqme.models.prost_t5 import ProstT5
 from seqme.models.third_party import ThirdPartyModel
 
 __all__ = [
@@ -34,5 +35,6 @@ __all__ = [
     "KmerFrequencyEmbedding",
     "MinMaxNorm",
     "Concatenate",
+    "ProstT5",
     "ThirdPartyModel",
 ]

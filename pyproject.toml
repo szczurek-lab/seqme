@@ -49,15 +49,29 @@ dependencies = [
     "scipy",
     "torch",
     "tqdm",
-    "transformers",
     "scikit-learn",
     "umap-learn",
-    "modlamp",
     "pylev",
     "pylatex",
 ]
 
 [project.optional-dependencies]
+proteins = [
+    "transformers",
+    "sentencepiece",
+    "modlamp",
+]
+
+peptide = [
+    "transformers",
+    "sentencepiece",
+    "modlamp",
+]
+
+rna = []
+dna = []
+molecule = []
+
 doc = [
     "ipykernel",
     "ipywidgets",
