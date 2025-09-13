@@ -56,7 +56,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-proteins = [
+protein = [
     "transformers",
     "sentencepiece",
     "modlamp",
