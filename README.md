@@ -12,17 +12,19 @@ You need to have Python 3.10 or newer installed on your system. To install the b
 $ pip install seqme
 ```
 
-To also install domain-specific models, use `molecule`, `dna`, `rna`, `peptide` and/or `protein`.
+To also install domain-specific models, use the extras specifier `molecule`, `dna`, `rna`, `peptide` and/or `protein`.
 
-Example:
+Read the [docs](https://seqme.readthedocs.io/en/latest/api/models_index.html) for more information on using domain-specific models.
+
+## Quick start
+
+Install seqme and protein models.
 
 ```bash
 $ pip install seqme[protein]
 ```
 
-See the [docs](https://seqme.readthedocs.io/en/latest/api/models_index.html) for more information on using domain-specific models.
-
-## Quick start
+Run in a Jupter notebook:
 
 ```python
 import seqme as sm
@@ -46,10 +48,10 @@ metrics = [
 ]
 
 df = sm.compute_metrics(sequences, metrics)
-sm.show_table(df)
+sm.show_table(df) # Note: Gets only displayed in a notebook.
 ```
 
-See the [docs](https://seqme.readthedocs.io/en/latest/tutorials/index.html) for more tutorials and examples.
+Read the [docs](https://seqme.readthedocs.io/en/latest/tutorials/index.html) for more tutorials and examples.
 
 ## Citation
 
