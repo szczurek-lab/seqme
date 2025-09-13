@@ -24,7 +24,7 @@ Install seqme and protein models.
 $ pip install seqme[protein]
 ```
 
-Run in a Jupter notebook:
+Run in a Jupyter notebook:
 
 ```python
 import seqme as sm
