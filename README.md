@@ -48,7 +48,7 @@ metrics = [
 ]
 
 df = sm.compute_metrics(sequences, metrics)
-sm.show_table(df) # Note: Gets only displayed in a notebook.
+sm.show_table(df) # Note: Will only display the table in a notebook.
 ```
 
 Read the [docs](https://seqme.readthedocs.io/en/latest/tutorials/index.html) for more tutorials and examples.
