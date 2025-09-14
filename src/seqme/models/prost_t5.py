@@ -8,20 +8,23 @@ class ProstT5:
     Wrapper for the ProstT5 encoder protein embedding model from HuggingFace.
 
     Computes sequence-level embeddings by averaging token embeddings.
+
+    Reference:
+        Heinzinger et al., "ProstT5: Bilingual Language Model for Protein Sequence and Structure"
+        (https://www.biorxiv.org/content/10.1101/2023.07.23.550085v1)
     """
 
     def __init__(
         self,
         *,
         device: str | None = None,
-        batch_size: int = 32,
+        batch_size: int = 64,
         verbose: bool = False,
     ):
         """
         Initialize ProstT5 encoder.
 
         Args:
-            model_name: Model checkpoint name or enum.
             device: Device to run inference on, e.g., "cuda" or "cpu".
             batch_size: Number of sequences to process per batch.
             verbose: Whether to display a progress bar.
@@ -38,6 +41,7 @@ class ProstT5:
         self.tokenizer = T5Tokenizer.from_pretrained("Rostlab/ProstT5", do_lower_case=False, legacy=True)
         self.model = T5EncoderModel.from_pretrained("Rostlab/ProstT5").to(device)
         self.model.float() if device == "cpu" else self.model.half()
+        self.model.eval()
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
         return self.embed(sequences)
@@ -50,7 +54,7 @@ class ProstT5:
         Token embeddings are averaged to produce a single embedding per sequence.
 
         Args:
-            sequences: List of input amino acid sequences.
+            sequences: List of amino acid sequences.
 
         Returns:
             A NumPy array of shape (n_sequences, embedding_dim) containing the embeddings.

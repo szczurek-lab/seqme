@@ -60,6 +60,10 @@ esm2 = ["transformers"]
 prostT5 = ["transformers", "sentencepiece"]
 descriptors = ["modlamp"]
 
+# RNA
+RNA_FM = ["rna-fm"]
+
+
 # DNA
 DNABert2 = ["transformers"]
 

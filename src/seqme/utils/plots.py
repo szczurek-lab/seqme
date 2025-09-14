@@ -273,12 +273,6 @@ def plot_2d_embeddings(
         if projection.shape[-1] != 2:
             raise ValueError(f"Only 2D embeddings can be plotted, but got {projection.shape[-1]}D embeddings.")
 
-    if groups_or_values is not None:
-        if len(groups_or_values) != len(projections):
-            raise ValueError(
-                f"'group_or_values' has {len(groups_or_values)} list elements. 'projections' has {len(projections)} list elements. Required the same sizes."
-            )
-
     created_fig = False
     if ax is None:
         _, ax = plt.subplots(figsize=figsize)

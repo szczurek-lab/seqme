@@ -19,14 +19,13 @@ class DNABert2:
         self,
         *,
         device: str | None = None,
-        batch_size: int = 32,
+        batch_size: int = 256,
         verbose: bool = False,
     ):
         """
         Initialize model.
 
         Args:
-            model_name: Model checkpoint name or enum.
             device: Device to run inference on, e.g., "cuda" or "cpu".
             batch_size: Number of sequences to process per batch.
             verbose: Whether to display a progress bar.
@@ -47,6 +46,9 @@ class DNABert2:
         self.model = AutoModel.from_pretrained("zhihan1996/DNABERT-2-117M", trust_remote_code=True)
         logging.set_verbosity(prev)
 
+        self.model.to(device)
+        self.model.eval()
+
     def __call__(self, sequences: list[str]) -> np.ndarray:
         return self.embed(sequences)
 
@@ -58,7 +60,7 @@ class DNABert2:
         Token embeddings are averaged to produce a single embedding per sequence.
 
         Args:
-            sequences: List of input amino acid sequences.
+            sequences: List of DNA sequences.
 
         Returns:
             A NumPy array of shape (n_sequences, embedding_dim) containing the embeddings.

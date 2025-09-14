@@ -65,8 +65,11 @@ class Esm2:
         prev = logging.get_verbosity()
         logging.set_verbosity_error()
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self.model = AutoModelForMaskedLM.from_pretrained(model_name).to(device)
+        self.model = AutoModelForMaskedLM.from_pretrained(model_name)
         logging.set_verbosity(prev)
+
+        self.model.to(device)
+        self.model.eval()
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
         return self.embed(sequences)

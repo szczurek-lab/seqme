@@ -17,6 +17,7 @@ from seqme.models.physicochemical import (
     MolecularWeight,
 )
 from seqme.models.prost_t5 import ProstT5
+from seqme.models.rna_fm import RNA_FM
 from seqme.models.third_party import ThirdPartyModel
 
 __all__ = [
@@ -38,5 +39,6 @@ __all__ = [
     "MinMaxNorm",
     "Concatenate",
     "ProstT5",
+    "RNA_FM",
     "ThirdPartyModel",
 ]
