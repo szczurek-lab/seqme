@@ -25,6 +25,11 @@ class Esm2:
 
     Computes sequence-level embeddings by averaging token embeddings,
     excluding [CLS] and [EOS] tokens.
+
+    Reference:
+        Lin et al., "Language models of protein sequences at the scale of evolution enable accurate structure prediction"
+        (https://www.biorxiv.org/content/10.1101/2022.07.20.500902v3)
+
     """
 
     def __init__(
@@ -50,6 +55,10 @@ class Esm2:
         if device is None:
             device = "cuda" if torch.cuda.is_available() else "cpu"
 
+        self.batch_size = batch_size
+        self.device = device
+        self.verbose = verbose
+
         from transformers import AutoModelForMaskedLM, AutoTokenizer
         from transformers.utils import logging
 
@@ -58,10 +67,6 @@ class Esm2:
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.model = AutoModelForMaskedLM.from_pretrained(model_name).to(device)
         logging.set_verbosity(prev)
-
-        self.batch_size = batch_size
-        self.device = device
-        self.verbose = verbose
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
         return self.embed(sequences)

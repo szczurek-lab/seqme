@@ -9,6 +9,8 @@ Models
     :nosignatures:
 
     seqme.models.Esm2
+    seqme.models.ProstT5
+    seqme.models.DNABert2
     seqme.models.KmerFrequencyEmbedding
 
     seqme.models.AliphaticIndex

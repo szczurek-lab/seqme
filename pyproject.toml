@@ -7,16 +7,14 @@ name = "seqme"
 version = "0.0.1"
 description = "Metrics for evaluating biological sequence generation models."
 readme = "README.md"
-license = {file = "LICENSE"}
+license = { file = "LICENSE" }
 requires-python = ">=3.10"
 authors = [
     { name = "Rasmus Møller-Larsen" },
     { name = "Adam Izdebski" },
     { name = "Jan Olszewski" },
 ]
-maintainers = [
-    {name = "Rasmus Møller-Larsen"},
-]
+maintainers = [{ name = "Rasmus Møller-Larsen" }]
 urls.Documentation = "https://seqme.readthedocs.io"
 urls.Source = "https://github.com/szczurek-lab/seqme"
 urls.Home-page = "https://github.com/szczurek-lab/seqme"
@@ -56,25 +54,14 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-protein = [
-    "transformers",
-    "sentencepiece",
-    "modlamp",
-]
 
-peptide = [
-    "transformers",
-    "sentencepiece",
-    "modlamp",
-]
+# protein / peptides
+esm2 = ["transformers"]
+prostT5 = ["transformers", "sentencepiece"]
+descriptors = ["modlamp"]
 
-rna = [
-]
-
-dna = [
-]
-
-molecule = []
+# DNA
+DNABert2 = ["transformers"]
 
 doc = [
     "ipykernel",
@@ -128,28 +115,28 @@ select = [
 
 ignore = [
     # Pycodestyle
-    "E501",  # Line too long (we accept long comments; formatter handles code)
-    "E731",  # Do not assign a lambda expression (we allow this for convenience)
-    "E741",  # Ambiguous variable name "l", "O", or "I" (we allow "I" for identity matrices)
+    "E501", # Line too long (we accept long comments; formatter handles code)
+    "E731", # Do not assign a lambda expression (we allow this for convenience)
+    "E741", # Ambiguous variable name "l", "O", or "I" (we allow "I" for identity matrices)
 
     # Flake8-bugbear
-    "B008",  # Do not perform function calls in default arguments (allowed when result is immutable)
+    "B008", # Do not perform function calls in default arguments (allowed when result is immutable)
 
     # Pydocstyle — disable “missing docstring” checks (docstrings optional)
-    "D100",  # Missing docstring in public module
-    "D101",  # Missing docstring in public class
-    "D102",  # Missing docstring in public method
-    "D103",  # Missing docstring in public function
-    "D104",  # Missing docstring in public package
-    "D105",  # Missing docstring in magic method
-    "D106",  # Missing docstring in public nested class
-    "D107",  # Missing docstring in __init__
+    "D100", # Missing docstring in public module
+    "D101", # Missing docstring in public class
+    "D102", # Missing docstring in public method
+    "D103", # Missing docstring in public function
+    "D104", # Missing docstring in public package
+    "D105", # Missing docstring in magic method
+    "D106", # Missing docstring in public nested class
+    "D107", # Missing docstring in __init__
 
     # Pydocstyle — stylistic rules we don't want
-    "D400",  # First line should end with a period
-    "D401",  # First line should be in imperative mood
-    "D203",  # 1 blank line required before class docstring
-    "D212",  # Enforces first-line docstring — disabled, since we prefer second-line
+    "D400", # First line should end with a period
+    "D401", # First line should be in imperative mood
+    "D203", # 1 blank line required before class docstring
+    "D212", # Enforces first-line docstring — disabled, since we prefer second-line
     # "D213",  # Multi-line docstring should start on the second line
 ]
 
@@ -167,21 +154,12 @@ no_strict_optional = true
 
 
 [tool.hatch.build.targets.sdist]
-exclude = [
-  "docs",
-  "docs/**",
-]
+exclude = ["docs", "docs/**"]
 
 [tool.hatch.build.targets.wheel]
-exclude = [
-  "docs",
-  "docs/**",
-]
+exclude = ["docs", "docs/**"]
 
 
 [tool.coverage.run]
 branch = true
-omit = [
-    "*/.conda/*",
-    "*/tests/*",
-]
+omit = ["*/.conda/*", "*/tests/*"]

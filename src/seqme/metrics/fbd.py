@@ -91,7 +91,7 @@ def wasserstein_distance(e1: np.ndarray, e2: np.ndarray, eps: float = 1e-6) -> f
     Returns:
         The Fréchet distance as a float. Returns NaN if either set has fewer than 2 samples.
     """
-    if len(e1) < 2 or len(e2) < 2:
+    if e1.shape[0] < 2 or e2.shape[0] < 2:
         return float("nan")
 
     mu1, sigma1 = e1.mean(axis=0), np.cov(e1, rowvar=False)
@@ -100,10 +100,10 @@ def wasserstein_distance(e1: np.ndarray, e2: np.ndarray, eps: float = 1e-6) -> f
     covmean, err = scipy.linalg.sqrtm(sigma1.dot(sigma2), disp=False)
 
     is_real = np.allclose(np.diagonal(covmean).imag, 0, atol=1e-3)
-    if (err == np.inf) or not is_real:
+    if np.isinf(err) or not is_real:
         offset = np.eye(sigma1.shape[0]) * eps
         covmean, err = scipy.linalg.sqrtm((sigma1 + offset).dot(sigma2 + offset), disp=False)
-        if err == np.inf:
+        if np.isinf(err):
             return float("nan")
 
     # Handle numerical issues with imaginary components

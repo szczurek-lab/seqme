@@ -3,11 +3,16 @@ import torch
 from tqdm import tqdm
 
 
-class ProstT5:
+class DNABert2:
     """
-    Wrapper for the ProstT5 encoder protein embedding model from HuggingFace.
+    Wrapper for the DNABert2 embedding model from HuggingFace.
 
     Computes sequence-level embeddings by averaging token embeddings.
+
+    Reference:
+        Zhou et al., "DNABERT-2: Efficient Foundation Model and Benchmark For Multi-Species Genome"
+        (https://arxiv.org/abs/2306.15006)
+
     """
 
     def __init__(
@@ -18,7 +23,7 @@ class ProstT5:
         verbose: bool = False,
     ):
         """
-        Initialize ProstT5 encoder.
+        Initialize model.
 
         Args:
             model_name: Model checkpoint name or enum.
@@ -33,11 +38,14 @@ class ProstT5:
         self.device = device
         self.verbose = verbose
 
-        from transformers import T5EncoderModel, T5Tokenizer
+        from transformers import AutoModel, AutoTokenizer
+        from transformers.utils import logging
 
-        self.tokenizer = T5Tokenizer.from_pretrained("Rostlab/ProstT5", do_lower_case=False, legacy=True)
-        self.model = T5EncoderModel.from_pretrained("Rostlab/ProstT5").to(device)
-        self.model.float() if device == "cpu" else self.model.half()
+        prev = logging.get_verbosity()
+        logging.set_verbosity_error()
+        self.tokenizer = AutoTokenizer.from_pretrained("zhihan1996/DNABERT-2-117M", trust_remote_code=True)
+        self.model = AutoModel.from_pretrained("zhihan1996/DNABERT-2-117M", trust_remote_code=True)
+        logging.set_verbosity(prev)
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
         return self.embed(sequences)
@@ -62,18 +70,11 @@ class ProstT5:
                 disable=not self.verbose,
             ):
                 batch = sequences[i : i + self.batch_size]
-                batch = ["<AA2fold> " + " ".join(sequence) for sequence in batch]
 
-                tokens = self.tokenizer.batch_encode_plus(
-                    batch,
-                    add_special_tokens=True,
-                    padding="longest",
-                    return_tensors="pt",
-                ).to(self.device)
+                tokens = self.tokenizer(batch, return_tensors="pt", padding=True, truncation=False)
+                tokens = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in tokens.items()}
 
-                hidden_state = self.model(
-                    tokens["input_ids"], attention_mask=tokens["attention_mask"]
-                ).last_hidden_state
+                hidden_state = self.model(**tokens)[0]
 
                 counts = tokens["attention_mask"].sum(dim=-1)
                 mask = tokens["attention_mask"]

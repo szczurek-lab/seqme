@@ -17,16 +17,15 @@ You need to have Python 3.10 or newer installed on your system. To install the b
 $ pip install seqme
 ```
 
-To also install domain-specific models, use the extras specifier `molecule`, `dna`, `rna`, `peptide` and/or `protein`.
-
-Read the [docs](https://seqme.readthedocs.io/en/latest/api/models_index.html) for more information on using domain-specific models.
+To also install domain-specific models, add extras specifiers.
+Read the [docs](https://seqme.readthedocs.io/en/latest/api/models_index.html) for more information on the supported models.
 
 ## Quick start
 
-Install seqme and protein models.
+Install seqme and the protein language model, ESM-2.
 
 ```bash
-$ pip install seqme[protein]
+$ pip install seqme[esm2]
 ```
 
 Run in a Jupyter notebook:

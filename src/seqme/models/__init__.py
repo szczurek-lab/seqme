@@ -1,4 +1,5 @@
 from seqme.models.concatenate import Concatenate
+from seqme.models.dna_bert2 import DNABert2
 from seqme.models.ensemble import Ensemble
 from seqme.models.esm2 import Esm2, Esm2Checkpoint
 from seqme.models.kmers import KmerFrequencyEmbedding
@@ -19,6 +20,7 @@ from seqme.models.prost_t5 import ProstT5
 from seqme.models.third_party import ThirdPartyModel
 
 __all__ = [
+    "DNABert2",
     "Ensemble",
     "AliphaticIndex",
     "Aromaticity",
