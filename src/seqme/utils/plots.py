@@ -227,6 +227,7 @@ def plot_2d_embeddings(
     figsize: tuple[int, int] = (4, 3),
     outline_width: float = 0,
     point_size: float = 20,
+    show_legend: bool = True,
     legend_point_size: float | None = None,
     alpha: float = 0.6,
     show_ticks: bool = False,
@@ -246,6 +247,7 @@ def plot_2d_embeddings(
         figsize: Size of the figure (if no Axes provided).
         outline_width: Width of the outline around points.
         point_size: Size of scatter points.
+        show_legend: Whether to show legend (only for categorical data)
         legend_point_size: Size of scatter points in the legend.
         alpha: Transparency of points.
         show_ticks: Whether to show axis ticks.
@@ -294,6 +296,11 @@ def plot_2d_embeddings(
             )
             ax.figure.colorbar(sc, ax=ax)
         else:
+            if len(groups_or_values) != len(projections):
+                raise ValueError(
+                    f"'group_or_values' has {len(groups_or_values)} groups (elements). 'projections' has {len(projections)} list elements. Required the same sizes."
+                )
+
             if group_colors:
                 if len(group_colors) != len(groups_or_values):
                     raise ValueError(
@@ -312,12 +319,13 @@ def plot_2d_embeddings(
                     linewidth=outline_width,
                 )
 
-                leg = ax.legend(frameon=True)
+                if show_legend:
+                    leg = ax.legend(frameon=True)
 
-                if legend_point_size is not None:
-                    for lh in leg.legend_handles:
-                        lh.set_sizes([legend_point_size])  # type: ignore
-                        lh.set_alpha(1.0)
+                    if legend_point_size is not None:
+                        for lh in leg.legend_handles:
+                            lh.set_sizes([legend_point_size])  # type: ignore
+                            lh.set_alpha(1.0)
     else:
         for i, group in enumerate(projections):
             ax.scatter(
