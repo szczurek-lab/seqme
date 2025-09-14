@@ -2,7 +2,7 @@ from collections.abc import Callable
 from typing import Literal
 
 import numpy as np
-from scipy.linalg import sqrtm
+import scipy.linalg
 
 from seqme.core import Metric, MetricResult
 
@@ -11,7 +11,7 @@ class FrechetBiologicalDistance(Metric):
     """Fréchet Biological Distance (FBD) between a set of generated sequences and a reference dataset based on their embeddings.
 
     This metric estimates how similar the distributions of two sets of embeddings
-    are using the 2-Wasserstein (Fréchet) distance.
+    are using the Wasserstein-2 (Fréchet) distance.
 
     Reference:
         Heusel et al., "GANs Trained by a Two Time-Scale Update Rule Converge to a
@@ -76,7 +76,7 @@ class FrechetBiologicalDistance(Metric):
         return "minimize"
 
 
-def wasserstein_distance(e1: np.ndarray, e2: np.ndarray) -> float:
+def wasserstein_distance(e1: np.ndarray, e2: np.ndarray, eps: float = 1e-6) -> float:
     """
     Computes the Fréchet distance between two sets of embeddings.
 
@@ -86,6 +86,7 @@ def wasserstein_distance(e1: np.ndarray, e2: np.ndarray) -> float:
     Args:
         e1: First set of embeddings, shape (N1, D).
         e2: Second set of embeddings, shape (N2, D).
+        eps: Epsilon.
 
     Returns:
         The Fréchet distance as a float. Returns NaN if either set has fewer than 2 samples.
@@ -96,18 +97,26 @@ def wasserstein_distance(e1: np.ndarray, e2: np.ndarray) -> float:
     mu1, sigma1 = e1.mean(axis=0), np.cov(e1, rowvar=False)
     mu2, sigma2 = e2.mean(axis=0), np.cov(e2, rowvar=False)
 
-    ssdiff = np.sum((mu1 - mu2) ** 2.0)
-    covmean, err = sqrtm(sigma1.dot(sigma2), disp=False)
+    covmean, err = scipy.linalg.sqrtm(sigma1.dot(sigma2), disp=False)
 
-    if err == np.inf:
-        return float("nan")
+    is_real = np.allclose(np.diagonal(covmean).imag, 0, atol=1e-3)
+    if (err == np.inf) or not is_real:
+        offset = np.eye(sigma1.shape[0]) * eps
+        covmean, err = scipy.linalg.sqrtm((sigma1 + offset).dot(sigma2 + offset), disp=False)
+        if err == np.inf:
+            return float("nan")
 
     # Handle numerical issues with imaginary components
     if np.iscomplexobj(covmean):
+        if not np.allclose(np.diagonal(covmean).imag, 0, atol=1e-3):
+            raise ValueError("Imaginary component")
         covmean = covmean.real
 
-    dist = ssdiff + np.trace(sigma1 + sigma2 - 2.0 * covmean)
-    dist = max(0.0, dist.item())  # numerical stability
+    diff = mu1 - mu2
+    ssdiff = np.dot(diff, diff)
+
+    dist = float(ssdiff + np.trace(sigma1) + np.trace(sigma2) - 2.0 * np.trace(covmean))
+    dist = max(0.0, dist)  # numerical stability
 
     return dist
 
@@ -116,7 +125,7 @@ class FBD(FrechetBiologicalDistance):
     """Fréchet Biological Distance (FBD) between a set of generated sequences and a reference dataset based on their embeddings.
 
     This metric estimates how similar the distributions of two sets of embeddings
-    are using the 2-Wasserstein (Fréchet) distance.
+    are using the Wasserstein-2 (Fréchet) distance.
 
     Reference:
         Heusel et al., "GANs Trained by a Two Time-Scale Update Rule Converge to a

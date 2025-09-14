@@ -1,6 +1,12 @@
+[![License](https://img.shields.io/github/license/szczurek-lab/seqme)](https://opensource.org/license/bsd-3-clause)
+[![PyPI](https://img.shields.io/pypi/v/seqme.svg)](https://pypi.org/project/seqme/)
+[![Read the Docs](https://img.shields.io/readthedocs/seqme)](https://seqme.readthedocs.io/)
+[![Python Version](https://img.shields.io/pypi/pyversions/seqme)](https://pypi.org/project/seqme)
+
 <p align="left">
     <img src="docs/_static/logo_title.svg" alt="seqme logo" width="30%">
 </p>
+
 
 **seqme** is a modular and highly extendable python library containing model-agnostic metrics for evaluating biological sequences.
 
