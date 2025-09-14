@@ -45,7 +45,7 @@ dependencies = [
     "matplotlib>=3.6",
     "numpy",
     "pandas>=1.5",
-    "pymoo",
+    "moocore",
     "scipy",
     "torch",
     "tqdm",
@@ -68,8 +68,12 @@ peptide = [
     "modlamp",
 ]
 
-rna = []
-dna = []
+rna = [
+]
+
+dna = [
+]
+
 molecule = []
 
 doc = [

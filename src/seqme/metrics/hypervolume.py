@@ -1,8 +1,8 @@
 from collections.abc import Callable
 from typing import Literal
 
+import moocore
 import numpy as np
-import pymoo.indicators.hv as hv
 from scipy.spatial import ConvexHull, QhullError
 
 from seqme.core import Metric, MetricResult
@@ -111,8 +111,7 @@ def calculate_hypervolume(
         points = points / (ideal - nadir)
 
     if method == "standard":
-        hv_indicator = hv.HV(ref_point=ref_point)
-        hypervolume = hv_indicator(-points).item()
+        hypervolume = moocore.hypervolume(points, ref=ref_point, maximise=True)
     elif method == "convex-hull":
         all_points = np.vstack((points, ref_point))
         try:
