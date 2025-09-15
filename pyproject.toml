@@ -65,7 +65,7 @@ RNA_FM = ["rna-fm"]
 
 
 # DNA
-DNABert2 = ["transformers"]
+DNABert2 = ["transformers", "einops"]
 
 doc = [
     "ipykernel",

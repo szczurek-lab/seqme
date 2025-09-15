@@ -3,35 +3,27 @@ import pytest
 
 import seqme as sm
 
-pytest.importorskip("rna-fm")
+pytest.importorskip("fm")
 
 
 @pytest.fixture(scope="module")
 def rna_fm():
-    return sm.models.DNABert2()
+    return sm.models.RNA_FM()
 
 
 def test_rna_fm_shape_and_means(rna_fm):
     data = [
-        "RVKRVWPLVIRTVIAGYNLYRAIKKK",
-        "RKRIHIGPGRAFYTT",
-        "DSHAKRHHGYKRKFHEKHHSHRGY",
-        "ENREVPPGFTALIKTLRKCKII",
-        "NLVSGLIEARKYLEQLHRKLKNCKV",
-        "FLPKTLRKFFARIRGGRAAVLNALGKEEQIGRASNSGRKCARKKK",
+        "AAAUUU",
+        "UUUAAA",
     ]
     embeddings = rna_fm(data)
 
-    assert embeddings.shape == (6, 320)
+    assert embeddings.shape == (2, 1280)
 
     expected_means = np.array(
         [
-            -0.01061969,
-            -0.01052918,
-            -0.01140676,
-            -0.00957893,
-            -0.00982053,
-            -0.0104174,
+            0.013062825426459312,
+            0.021095028147101402,
         ]
     )
     actual_means = embeddings.mean(axis=-1)

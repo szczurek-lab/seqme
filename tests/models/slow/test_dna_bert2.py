@@ -4,6 +4,7 @@ import pytest
 import seqme as sm
 
 pytest.importorskip("transformers")
+pytest.importorskip("einops")
 
 
 @pytest.fixture(scope="module")
@@ -15,23 +16,15 @@ def test_dna_bert2_shape_and_means(dna_bert2):
     data = [
         "RVKRVWPLVIRTVIAGYNLYRAIKKK",
         "RKRIHIGPGRAFYTT",
-        "DSHAKRHHGYKRKFHEKHHSHRGY",
-        "ENREVPPGFTALIKTLRKCKII",
-        "NLVSGLIEARKYLEQLHRKLKNCKV",
-        "FLPKTLRKFFARIRGGRAAVLNALGKEEQIGRASNSGRKCARKKK",
     ]
     embeddings = dna_bert2(data)
 
-    assert embeddings.shape == (6, 320)
+    assert embeddings.shape == (2, 768)
 
     expected_means = np.array(
         [
-            -0.01061969,
-            -0.01052918,
-            -0.01140676,
-            -0.00957893,
-            -0.00982053,
-            -0.0104174,
+            0.00342898,
+            0.00424373,
         ]
     )
     actual_means = embeddings.mean(axis=-1)

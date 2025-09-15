@@ -1,14 +1,14 @@
 Tutorials
 #########
 
-Tutorials on using seqme for peptide evaluation, adding new metrics, and integrating third-party models.
+The easiest way to get familiar with seqme is to follow along with our tutorials.
 
 .. nbgallery::
 
     getting_started
     time_series
-    benchmark_peptides
-    benchmark_rna
     diagnostics
     third_party
+    benchmark_peptides
+    benchmark_rna
     

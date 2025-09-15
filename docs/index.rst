@@ -3,17 +3,15 @@ seqme
 **seqme** is a modular and highly extendable python library containing model-agnostic metrics for evaluating biological sequences.
 
 
-
 Quick start
 -----------
 
 Install seqme and the protein language model, ESM-2.
 
 .. code-block:: bash
+
     pip install seqme[esm2]
 
-
-Let's compute a few metrics on example sequences.
 
 Run in a Jupyter notebook:
 
