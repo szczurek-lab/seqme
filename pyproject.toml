@@ -58,7 +58,7 @@ dependencies = [
 # protein / peptides
 esm2 = ["transformers"]
 prostT5 = ["transformers", "sentencepiece"]
-aaDescriptor = ["modlamp"]
+aaDescriptors = ["modlamp"]
 
 # RNA
 RNA_FM = ["rna-fm"]

@@ -2,11 +2,13 @@ from typing import Literal
 
 import numpy as np
 
+from .exceptions import OptionalDependencyError
+
 
 class AliphaticIndex:
     """Aliphatic index of peptide sequences.
 
-    Installation: ``pip install seqme[aaDescriptor]``
+    Installation: ``pip install seqme[aaDescriptors]``
     """
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
@@ -18,7 +20,10 @@ class AliphaticIndex:
         Returns:
             Aliphatic index for each sequence.
         """
-        from modlamp.descriptors import GlobalDescriptor
+        try:
+            from modlamp.descriptors import GlobalDescriptor
+        except ModuleNotFoundError:
+            raise OptionalDependencyError("aaDescriptors") from None
 
         d = GlobalDescriptor(sequences)
         d.aliphatic_index()
@@ -28,7 +33,7 @@ class AliphaticIndex:
 class Aromaticity:
     """Aromaticity of peptide sequences.
 
-    Installation: ``pip install seqme[aaDescriptor]``
+    Installation: ``pip install seqme[aaDescriptors]``
     """
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
@@ -40,7 +45,10 @@ class Aromaticity:
         Returns:
             Aromaticity value for each sequence.
         """
-        from modlamp.descriptors import GlobalDescriptor
+        try:
+            from modlamp.descriptors import GlobalDescriptor
+        except ModuleNotFoundError:
+            raise OptionalDependencyError("aaDescriptors") from None
 
         d = GlobalDescriptor(sequences)
         d.aromaticity()
@@ -50,7 +58,7 @@ class Aromaticity:
 class BomanIndex:
     """Boman index, estimating binding potential to proteins.
 
-    Installation: ``pip install seqme[aaDescriptor]``
+    Installation: ``pip install seqme[aaDescriptors]``
     """
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
@@ -62,7 +70,10 @@ class BomanIndex:
         Returns:
             Boman index value for each sequence.
         """
-        from modlamp.descriptors import GlobalDescriptor
+        try:
+            from modlamp.descriptors import GlobalDescriptor
+        except ModuleNotFoundError:
+            raise OptionalDependencyError("aaDescriptors") from None
 
         d = GlobalDescriptor(sequences)
         d.boman_index()
@@ -72,7 +83,7 @@ class BomanIndex:
 class Charge:
     """Net charge of peptides at a given pH.
 
-    Installation: ``pip install seqme[aaDescriptor]``
+    Installation: ``pip install seqme[aaDescriptors]``
     """
 
     def __init__(self, ph: float = 7.0):
@@ -92,7 +103,10 @@ class Charge:
         Returns:
             Net charge for each sequence.
         """
-        from modlamp.descriptors import GlobalDescriptor
+        try:
+            from modlamp.descriptors import GlobalDescriptor
+        except ModuleNotFoundError:
+            raise OptionalDependencyError("aaDescriptors") from None
 
         d = GlobalDescriptor(sequences)
         d.calculate_charge(ph=self.ph)
@@ -102,7 +116,7 @@ class Charge:
 class Gravy:
     """GRAVY (hydropathy) score for peptide sequences.
 
-    Installation: ``pip install seqme[aaDescriptor]``
+    Installation: ``pip install seqme[aaDescriptors]``
     """
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
@@ -114,7 +128,10 @@ class Gravy:
         Returns:
             GRAVY score for each sequence.
         """
-        from modlamp.descriptors import PeptideDescriptor
+        try:
+            from modlamp.descriptors import PeptideDescriptor
+        except ModuleNotFoundError:
+            raise OptionalDependencyError("aaDescriptors") from None
 
         d = PeptideDescriptor(sequences)
         d.load_scale("gravy")
@@ -125,7 +142,7 @@ class Gravy:
 class Hydrophobicity:
     """Hydrophobicity using a selected scale.
 
-    Installation: ``pip install seqme[aaDescriptor]``
+    Installation: ``pip install seqme[aaDescriptors]``
     """
 
     def __init__(self, scale: Literal["eisenberg", "hopp-woods", "janin", "kytedoolittle"] = "eisenberg"):
@@ -146,7 +163,10 @@ class Hydrophobicity:
         Returns:
             Hydrophobicity score for each sequence.
         """
-        from modlamp.descriptors import PeptideDescriptor
+        try:
+            from modlamp.descriptors import PeptideDescriptor
+        except ModuleNotFoundError:
+            raise OptionalDependencyError("aaDescriptors") from None
 
         d = PeptideDescriptor(sequences)
         d.load_scale(self.scale)
@@ -157,7 +177,7 @@ class Hydrophobicity:
 class HydrophobicMoment:
     """Hydrophobic moment (i.e., amphiphilicity) for one or more peptide sequences using a sliding-window approach.
 
-    Installation: ``pip install seqme[aaDescriptor]``
+    Installation: ``pip install seqme[aaDescriptors]``
     """
 
     def __init__(
@@ -189,7 +209,10 @@ class HydrophobicMoment:
         Returns:
             hydrophobic moment for each sequence.
         """
-        from modlamp.descriptors import PeptideDescriptor
+        try:
+            from modlamp.descriptors import PeptideDescriptor
+        except ModuleNotFoundError:
+            raise OptionalDependencyError("aaDescriptors") from None
 
         d = PeptideDescriptor(sequences)
         d.load_scale(self.scale)
@@ -200,7 +223,7 @@ class HydrophobicMoment:
 class InstabilityIndex:
     """Instability index, predicting in vitro protein stability.
 
-    Installation: ``pip install seqme[aaDescriptor]``
+    Installation: ``pip install seqme[aaDescriptors]``
     """
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
@@ -212,7 +235,10 @@ class InstabilityIndex:
         Returns:
             Instability index for each sequence.
         """
-        from modlamp.descriptors import GlobalDescriptor
+        try:
+            from modlamp.descriptors import GlobalDescriptor
+        except ModuleNotFoundError:
+            raise OptionalDependencyError("aaDescriptors") from None
 
         d = GlobalDescriptor(sequences)
         d.instability_index()
@@ -220,7 +246,10 @@ class InstabilityIndex:
 
 
 class IsoelectricPoint:
-    """Isoelectric point of peptide sequences."""
+    """Isoelectric point of peptide sequences.
+
+    Installation: ``pip install seqme[aaDescriptors]``
+    """
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
         """Computes the isoelectric point of peptide sequences.
@@ -231,7 +260,10 @@ class IsoelectricPoint:
         Returns:
             Isoelectric point for each sequence.
         """
-        from modlamp.descriptors import GlobalDescriptor
+        try:
+            from modlamp.descriptors import GlobalDescriptor
+        except ModuleNotFoundError:
+            raise OptionalDependencyError("aaDescriptors") from None
 
         d = GlobalDescriptor(sequences)
         d.isoelectric_point()
@@ -241,7 +273,7 @@ class IsoelectricPoint:
 class ProteinWeight:
     """Molecular weight of protein/peptide sequences.
 
-    Installation: ``pip install seqme[aaDescriptor]``
+    Installation: ``pip install seqme[aaDescriptors]``
     """
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
@@ -253,7 +285,10 @@ class ProteinWeight:
         Returns:
             Molecular weight for each sequence.
         """
-        from modlamp.descriptors import GlobalDescriptor
+        try:
+            from modlamp.descriptors import GlobalDescriptor
+        except ModuleNotFoundError:
+            raise OptionalDependencyError("aaDescriptors") from None
 
         d = GlobalDescriptor(sequences)
         d.calculate_MW()

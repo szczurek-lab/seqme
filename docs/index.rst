@@ -7,7 +7,15 @@ seqme
 Quick start
 -----------
 
+Install seqme and the protein language model, ESM-2.
+
+.. code-block:: bash
+    pip install seqme[esm2]
+
+
 Let's compute a few metrics on example sequences.
+
+Run in a Jupyter notebook:
 
 .. code-block:: python
 
@@ -32,7 +40,7 @@ Let's compute a few metrics on example sequences.
     ]
 
     df = sm.compute_metrics(sequences, metrics)
-    sm.show_table(df)
+    sm.show_table(df) # Note: Will only display the table in a notebook.
 
 
 .. toctree::
@@ -49,7 +57,8 @@ Let's compute a few metrics on example sequences.
    :maxdepth: 1
    :hidden:
    :caption: About
-
+   
+   citing
    GitHub <https://github.com/szczurek-lab/seqme>
 
 

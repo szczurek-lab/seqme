@@ -2,6 +2,8 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
+from .exceptions import OptionalDependencyError
+
 
 class DNABert2:
     """
@@ -39,8 +41,11 @@ class DNABert2:
         self.device = device
         self.verbose = verbose
 
-        from transformers import AutoModel, AutoTokenizer
-        from transformers.utils import logging
+        try:
+            from transformers import AutoModel, AutoTokenizer
+            from transformers.utils import logging
+        except ModuleNotFoundError:
+            raise OptionalDependencyError("DNABert2") from None
 
         prev = logging.get_verbosity()
         logging.set_verbosity_error()

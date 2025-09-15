@@ -4,6 +4,8 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
+from .exceptions import OptionalDependencyError
+
 
 class RNA_FM:
     """
@@ -46,7 +48,10 @@ class RNA_FM:
         self.device = device
         self.verbose = verbose
 
-        import fm
+        try:
+            import fm
+        except ModuleNotFoundError:
+            raise OptionalDependencyError("RNA_FM") from None
 
         model, alphabet = fm.pretrained.rna_fm_t12() if self.model_name == "ncRNA" else fm.pretrained.mrna_fm_t12()
         batch_converter = alphabet.get_batch_converter()

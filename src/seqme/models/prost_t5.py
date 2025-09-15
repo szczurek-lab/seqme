@@ -2,6 +2,8 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
+from .exceptions import OptionalDependencyError
+
 
 class ProstT5:
     """
@@ -38,7 +40,10 @@ class ProstT5:
         self.device = device
         self.verbose = verbose
 
-        from transformers import T5EncoderModel, T5Tokenizer
+        try:
+            from transformers import T5EncoderModel, T5Tokenizer
+        except ModuleNotFoundError:
+            raise OptionalDependencyError("prostT5") from None
 
         self.tokenizer = T5Tokenizer.from_pretrained("Rostlab/ProstT5", do_lower_case=False, legacy=True)
         self.model = T5EncoderModel.from_pretrained("Rostlab/ProstT5").to(device)

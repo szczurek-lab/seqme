@@ -5,6 +5,8 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
+from .exceptions import OptionalDependencyError
+
 
 class Esm2Checkpoint(str, Enum):
     # protein checkpoints
@@ -60,8 +62,11 @@ class Esm2:
         self.device = device
         self.verbose = verbose
 
-        from transformers import AutoModelForMaskedLM, AutoTokenizer
-        from transformers.utils import logging
+        try:
+            from transformers import AutoModelForMaskedLM, AutoTokenizer
+            from transformers.utils import logging
+        except ModuleNotFoundError:
+            raise OptionalDependencyError("esm2") from None
 
         prev = logging.get_verbosity()
         logging.set_verbosity_error()
