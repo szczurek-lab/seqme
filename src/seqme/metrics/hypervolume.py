@@ -29,7 +29,7 @@ class Hypervolume(Metric):
             method: Which Hypervolume computation method to use ("standard" or "convex-hull").
             nadir: Worst acceptable value in each objective dimension.
             ideal: Best value in each objective dimension (used for normalizing points to [0;1]).
-            strict: If true, if values < nadir (or values > ideal) raise an exception.
+            strict: If true and values < nadir (or values > ideal) raise an exception.
             include_objective_count_in_name: Whether to append the number of objectives to the metric's name.
         """
         self.predictors = predictors

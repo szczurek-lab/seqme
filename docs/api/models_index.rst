@@ -10,6 +10,7 @@ Models
 
     seqme.models.Esm2
     seqme.models.ProstT5
+    seqme.models.RNA_FM
     seqme.models.DNABert2
     seqme.models.KmerFrequencyEmbedding
 
@@ -22,7 +23,7 @@ Models
     seqme.models.HydrophobicMoment
     seqme.models.InstabilityIndex
     seqme.models.IsoelectricPoint
-    seqme.models.MolecularWeight
+    seqme.models.ProteinWeight
 
 Miscellaneous
 -------------

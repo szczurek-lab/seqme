@@ -14,7 +14,7 @@ from seqme.models.physicochemical import (
     HydrophobicMoment,
     InstabilityIndex,
     IsoelectricPoint,
-    MolecularWeight,
+    ProteinWeight,
 )
 from seqme.models.prost_t5 import ProstT5
 from seqme.models.rna_fm import RNA_FM
@@ -32,7 +32,7 @@ __all__ = [
     "InstabilityIndex",
     "IsoelectricPoint",
     "HydrophobicMoment",
-    "MolecularWeight",
+    "ProteinWeight",
     "Esm2Checkpoint",
     "Esm2",
     "KmerFrequencyEmbedding",

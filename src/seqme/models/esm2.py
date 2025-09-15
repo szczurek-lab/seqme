@@ -26,10 +26,11 @@ class Esm2:
     Computes sequence-level embeddings by averaging token embeddings,
     excluding [CLS] and [EOS] tokens.
 
+    Installation: ``pip install seqme[esm2]``
+
     Reference:
         Lin et al., "Language models of protein sequences at the scale of evolution enable accurate structure prediction"
         (https://www.biorxiv.org/content/10.1101/2022.07.20.500902v3)
-
     """
 
     def __init__(

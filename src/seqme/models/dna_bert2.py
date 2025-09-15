@@ -9,6 +9,8 @@ class DNABert2:
 
     Computes sequence-level embeddings by averaging token embeddings.
 
+    Installation: ``pip install seqme[DNABert2]``
+
     Reference:
         Zhou et al., "DNABERT-2: Efficient Foundation Model and Benchmark For Multi-Species Genome"
         (https://arxiv.org/abs/2306.15006)

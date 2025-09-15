@@ -9,7 +9,13 @@ from seqme.core import Metric, MetricResult
 
 
 class ConformityScore(Metric):
-    """Conformity score similar to https://prescient-design.github.io/walk-jump/."""
+    """
+    Distributional conformity score.
+
+    Reference:
+        Frey et al., "Protein Discovery With Discrete Walk-jump Sampling" (2024).
+        (https://arxiv.org/abs/2306.12360)
+    """
 
     def __init__(
         self,

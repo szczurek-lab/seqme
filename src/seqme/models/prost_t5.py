@@ -9,6 +9,8 @@ class ProstT5:
 
     Computes sequence-level embeddings by averaging token embeddings.
 
+    Installation: ``pip install seqme[prostT5]``
+
     Reference:
         Heinzinger et al., "ProstT5: Bilingual Language Model for Protein Sequence and Structure"
         (https://www.biorxiv.org/content/10.1101/2023.07.23.550085v1)

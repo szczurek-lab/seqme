@@ -13,6 +13,8 @@ class RNA_FM:
         mRNA: Trained exclusively on 45 million mRNA coding sequences (CDS).
         ncRNA: Trained on 23+ million non-coding RNA (ncRNA) sequences.
 
+    Installation: ``pip install seqme[RNA_FM]``
+
     Reference:
         Chen et al., "Interpretable RNA Foundation Model from Unannotated Data for Highly Accurate RNA Structure and Function Predictions"
         (https://arxiv.org/pdf/2204.00300)
