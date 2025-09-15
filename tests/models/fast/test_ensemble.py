@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from seqme.models import Charge, Ensemble
+import seqme as sm
 
 
 def biased_model(model, offset: float):
@@ -11,7 +11,7 @@ def biased_model(model, offset: float):
 def test_ensemble_equal():
     sequences = ["KKK", "KKKK", "KKKKK"]
 
-    ensemble = Ensemble([Charge(), biased_model(Charge(), offset=1)])
+    ensemble = sm.models.Ensemble([sm.models.Charge(), biased_model(sm.models.Charge(), offset=1)])
     values = ensemble(sequences)
 
     assert values.shape == (3,)
@@ -21,7 +21,9 @@ def test_ensemble_equal():
 def test_ensemble_weighted():
     sequences = ["KKK", "KKKK", "KKKKK"]
 
-    ensemble = Ensemble([Charge(), biased_model(Charge(), offset=1)], importance_weights=[1, 2])
+    ensemble = sm.models.Ensemble(
+        [sm.models.Charge(), biased_model(sm.models.Charge(), offset=1)], importance_weights=[1, 2]
+    )
     values = ensemble(sequences)
 
     assert values.shape == (3,)

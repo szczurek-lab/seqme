@@ -3,6 +3,8 @@ import pytest
 
 from seqme.models import Esm2, Esm2Checkpoint
 
+pytest.importorskip("transformers")
+
 
 @pytest.fixture(scope="module")
 def esm():
