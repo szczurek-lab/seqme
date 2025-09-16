@@ -56,10 +56,7 @@ class RNA_FM:
         model, alphabet = fm.pretrained.rna_fm_t12() if self.model_name == "ncRNA" else fm.pretrained.mrna_fm_t12()
         batch_converter = alphabet.get_batch_converter()
 
-        model.to(device)
-        model.eval()
-
-        self.model = model
+        self.model = model.to(device).eval()
         self.batch_converter = batch_converter
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
@@ -82,7 +79,7 @@ class RNA_FM:
         if self.model_name == "mRNA":
             for sequence in sequences:
                 if len(sequence) % 3 != 0:
-                    raise ValueError(f"Found non-aligned sequence with {len(sequence)}) nucleotides.")
+                    raise ValueError(f"Found non-codon aligned sequence with {len(sequence)}) nucleotides.")
 
         embeddings = []
         with torch.inference_mode():
@@ -91,16 +88,28 @@ class RNA_FM:
                 disable=not self.verbose,
             ):
                 batch = sequences[i : i + self.batch_size]
-                name_batch = [("", b) for b in batch]
 
-                tokens = self.batch_converter(name_batch)[2].to(self.device)
+                named_batch = [("", b) for b in batch]
+                tokens = self.batch_converter(named_batch)[2].to(self.device)
 
                 results = self.model(tokens, repr_layers=[layer])
-                embeds = results["representations"][layer]
+                hidden_state = results["representations"][layer]
 
-                # @NOTE: the authors take the mean (including padding tokens):
-                # https://github.com/ml4bio/RNA-FM/blob/main/tutorials/rna_family-clustering_type-classification/rnafm-tutorial-code.ipynb
-                embed = torch.mean(embeds, dim=1)
+                counts = torch.from_numpy(
+                    np.array([len(s) // 3 if self.model_name == "mRNA" else len(s) for s in batch])
+                )
+                counts += 2  # Include BOS and EOS
+                max_len = int(counts.max())
+                attention_mask = torch.arange(max_len).expand(len(batch), max_len) < counts.unsqueeze(1)
+                mask = attention_mask.long()
+
+                batch_size = mask.size(0)
+                batch_indices = torch.arange(batch_size, device=mask.device)
+                mask[batch_indices, 0] = 0
+                mask[batch_indices, counts - 1] = 0
+                counts = counts - 2
+
+                embed = (hidden_state * mask.unsqueeze(-1)).sum(dim=-2) / counts.unsqueeze(-1)
                 embeddings.append(embed.cpu().numpy())
 
         return np.concatenate(embeddings)

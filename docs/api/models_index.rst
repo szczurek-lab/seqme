@@ -33,5 +33,3 @@ Miscellaneous
 
     seqme.models.ThirdPartyModel
     seqme.models.Ensemble
-    seqme.models.Concatenate
-    seqme.models.MinMaxNorm

@@ -13,7 +13,7 @@ def test_mean_on_overlap():
     sequences2 = {"my_model": ["KKW", "KKW"]}
     df2 = compute_metrics(sequences2, metrics)
 
-    df = combine_metric_dataframes([df1, df2], on_overlap="mean")
+    df = combine_metric_dataframes([df1, df2], on_overlap="mean,std")
     assert df.loc[("my_model", ("Uniqueness", "value"))] == 0.75
     assert df.loc[("my_model", ("Uniqueness", "deviation"))] == 0.25
 

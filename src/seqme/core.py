@@ -127,7 +127,11 @@ def compute_metrics(
     return df
 
 
-def combine_metric_dataframes(dfs: list[pd.DataFrame], *, on_overlap: Literal["fail", "mean"] = "fail") -> pd.DataFrame:
+def combine_metric_dataframes(
+    dfs: list[pd.DataFrame],
+    *,
+    on_overlap: Literal["fail", "mean,std"] = "fail",
+) -> pd.DataFrame:
     """Combine multiple DataFrames with metrics results into a single DataFrame.
 
     Args:
@@ -135,7 +139,7 @@ def combine_metric_dataframes(dfs: list[pd.DataFrame], *, on_overlap: Literal["f
         on_overlap: How to handle cells with multiple values.
 
             - "fail": raises an exception on overlap.
-            - "mean": sets the cell value to the mean and the deviation to the std of the values.
+            - "mean,std": sets the cell value to the mean and the deviation to the std of the values.
 
     Returns:
         A single DataFrame combining multiple metric dataframes.
@@ -191,7 +195,7 @@ def combine_metric_dataframes(dfs: list[pd.DataFrame], *, on_overlap: Literal["f
             if len(vs) > 1:
                 raise ValueError(f"Multiple values in cell: [{cell_name[0]}, {cell_name[1]}]")
             res[cell_name] = vs[0]
-    elif on_overlap == "mean":
+    elif on_overlap == "mean,std":
         for cell_name, vs in values.items():
             col_subname = cell_name[1][1]  # either "value" or "deviation"
             if col_subname == "value":

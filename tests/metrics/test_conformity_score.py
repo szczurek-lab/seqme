@@ -17,7 +17,7 @@ def test_conformity_score_match():
     reference = sequences[:1000]
     test = sequences[1000:]
 
-    metric = ConformityScore(reference=reference, descriptors=[Gravy()])
+    metric = ConformityScore(reference=reference, predictors=[Gravy()])
 
     assert metric.name == "Conformity score"
     assert metric.objective == "maximize"
@@ -33,7 +33,7 @@ def test_conformity_score_mismatch():
     reference = generate_sequences_from_aas(neg_kd, 1000)
     test = generate_sequences_from_aas(pos_kd, 100)
 
-    metric = ConformityScore(reference=reference, descriptors=[Gravy()], reference_name="ref")
+    metric = ConformityScore(reference=reference, predictors=[Gravy()], reference_name="ref")
 
     assert metric.name == "Conformity score (ref)"
     assert metric.objective == "maximize"
@@ -48,4 +48,4 @@ def test_one_split():
     reference = generate_sequences_from_aas(neg_kd, 1000)
 
     with pytest.raises(ValueError, match=r"Number of cross-validation folds for KDE \(n_splits\) must be at least 2."):
-        ConformityScore(reference=reference, descriptors=[Gravy()], n_splits=1)
+        ConformityScore(reference=reference, predictors=[Gravy()], n_splits=1)

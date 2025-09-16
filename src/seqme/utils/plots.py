@@ -216,10 +216,10 @@ def plot_violin(
 
 
 def plot_2d_embeddings(
-    projections: np.ndarray | list[np.ndarray],
+    embeddings: np.ndarray | list[np.ndarray],
     *,
-    groups_or_values: (str | np.ndarray) | (list[str] | list[np.ndarray]) | None = None,
-    group_colors: str | list[str] | None = None,
+    values: (str | np.ndarray) | (list[str] | list[np.ndarray]) | None = None,
+    colors: str | list[str] | None = None,
     cmap: str | None = None,
     title: str | None = None,
     xlabel: str = "dim1",
@@ -236,9 +236,9 @@ def plot_2d_embeddings(
     """Plot projections for one or more groups.
 
     Args:
-        projections: Groups of arrays, each containing 2d embeddings.
-        groups_or_values: Either group names or values for each individual embedding.
-        group_colors: Colors for each group of points.
+        embeddings: Groups of arrays, each containing 2d embeddings.
+        values: Either group names or values for each individual embedding.
+        colors: Colors for each group of points.
         cmap: Colors used for values.
         title: Optional plot title.
         ax: Optional matplotlib Axes to plot on.
@@ -254,20 +254,20 @@ def plot_2d_embeddings(
     """
     # try making the parameters lists then parse those normally.
 
-    if isinstance(projections, np.ndarray):
-        projections = [projections]
+    if isinstance(embeddings, np.ndarray):
+        embeddings = [embeddings]
 
-    if isinstance(groups_or_values, str) or isinstance(groups_or_values, np.ndarray):
-        groups_or_values = [groups_or_values]  # type: ignore
+    if isinstance(values, str) or isinstance(values, np.ndarray):
+        values = [values]  # type: ignore
 
-    if isinstance(group_colors, str):
-        group_colors = [group_colors]
+    if isinstance(colors, str):
+        colors = [colors]
 
-    projections = list(projections)
-    groups_or_values = list(groups_or_values) if groups_or_values else None  # type: ignore
-    group_colors = list(group_colors) if group_colors else None
+    embeddings = list(embeddings)
+    values = list(values) if values else None  # type: ignore
+    colors = list(colors) if colors else None
 
-    for projection in projections:
+    for projection in embeddings:
         if projection.ndim != 2:
             raise ValueError(
                 f"All projection groups should have two dimensions [embeddings, 2], but a group has {projection.ndim} dimensions."
@@ -280,10 +280,10 @@ def plot_2d_embeddings(
         _, ax = plt.subplots(figsize=figsize)
         created_fig = True
 
-    if groups_or_values:
-        if isinstance(groups_or_values[0], np.ndarray):
-            group = np.vstack(projections)
-            c = np.vstack(groups_or_values)
+    if values:
+        if isinstance(values[0], np.ndarray):
+            group = np.vstack(embeddings)
+            c = np.vstack(values)
             sc = ax.scatter(
                 group[:, 0],
                 group[:, 1],
@@ -296,23 +296,23 @@ def plot_2d_embeddings(
             )
             ax.figure.colorbar(sc, ax=ax)
         else:
-            if len(groups_or_values) != len(projections):
+            if len(values) != len(embeddings):
                 raise ValueError(
-                    f"'group_or_values' has {len(groups_or_values)} groups (elements). 'projections' has {len(projections)} list elements. Required the same sizes."
+                    f"'group_or_values' has {len(values)} groups (elements). 'projections' has {len(embeddings)} list elements. Required the same sizes."
                 )
 
-            if group_colors:
-                if len(group_colors) != len(groups_or_values):
+            if colors:
+                if len(colors) != len(values):
                     raise ValueError(
-                        f"'group_colors' has {len(group_colors)} list elements. 'group_or_values' has {len(groups_or_values)} list elements. Required the same sizes."
+                        f"'group_colors' has {len(colors)} list elements. 'group_or_values' has {len(values)} list elements. Required the same sizes."
                     )
 
-            for i, group in enumerate(projections):
+            for i, group in enumerate(embeddings):
                 ax.scatter(
                     group[:, 0],
                     group[:, 1],
-                    label=groups_or_values[i],
-                    c=group_colors[i] if group_colors else None,
+                    label=values[i],
+                    c=colors[i] if colors else None,
                     s=point_size,
                     alpha=alpha,
                     edgecolor="black",
@@ -327,11 +327,11 @@ def plot_2d_embeddings(
                             lh.set_sizes([legend_point_size])  # type: ignore
                             lh.set_alpha(1.0)
     else:
-        for i, group in enumerate(projections):
+        for i, group in enumerate(embeddings):
             ax.scatter(
                 group[:, 0],
                 group[:, 1],
-                c=group_colors[i] if group_colors else None,
+                c=colors[i] if colors else None,
                 s=point_size,
                 alpha=alpha,
                 edgecolor="black",

@@ -20,7 +20,7 @@ class ConformityScore(Metric):
     def __init__(
         self,
         reference: list[str],
-        descriptors: list[Callable[[list[str]], np.ndarray]],
+        predictors: list[Callable[[list[str]], np.ndarray]],
         *,
         n_splits: int = 5,
         kde_bandwidth: float | Literal["scott", "silverman"] = "silverman",
@@ -33,7 +33,7 @@ class ConformityScore(Metric):
         Args:
             reference: Reference sequences assumed to represent the
                 target distribution.
-            descriptors: A list of descriptor functions. Each should
+            predictors: A list of descriptor functions. Each should
                 take a list of sequences and return a 1D NumPy array of features.
             n_splits: Number of cross-validation folds for KDE.
             kde_bandwidth: Bandwidth parameter for the Gaussian KDE.
@@ -44,7 +44,7 @@ class ConformityScore(Metric):
             raise ValueError("Number of cross-validation folds for KDE (n_splits) must be at least 2.")
 
         self.reference = reference
-        self.descriptors = descriptors
+        self.predictors = predictors
         self.reference_name = reference_name
 
         reference_arr = self._sequences_to_descriptors(self.reference)  # (n_ref, n_descs)
@@ -76,7 +76,7 @@ class ConformityScore(Metric):
         )
 
     def _sequences_to_descriptors(self, sequences: list[str]) -> np.ndarray:
-        return np.stack([desc_func(sequences) for desc_func in self.descriptors], axis=1)
+        return np.stack([desc_func(sequences) for desc_func in self.predictors], axis=1)
 
     def _fit_and_score_reference(
         self,

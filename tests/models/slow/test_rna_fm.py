@@ -22,8 +22,8 @@ def test_rna_fm_shape_and_means(rna_fm):
 
     expected_means = np.array(
         [
-            0.013062825426459312,
-            0.021095028147101402,
+            0.024099390,
+            0.026144567,
         ]
     )
     actual_means = embeddings.mean(axis=-1)

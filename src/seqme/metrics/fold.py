@@ -15,7 +15,7 @@ class Fold(Metric):
         self,
         metric: Metric,
         *,
-        deviation: Literal["standard-error", "standard-deviation", "variance"] = "standard-error",
+        deviation: Literal["se", "std", "var"] = "se",
         n_splits: int | None = None,
         split_size: int | None = None,
         drop_last: bool = False,
@@ -28,7 +28,12 @@ class Fold(Metric):
 
         Args:
             metric: The underlying metric to evaluate per fold.
-            deviation: Type of deviation to compute.
+            deviation: Type of deviation to compute:
+
+                - ``se``: Standard error
+                - ``std``: Standard deviation
+                - ``var``: Variance
+
             n_splits: Number of folds to create (exclusive with split_size).
             split_size: Fixed size for each fold (exclusive with n_splits).
             drop_last: Drop final fold if smaller than split_size.
@@ -95,11 +100,11 @@ class Fold(Metric):
         values = np.array([result.value for result in results], float)
 
         if len(results) > 1:
-            if self.deviation == "standard-deviation":
+            if self.deviation == "std":
                 deviation = float(values.std(ddof=0))
-            elif self.deviation == "variance":
+            elif self.deviation == "var":
                 deviation = float(values.var(ddof=0))
-            elif self.deviation == "standard-error":
+            elif self.deviation == "se":
                 deviation = float(values.std(ddof=0)) / (len(values) ** 0.5)
             else:
                 raise ValueError(f"invalid deviation: {self.deviation}")
