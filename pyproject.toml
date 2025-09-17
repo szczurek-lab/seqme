@@ -61,7 +61,7 @@ prostT5 = ["transformers", "sentencepiece"]
 aaDescriptors = ["modlamp"]
 
 # RNA
-RNA-fm = ["rna-fm"]
+RNA_FM = ["rna-fm"]
 
 
 # DNA
