@@ -242,7 +242,7 @@ def compute_recall(
         col_batch_size=col_batch_size,
         device=device,
     )
-    return eval_manifold.evaluate(reference_embeddings).mean()
+    return eval_manifold.evaluate(reference_embeddings).mean().item()
 
 
 def compute_precision(
@@ -276,7 +276,7 @@ def compute_precision(
         col_batch_size=col_batch_size,
         device=device,
     )
-    return reference_manifold.evaluate(eval_embeddings).mean()
+    return reference_manifold.evaluate(eval_embeddings).mean().item()
 
 
 class ManifoldEstimator:

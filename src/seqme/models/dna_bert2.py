@@ -43,15 +43,11 @@ class DNABert2:
 
         try:
             from transformers import AutoModel, AutoTokenizer
-            from transformers.utils import logging
         except ModuleNotFoundError:
             raise OptionalDependencyError("DNABert2") from None
 
-        prev = logging.get_verbosity()
-        logging.set_verbosity_error()
         self.tokenizer = AutoTokenizer.from_pretrained("zhihan1996/DNABERT-2-117M", trust_remote_code=True)
         self.model = AutoModel.from_pretrained("zhihan1996/DNABERT-2-117M", trust_remote_code=True)
-        logging.set_verbosity(prev)
 
         self.model.to(device)
         self.model.eval()
@@ -85,10 +81,10 @@ class DNABert2:
 
                 hidden_state = self.model(**tokens)[0]
 
-                counts = tokens["attention_mask"].sum(dim=-1)
-                mask = tokens["attention_mask"]
+                lengths = [len(s) for s in batch]
+                means = [hidden_state[i, :length].mean(dim=-2) for i, length in enumerate(lengths)]
+                embed = torch.stack(means, dim=0)
 
-                embed = (hidden_state * mask.unsqueeze(-1)).sum(dim=-2) / counts.unsqueeze(-1)
                 embeddings.append(embed.cpu().numpy())
 
         return np.concatenate(embeddings)

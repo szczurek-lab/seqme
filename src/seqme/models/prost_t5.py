@@ -73,10 +73,10 @@ class ProstT5:
                 disable=not self.verbose,
             ):
                 batch = sequences[i : i + self.batch_size]
-                batch = ["<AA2fold> " + " ".join(sequence) for sequence in batch]
+                prefixed_batch = ["<AA2fold> " + " ".join(sequence) for sequence in batch]
 
                 tokens = self.tokenizer.batch_encode_plus(
-                    batch,
+                    prefixed_batch,
                     add_special_tokens=True,
                     padding="longest",
                     return_tensors="pt",
@@ -86,10 +86,10 @@ class ProstT5:
                     tokens["input_ids"], attention_mask=tokens["attention_mask"]
                 ).last_hidden_state
 
-                counts = tokens["attention_mask"].sum(dim=-1)
-                mask = tokens["attention_mask"]
+                lengths = [len(s) for s in batch]
+                means = [hidden_state[i, 1 : length + 1].mean(dim=-2) for i, length in enumerate(lengths)]
+                embed = torch.stack(means, dim=0)
 
-                embed = (hidden_state * mask.unsqueeze(-1)).sum(dim=-2) / counts.unsqueeze(-1)
                 embeddings.append(embed.cpu().numpy())
 
         return np.concatenate(embeddings)

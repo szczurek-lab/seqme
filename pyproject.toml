@@ -85,12 +85,9 @@ doc = [
 dev = [
     "mypy",
     "nbstripout",
-    "pandas-stubs",
     "pre-commit>=3.0.0",
     "pytest",
     "ruff",
-    "scipy-stubs",
-    "types-tqdm",
     "ipykernel",
     "ipywidgets",
 ]

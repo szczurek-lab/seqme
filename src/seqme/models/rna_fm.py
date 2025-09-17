@@ -95,21 +95,10 @@ class RNA_FM:
                 results = self.model(tokens, repr_layers=[layer])
                 hidden_state = results["representations"][layer]
 
-                counts = torch.from_numpy(
-                    np.array([len(s) // 3 if self.model_name == "mRNA" else len(s) for s in batch])
-                )
-                counts += 2  # Include BOS and EOS
-                max_len = int(counts.max())
-                attention_mask = torch.arange(max_len).expand(len(batch), max_len) < counts.unsqueeze(1)
-                mask = attention_mask.long()
+                lengths = [len(s) // 3 if self.model_name == "mRNA" else len(s) for s in batch]
+                means = [hidden_state[i, :length].mean(dim=-2) for i, length in enumerate(lengths)]
+                embed = torch.stack(means, dim=0)
 
-                batch_size = mask.size(0)
-                batch_indices = torch.arange(batch_size, device=mask.device)
-                mask[batch_indices, 0] = 0
-                mask[batch_indices, counts - 1] = 0
-                counts = counts - 2
-
-                embed = (hidden_state * mask.unsqueeze(-1)).sum(dim=-2) / counts.unsqueeze(-1)
                 embeddings.append(embed.cpu().numpy())
 
         return np.concatenate(embeddings)
