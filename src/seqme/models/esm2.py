@@ -64,15 +64,11 @@ class Esm2:
 
         try:
             from transformers import AutoModelForMaskedLM, AutoTokenizer
-            from transformers.utils import logging
         except ModuleNotFoundError:
             raise OptionalDependencyError("esm2") from None
 
-        prev = logging.get_verbosity()
-        logging.set_verbosity_error()
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.model = AutoModelForMaskedLM.from_pretrained(model_name)
-        logging.set_verbosity(prev)
 
         self.model.to(device)
         self.model.eval()
@@ -105,16 +101,10 @@ class Esm2:
                 tokens = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in tokens.items()}
                 hidden_state = self.model(**tokens, output_hidden_states=True).hidden_states[layer]
 
-                counts = tokens["attention_mask"].sum(dim=-1)
-                mask = tokens["attention_mask"]
+                lengths = [len(s) for s in batch]
+                means = [hidden_state[i, 1 : length + 1].mean(dim=-2) for i, length in enumerate(lengths)]
+                embed = torch.stack(means, dim=0)
 
-                batch_size = mask.size(0)
-                batch_indices = torch.arange(batch_size, device=mask.device)
-                mask[batch_indices, 0] = 0
-                mask[batch_indices, counts - 1] = 0
-                counts = counts - 2
-
-                embed = (hidden_state * mask.unsqueeze(-1)).sum(dim=-2) / counts.unsqueeze(-1)
                 embeddings.append(embed.cpu().numpy())
 
         return np.concatenate(embeddings)

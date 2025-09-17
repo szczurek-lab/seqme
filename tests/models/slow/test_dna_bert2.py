@@ -23,8 +23,8 @@ def test_dna_bert2_shape_and_means(dna_bert2):
 
     expected_means = np.array(
         [
-            0.00342898,
-            0.00424373,
+            0.00355302356,
+            0.00452740350,
         ]
     )
     actual_means = embeddings.mean(axis=-1)

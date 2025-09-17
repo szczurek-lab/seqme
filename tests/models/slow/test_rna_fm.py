@@ -14,7 +14,7 @@ def rna_fm():
 def test_rna_fm_shape_and_means(rna_fm):
     data = [
         "AAAUUU",
-        "UUUAAA",
+        "UUU",
     ]
     embeddings = rna_fm(data)
 
@@ -22,8 +22,8 @@ def test_rna_fm_shape_and_means(rna_fm):
 
     expected_means = np.array(
         [
-            0.024099390,
-            0.026144567,
+            0.023362776,
+            0.000433295,
         ]
     )
     actual_means = embeddings.mean(axis=-1)

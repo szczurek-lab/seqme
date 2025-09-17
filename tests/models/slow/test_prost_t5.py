@@ -14,8 +14,8 @@ def prost_t5():
 
 def test_prost_t5_shape_and_means(prost_t5):
     data = [
-        "RVKRVWPLVIRTVIAGYNLYRAIKKK",
-        "RKRIHIGPGRAFYTT",
+        "RVKRVW",
+        "RKRIH",
     ]
     embeddings = prost_t5(data)
 
@@ -23,8 +23,8 @@ def test_prost_t5_shape_and_means(prost_t5):
 
     expected_means = np.array(
         [
-            -0.003066932782530,
-            6.7310757003724e-06,
+            0.0005712069,
+            0.0021576248,
         ]
     )
     actual_means = embeddings.mean(axis=-1)

@@ -61,7 +61,7 @@ prostT5 = ["transformers", "sentencepiece"]
 aaDescriptors = ["modlamp"]
 
 # RNA
-RNA_FM = ["rna-fm"]
+RNA-fm = ["rna-fm"]
 
 
 # DNA
@@ -85,12 +85,9 @@ doc = [
 dev = [
     "mypy",
     "nbstripout",
-    "pandas-stubs",
     "pre-commit>=3.0.0",
     "pytest",
     "ruff",
-    "scipy-stubs",
-    "types-tqdm",
     "ipykernel",
     "ipywidgets",
 ]
