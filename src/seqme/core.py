@@ -484,15 +484,15 @@ def show_table(
         hline_level = 1 if df.index.nlevels > 1 else 0
 
     if hline_level > 0:
-        level0_values = [idx[:hline_level] for idx in df.index]
-        changed_rows = []
+        level_names = [idx[:hline_level] for idx in df.index]
+        changing_rows = []
         prev = None
-        for i, v in enumerate(level0_values):
+        for i, v in enumerate(level_names):
             if i != 0 and v != prev:
-                changed_rows.append(i)  # i is 0-based index into dataframe rows
+                changing_rows.append(i)  # i is 0-based index into dataframe rows
             prev = v
 
-        for row_idx in changed_rows:
+        for row_idx in changing_rows:
             nth_child = row_idx + 1  # add CSS using tbody nth-child (nth-child is 1-based, so add 1)
             selector = f"tbody tr:nth-child({nth_child}) td, tbody tr:nth-child({nth_child}) th"
             table_styles.append({"selector": selector, "props": [("border-top", "1px solid #ccc")]})
