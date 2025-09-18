@@ -223,13 +223,14 @@ def combine_metric_dataframes(
     return combined_df
 
 
-def sort(df: pd.DataFrame, metric: str, *, level: int = 0) -> pd.DataFrame:
+def sort(df: pd.DataFrame, metric: str, *, level: int = 0, order: Literal["best", "worst"] = "best") -> pd.DataFrame:
     """Sort metric dataframe by metric value.
 
     Args:
         df: Metric Dataframe.
         metric: Metric to consider when sorting.
         level: The tuple index names level to considers as a group.
+        order: Which sequences to be first after sorting.
 
     Returns:
         Sorted metric dataframe.
@@ -249,8 +250,10 @@ def sort(df: pd.DataFrame, metric: str, *, level: int = 0) -> pd.DataFrame:
         groups[level_index].append(index)
 
     def sort_df(df: pd.DataFrame, metric: str) -> pd.DataFrame:
-        objective = df.attrs["objective"][metric]
-        return df.sort_values(by=(metric, "value"), ascending=(objective == "minimize"))
+        ascending = df.attrs["objective"][metric] == "minimize"
+        if order == "worst":
+            ascending = not ascending
+        return df.sort_values(by=(metric, "value"), ascending=ascending)
 
     dfs_sorted = []
     for group_items in groups.values():
@@ -312,7 +315,7 @@ def top_k(
     top_k_indices = set(df_combined.index)
     ordered_index = [index for index in df.index if index in top_k_indices]
 
-    return df.loc[ordered_index]
+    return df_combined.loc[ordered_index]
 
 
 def show_table(
@@ -324,6 +327,7 @@ def show_table(
     notation: Literal["decimals", "exponent"] | list[Literal["decimals", "exponent"]] = "decimals",
     missing_value: str = "-",
     show_arrow: bool = True,
+    hline_level: int | None = None,
     caption: str | None = None,
 ) -> Styler:
     """Visualize a table of a metric dataframe.
@@ -343,6 +347,7 @@ def show_table(
         notation: Whether to use scientific notation (exponent) or fixed-point notation (decimals).
         missing_value: str to show for cells with no metric value, i.e., cells with NaN values.
         show_arrow: Whether to include the objective arrow in the column names.
+        hline_level: When to add horizontal lines seperaing model names. If None, add horizontal lines at the first level if more than 1 level.
         caption: Bottom caption text.
 
     Returns:
@@ -474,6 +479,23 @@ def show_table(
         {"selector": "td", "props": [("border-right", "1px solid #ccc")]},
         {"selector": "th.row_heading", "props": [("border-right", "1px solid #ccc")]},
     ]
+
+    if hline_level is None:
+        hline_level = 1 if df.index.nlevels > 1 else 0
+
+    if hline_level > 0:
+        level0_values = [idx[:hline_level] for idx in df.index]
+        changed_rows = []
+        prev = None
+        for i, v in enumerate(level0_values):
+            if i != 0 and v != prev:
+                changed_rows.append(i)  # i is 0-based index into dataframe rows
+            prev = v
+
+        for row_idx in changed_rows:
+            nth_child = row_idx + 1  # add CSS using tbody nth-child (nth-child is 1-based, so add 1)
+            selector = f"tbody tr:nth-child({nth_child}) td, tbody tr:nth-child({nth_child}) th"
+            table_styles.append({"selector": selector, "props": [("border-top", "1px solid #ccc")]})
 
     if caption:
         styler = styler.set_caption(caption)
