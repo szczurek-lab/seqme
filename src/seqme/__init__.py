@@ -8,7 +8,9 @@ from seqme.core import (
     compute_metrics,
     plot_series,
     show_table,
+    sort,
     to_latex,
+    top_k,
 )
 
 __all__ = [
@@ -24,4 +26,6 @@ __all__ = [
     "metrics",
     "models",
     "utils",
+    "sort",
+    "top_k",
 ]

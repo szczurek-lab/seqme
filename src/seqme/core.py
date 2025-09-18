@@ -229,10 +229,10 @@ def sort(df: pd.DataFrame, metric: str, *, level: int = 0) -> pd.DataFrame:
     Args:
         df: Metric Dataframe.
         metric: Metric to consider when sorting.
-        level: The model tuple name level to considers as a group.
+        level: The tuple index names level to considers as a group.
 
     Returns:
-        A subset of the metric dataframe with the top K rows.
+        Sorted metric dataframe.
     """
     if metric not in df.columns.get_level_values(0):
         raise ValueError(f"'{metric}' is not a column in the DataFrame.")
@@ -269,17 +269,17 @@ def top_k(
     level: int = 0,
     keep: Literal["first", "last", "all"] = "all",
 ) -> pd.DataFrame:
-    """Extract top-K rows of the metric dataframe.
+    """Extract top k rows of the metric dataframe based on a metrics values.
 
     Args:
         df: Metric Dataframe.
-        metric: Metric to consider when select top-K.
+        metric: Metric to consider when selecting top k rows.
         k: Number of rows to extract.
-        level: The model tuple name level to considers as a group.
+        level: The tuple index names level to considers as a group.
         keep: Which entry to keep if multiple are equally good.
 
     Returns:
-        A subset of the metric dataframe with the top K rows.
+        A subset of the metric dataframe with the top k rows.
     """
     if metric not in df.columns.get_level_values(0):
         raise ValueError(f"'{metric}' is not a column in the DataFrame.")
