@@ -223,6 +223,98 @@ def combine_metric_dataframes(
     return combined_df
 
 
+def sort(df: pd.DataFrame, metric: str, *, level: int = 0) -> pd.DataFrame:
+    """Sort metric dataframe by metric value.
+
+    Args:
+        df: Metric Dataframe.
+        metric: Metric to consider when sorting.
+        level: The model tuple name level to considers as a group.
+
+    Returns:
+        A subset of the metric dataframe with the top K rows.
+    """
+    if metric not in df.columns.get_level_values(0):
+        raise ValueError(f"'{metric}' is not a column in the DataFrame.")
+
+    if level >= df.index.nlevels or level < 0:
+        raise ValueError(f"Level should be in range [0;{df.index.nlevels - 1}].")
+
+    if "objective" not in df.attrs:
+        raise ValueError("The DataFrame must have an 'objective' attribute.")
+
+    groups = defaultdict(list)
+    for index in df.index:
+        level_index = index[:level]
+        groups[level_index].append(index)
+
+    def sort_df(df: pd.DataFrame, metric: str) -> pd.DataFrame:
+        objective = df.attrs["objective"][metric]
+        return df.sort_values(by=(metric, "value"), ascending=(objective == "minimize"))
+
+    dfs_sorted = []
+    for group_items in groups.values():
+        df_sub = df.loc[group_items]
+        df_sub_sorted = sort_df(df_sub, metric)
+        dfs_sorted.append(df_sub_sorted)
+
+    return pd.concat(dfs_sorted)
+
+
+def top_k(
+    df: pd.DataFrame,
+    metric: str,
+    k: int,
+    *,
+    level: int = 0,
+    keep: Literal["first", "last", "all"] = "all",
+) -> pd.DataFrame:
+    """Extract top-K rows of the metric dataframe.
+
+    Args:
+        df: Metric Dataframe.
+        metric: Metric to consider when select top-K.
+        k: Number of rows to extract.
+        level: The model tuple name level to considers as a group.
+        keep: Which entry to keep if multiple are equally good.
+
+    Returns:
+        A subset of the metric dataframe with the top K rows.
+    """
+    if metric not in df.columns.get_level_values(0):
+        raise ValueError(f"'{metric}' is not a column in the DataFrame.")
+
+    if level >= df.index.nlevels or level < 0:
+        raise ValueError(f"Level should be in range [0;{df.index.nlevels - 1}].")
+
+    if "objective" not in df.attrs:
+        raise ValueError("The DataFrame must have an 'objective' attribute.")
+
+    groups = defaultdict(list)
+    for index in df.index:
+        level_index = index[:level]
+        groups[level_index].append(index)
+
+    def get_best(df: pd.DataFrame, metric: str, k: int, keep: str) -> pd.DataFrame:
+        if df.attrs["objective"][metric] == "minimize":
+            return df.nsmallest(k, columns=(metric, "value"), keep=keep)  # type: ignore
+        return df.nlargest(k, columns=(metric, "value"), keep=keep)  # type: ignore
+
+    dfs_bests = []
+    for group_items in groups.values():
+        df_sub = df.loc[group_items]
+        df_sub_best = get_best(df_sub, metric, k, keep)
+        dfs_bests.append(df_sub_best)
+
+    df_combined = pd.concat(dfs_bests)
+
+    # keep the original index order
+    top_k_indices = set(df_combined.index)
+    ordered_index = [index for index in df.index if index in top_k_indices]
+
+    return df.loc[ordered_index]
+
+
 def show_table(
     df: pd.DataFrame,
     *,
