@@ -1,0 +1,27 @@
+import torch
+
+from pepme.random_sampler import RandomAASeqSampler
+
+
+def test_Random():
+    reference = [
+        "RVKRVWPLVIRTVIAGYNLYRAIKKK",
+        "RKRIHIGPGRAFYTT",
+        "DSHAKRHHGYKRKFHEKHHSHRGY",
+        "ENREVPPGFTALIKTLRKCKII",
+        "NLVSGLIEARKYLEQLHRKLKNCKV",
+        "FLPKTLRKFFARIRGGRAAVLNALGKEEQIGRASNSGRKCARKKK",
+        "VTCDILSVEAKGVKLNDAACAAHCLFRGRSGGYCNGKRVCVCR",
+        "VTC",
+        "DAACAAHCLFRGRSGGYCNGKRVCVCR",
+        "ALWKTLLKKVLKAAAKAALKAVLVGANA",
+    ]
+
+    torch.manual_seed(0)
+    ret = RandomAASeqSampler.from_reference(reference).sample(4)
+    assert ret == [
+        "GHVLAKIVLATILKGHKGRAKAAGNKHGKVTEATHLKRNLAIDRQ",
+        "SNKKCNLAYRAARVQAVLDRHHHLYRKK",
+        "VTVKLLVLAALAKLFERGVVVGAVC",
+        "GAICTCDKGIAVGRTIHKWGRSRSKARRGVISKRKNTAVNGGRAK",
+    ]
