@@ -272,17 +272,17 @@ def top_k(
     level: int = 0,
     keep: Literal["first", "last", "all"] = "all",
 ) -> pd.DataFrame:
-    """Extract top k rows of the metric dataframe based on a metrics values.
+    """Extract top-k rows of the metric dataframe based on a metrics values.
 
     Args:
         df: Metric Dataframe.
-        metric: Metric to consider when selecting top k rows.
+        metric: Metric to consider when selecting top-k rows.
         k: Number of rows to extract.
         level: The tuple index names level to considers as a group.
         keep: Which entry to keep if multiple are equally good.
 
     Returns:
-        A subset of the metric dataframe with the top k rows.
+        A subset of the metric dataframe with the top-k rows.
     """
     if metric not in df.columns.get_level_values(0):
         raise ValueError(f"'{metric}' is not a column in the DataFrame.")
@@ -421,7 +421,7 @@ def show_table(
     def decorate_gradient(idx: int, metric: str) -> str:
         def gradient_lerp(hex_color1: str, hex_color2: str, t: float) -> str:
             cmap = mpl.colors.LinearSegmentedColormap.from_list(None, [hex_color1, hex_color2])
-            return mpl.colors.to_hex(cmap(t))
+            return mpl.colors.to_hex(cmap(t), keep_alpha=True)
 
         fmts = []
         if color:
@@ -431,7 +431,7 @@ def show_table(
             min_value, max_value = values.min(), values.max()
 
             frac = _fraction(val, min_value, max_value, objective)
-            gradient = gradient_lerp("#ffffff", color, frac)
+            gradient = gradient_lerp(f"{color}00", f"{color}ff", frac)
             fmts += [f"background-color:{gradient}"]
 
         if idx in best_indices[metric]:
@@ -482,6 +482,9 @@ def show_table(
 
     if hline_level is None:
         hline_level = 1 if df.index.nlevels > 1 else 0
+
+    if hline_level > df.index.nlevels or hline_level < 0:
+        raise ValueError(f"Level should be in range [0;{df.index.nlevels}].")
 
     if hline_level > 0:
         level_names = [idx[:hline_level] for idx in df.index]
