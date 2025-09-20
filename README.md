@@ -18,7 +18,7 @@ $ pip install seqme
 ```
 
 To also install domain-specific models, add extras specifiers.
-Read the [docs](https://seqme.readthedocs.io/en/latest/api/models_index.html) for more information on the supported models.
+Read the [docs](https://seqme.readthedocs.io/en/stable/api/models_index.html) for more information on the supported models.
 
 ## Quick start
 
@@ -55,7 +55,7 @@ df = sm.compute_metrics(sequences, metrics)
 sm.show_table(df) # Note: Will only display the table in a notebook.
 ```
 
-Read the [docs](https://seqme.readthedocs.io/en/latest/tutorials/index.html) for more tutorials and examples.
+Read the [docs](https://seqme.readthedocs.io/en/stable/tutorials/index.html) for more tutorials and examples.
 
 ## Citation
 
