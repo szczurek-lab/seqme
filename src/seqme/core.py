@@ -223,6 +223,101 @@ def combine_metric_dataframes(
     return combined_df
 
 
+def sort(df: pd.DataFrame, metric: str, *, level: int = 0, order: Literal["best", "worst"] = "best") -> pd.DataFrame:
+    """Sort metric dataframe by metric value.
+
+    Args:
+        df: Metric Dataframe.
+        metric: Metric to consider when sorting.
+        level: The tuple index names level to considers as a group.
+        order: Which sequences to be first after sorting.
+
+    Returns:
+        Sorted metric dataframe.
+    """
+    if metric not in df.columns.get_level_values(0):
+        raise ValueError(f"'{metric}' is not a column in the DataFrame.")
+
+    if level >= df.index.nlevels or level < 0:
+        raise ValueError(f"Level should be in range [0;{df.index.nlevels - 1}].")
+
+    if "objective" not in df.attrs:
+        raise ValueError("The DataFrame must have an 'objective' attribute.")
+
+    groups = defaultdict(list)
+    for index in df.index:
+        level_index = index[:level]
+        groups[level_index].append(index)
+
+    def sort_df(df: pd.DataFrame, metric: str) -> pd.DataFrame:
+        ascending = df.attrs["objective"][metric] == "minimize"
+        if order == "worst":
+            ascending = not ascending
+        return df.sort_values(by=(metric, "value"), ascending=ascending)
+
+    dfs_sorted = []
+    for group_items in groups.values():
+        df_sub = df.loc[group_items]
+        df_sub_sorted = sort_df(df_sub, metric)
+        dfs_sorted.append(df_sub_sorted)
+
+    return pd.concat(dfs_sorted)
+
+
+def top_k(
+    df: pd.DataFrame,
+    metric: str,
+    k: int,
+    *,
+    level: int = 0,
+    keep: Literal["first", "last", "all"] = "all",
+) -> pd.DataFrame:
+    """Extract top-k rows of the metric dataframe based on a metrics values.
+
+    Args:
+        df: Metric Dataframe.
+        metric: Metric to consider when selecting top-k rows.
+        k: Number of rows to extract.
+        level: The tuple index names level to considers as a group.
+        keep: Which entry to keep if multiple are equally good.
+
+    Returns:
+        A subset of the metric dataframe with the top-k rows.
+    """
+    if metric not in df.columns.get_level_values(0):
+        raise ValueError(f"'{metric}' is not a column in the DataFrame.")
+
+    if level >= df.index.nlevels or level < 0:
+        raise ValueError(f"Level should be in range [0;{df.index.nlevels - 1}].")
+
+    if "objective" not in df.attrs:
+        raise ValueError("The DataFrame must have an 'objective' attribute.")
+
+    groups = defaultdict(list)
+    for index in df.index:
+        level_index = index[:level]
+        groups[level_index].append(index)
+
+    def get_best(df: pd.DataFrame, metric: str, k: int, keep: str) -> pd.DataFrame:
+        if df.attrs["objective"][metric] == "minimize":
+            return df.nsmallest(k, columns=(metric, "value"), keep=keep)  # type: ignore
+        return df.nlargest(k, columns=(metric, "value"), keep=keep)  # type: ignore
+
+    dfs_bests = []
+    for group_items in groups.values():
+        df_sub = df.loc[group_items]
+        df_sub_best = get_best(df_sub, metric, k, keep)
+        dfs_bests.append(df_sub_best)
+
+    df_combined = pd.concat(dfs_bests)
+
+    # keep the original index order
+    top_k_indices = set(df_combined.index)
+    ordered_index = [index for index in df.index if index in top_k_indices]
+
+    return df_combined.loc[ordered_index]
+
+
 def show_table(
     df: pd.DataFrame,
     *,
@@ -232,6 +327,7 @@ def show_table(
     notation: Literal["decimals", "exponent"] | list[Literal["decimals", "exponent"]] = "decimals",
     missing_value: str = "-",
     show_arrow: bool = True,
+    hline_level: int | None = None,
     caption: str | None = None,
 ) -> Styler:
     """Visualize a table of a metric dataframe.
@@ -251,6 +347,7 @@ def show_table(
         notation: Whether to use scientific notation (exponent) or fixed-point notation (decimals).
         missing_value: str to show for cells with no metric value, i.e., cells with NaN values.
         show_arrow: Whether to include the objective arrow in the column names.
+        hline_level: When to add horizontal lines seperaing model names. If None, add horizontal lines at the first level if more than 1 level.
         caption: Bottom caption text.
 
     Returns:
@@ -324,7 +421,7 @@ def show_table(
     def decorate_gradient(idx: int, metric: str) -> str:
         def gradient_lerp(hex_color1: str, hex_color2: str, t: float) -> str:
             cmap = mpl.colors.LinearSegmentedColormap.from_list(None, [hex_color1, hex_color2])
-            return mpl.colors.to_hex(cmap(t))
+            return mpl.colors.to_hex(cmap(t), keep_alpha=True)
 
         fmts = []
         if color:
@@ -334,7 +431,7 @@ def show_table(
             min_value, max_value = values.min(), values.max()
 
             frac = _fraction(val, min_value, max_value, objective)
-            gradient = gradient_lerp("#ffffff", color, frac)
+            gradient = gradient_lerp(f"{color}00", f"{color}ff", frac)
             fmts += [f"background-color:{gradient}"]
 
         if idx in best_indices[metric]:
@@ -382,6 +479,26 @@ def show_table(
         {"selector": "td", "props": [("border-right", "1px solid #ccc")]},
         {"selector": "th.row_heading", "props": [("border-right", "1px solid #ccc")]},
     ]
+
+    if hline_level is None:
+        hline_level = 1 if df.index.nlevels > 1 else 0
+
+    if hline_level > df.index.nlevels or hline_level < 0:
+        raise ValueError(f"Level should be in range [0;{df.index.nlevels}].")
+
+    if hline_level > 0:
+        level_names = [idx[:hline_level] for idx in df.index]
+        changing_rows = []
+        prev = None
+        for i, v in enumerate(level_names):
+            if i != 0 and v != prev:
+                changing_rows.append(i)  # i is 0-based index into dataframe rows
+            prev = v
+
+        for row_idx in changing_rows:
+            nth_child = row_idx + 1  # add CSS using tbody nth-child (nth-child is 1-based, so add 1)
+            selector = f"tbody tr:nth-child({nth_child}) td, tbody tr:nth-child({nth_child}) th"
+            table_styles.append({"selector": selector, "props": [("border-top", "1px solid #ccc")]})
 
     if caption:
         styler = styler.set_caption(caption)
