@@ -229,12 +229,19 @@ def sort(df: pd.DataFrame, metric: str, *, level: int = 0, order: Literal["best"
     Args:
         df: Metric Dataframe.
         metric: Metric to consider when sorting.
-        level: The tuple index names level to considers as a group.
+        level: The tuple index-names level to considers as a group.
         order: Which sequences to be first after sorting.
 
     Returns:
         Sorted metric dataframe.
     """
+
+    def sort_df(df: pd.DataFrame, metric: str) -> pd.DataFrame:
+        ascending = df.attrs["objective"][metric] == "minimize"
+        if order == "worst":
+            ascending = not ascending
+        return df.sort_values(by=(metric, "value"), ascending=ascending)
+
     if metric not in df.columns.get_level_values(0):
         raise ValueError(f"'{metric}' is not a column in the DataFrame.")
 
@@ -249,15 +256,9 @@ def sort(df: pd.DataFrame, metric: str, *, level: int = 0, order: Literal["best"
         level_index = index[:level]
         groups[level_index].append(index)
 
-    def sort_df(df: pd.DataFrame, metric: str) -> pd.DataFrame:
-        ascending = df.attrs["objective"][metric] == "minimize"
-        if order == "worst":
-            ascending = not ascending
-        return df.sort_values(by=(metric, "value"), ascending=ascending)
-
     dfs_sorted = []
-    for group_items in groups.values():
-        df_sub = df.loc[group_items]
+    for group in groups.values():
+        df_sub = df.loc[group]
         df_sub_sorted = sort_df(df_sub, metric)
         dfs_sorted.append(df_sub_sorted)
 
@@ -278,12 +279,18 @@ def top_k(
         df: Metric Dataframe.
         metric: Metric to consider when selecting top-k rows.
         k: Number of rows to extract.
-        level: The tuple index names level to considers as a group.
+        level: The tuple index-names level to considers as a group.
         keep: Which entry to keep if multiple are equally good.
 
     Returns:
         A subset of the metric dataframe with the top-k rows.
     """
+
+    def get_best(df: pd.DataFrame, metric: str, k: int, keep: str) -> pd.DataFrame:
+        if df.attrs["objective"][metric] == "minimize":
+            return df.nsmallest(k, columns=(metric, "value"), keep=keep)  # type: ignore
+        return df.nlargest(k, columns=(metric, "value"), keep=keep)  # type: ignore
+
     if metric not in df.columns.get_level_values(0):
         raise ValueError(f"'{metric}' is not a column in the DataFrame.")
 
@@ -298,14 +305,9 @@ def top_k(
         level_index = index[:level]
         groups[level_index].append(index)
 
-    def get_best(df: pd.DataFrame, metric: str, k: int, keep: str) -> pd.DataFrame:
-        if df.attrs["objective"][metric] == "minimize":
-            return df.nsmallest(k, columns=(metric, "value"), keep=keep)  # type: ignore
-        return df.nlargest(k, columns=(metric, "value"), keep=keep)  # type: ignore
-
     dfs_bests = []
-    for group_items in groups.values():
-        df_sub = df.loc[group_items]
+    for group in groups.values():
+        df_sub = df.loc[group]
         df_sub_best = get_best(df_sub, metric, k, keep)
         dfs_bests.append(df_sub_best)
 
@@ -327,6 +329,7 @@ def show_table(
     notation: Literal["decimals", "exponent"] | list[Literal["decimals", "exponent"]] = "decimals",
     missing_value: str = "-",
     show_arrow: bool = True,
+    level: int = 0,
     hline_level: int | None = None,
     caption: str | None = None,
 ) -> Styler:
@@ -347,31 +350,13 @@ def show_table(
         notation: Whether to use scientific notation (exponent) or fixed-point notation (decimals).
         missing_value: str to show for cells with no metric value, i.e., cells with NaN values.
         show_arrow: Whether to include the objective arrow in the column names.
+        level: The tuple index-names level to considers as a group.
         hline_level: When to add horizontal lines seperaing model names. If None, add horizontal lines at the first level if more than 1 level.
         caption: Bottom caption text.
 
     Returns:
         Styler: pandas Styler object.
     """
-    n_metrics = df.shape[1] // 2
-    n_decimals = [n_decimals] * n_metrics if isinstance(n_decimals, int) else n_decimals
-    notation = [notation] * n_metrics if isinstance(notation, str) else notation
-
-    if len(n_decimals) != n_metrics:
-        raise ValueError(
-            f"Expected {n_metrics} decimals, got {len(n_decimals)}. Provide a single int or a list matching the number of metrics."
-        )
-
-    if len(notation) != n_metrics:
-        raise ValueError(
-            f"Expected {n_metrics} notations, got {len(notation)}. Provide a single int or a list matching the number of metrics."
-        )
-
-    df = df.round(dict(zip(df.columns, [d for d in n_decimals for _ in range(2)], strict=True)))
-    best_indices, second_best_indices = _get_top_indices(df)
-
-    arrows = {"maximize": "↑", "minimize": "↓"}
-    metrics = pd.unique(df.columns.get_level_values(0)).tolist()
 
     def format_cell(
         val: float,
@@ -389,6 +374,97 @@ def show_table(
             return f"{val:.{n_decimals}{suffix_notation}}"
         return f"{val:.{n_decimals}{suffix_notation}}±{dev:.{n_decimals}{suffix_notation}}"
 
+    def _fraction(val: float, min_value: float, max_value: float, objective: str) -> float:
+        if pd.isna(val):
+            return 0.0
+        if max_value <= min_value:
+            return 1.0
+        t = (val - min_value) / (max_value - min_value)
+        return 1 - t if objective == "minimize" else t
+
+    def decorate_solid(idx: int, metric: str, df: pd.DataFrame) -> str:
+        fmts = []
+        best_indices, second_best_indices = _get_top_indices(df, metric)
+        if idx in best_indices:
+            if color:
+                fmts += [f"background-color:{color}"]
+            fmts += ["font-weight:bold"]
+        if idx in second_best_indices:
+            fmts += ["text-decoration:underline"]
+        return "; ".join(fmts)
+
+    def decorate_gradient(idx: int, metric: str, df: pd.DataFrame) -> str:
+        def gradient_lerp(hex_color1: str, hex_color2: str, t: float) -> str:
+            cmap = mpl.colors.LinearSegmentedColormap.from_list(None, [hex_color1, hex_color2])
+            return mpl.colors.to_hex(cmap(t), keep_alpha=True)
+
+        fmts = []
+        if color:
+            objective = df.attrs["objective"][metric]
+            values = df[metric]["value"]
+            frac = _fraction(values.at[idx], values.min(), values.max(), objective)
+            gradient = gradient_lerp(f"{color}00", f"{color}ff", frac)
+            fmts += [f"background-color:{gradient}"]
+
+        best_indices, second_best_indices = _get_top_indices(df, metric)
+        if idx in best_indices:
+            fmts += ["font-weight:bold"]
+        if idx in second_best_indices:
+            fmts += ["text-decoration:underline"]
+        return "; ".join(fmts)
+
+    def decorate_bar(idx: int, metric: str, df: pd.DataFrame) -> str:
+        fmts = []
+        if color:
+            objective = df.attrs["objective"][metric]
+            values = df[metric]["value"]
+            frac = _fraction(values.at[idx], values.min(), values.max(), objective)
+            if frac > 0:
+                width = f"{frac * 100:.1f}%"
+                fmts += [f"background: linear-gradient(90deg, {color} {width}, transparent {width})"]
+
+        best_indices, second_best_indices = _get_top_indices(df, metric)
+        if idx in best_indices:
+            fmts += ["font-weight:bold"]
+        if idx in second_best_indices:
+            fmts += ["text-decoration:underline"]
+        return "; ".join(fmts)
+
+    def decorate_col(col_series: pd.Series, metric: str, fn: Callable, df: pd.DataFrame) -> list[str]:
+        return [fn(idx, metric, df) for idx in col_series.index]
+
+    def get_changing_rows_iloc(indices: pd.Index, hline_level: int) -> list[int]:
+        level_names = [idx[:hline_level] for idx in indices]
+        changing_rows = []
+        prev = None
+        for i, v in enumerate(level_names):
+            if i != 0 and v != prev:
+                changing_rows.append(i)  # i is 0-based index into dataframe rows
+            prev = v
+        return changing_rows
+
+    n_metrics = df.shape[1] // 2
+    n_decimals = [n_decimals] * n_metrics if isinstance(n_decimals, int) else n_decimals
+    notation = [notation] * n_metrics if isinstance(notation, str) else notation
+
+    if len(n_decimals) != n_metrics:
+        raise ValueError(
+            f"Expected {n_metrics} decimals, got {len(n_decimals)}. Provide a single int or a list matching the number of metrics."
+        )
+
+    if len(notation) != n_metrics:
+        raise ValueError(
+            f"Expected {n_metrics} notations, got {len(notation)}. Provide a single int or a list matching the number of metrics."
+        )
+
+    if level >= df.index.nlevels or level < 0:
+        raise ValueError(f"Level should be in range [0;{df.index.nlevels - 1}].")
+
+    df = df.round(dict(zip(df.columns, [d for d in n_decimals for _ in range(2)], strict=True)))
+
+    arrows = {"maximize": "↑", "minimize": "↓"}
+    metrics = pd.unique(df.columns.get_level_values(0)).tolist()
+
     objectives = df.attrs["objective"]
     df_styled = pd.DataFrame(index=df.index)
     for i, m in enumerate(metrics):
@@ -400,79 +476,26 @@ def show_table(
             for val, dev in zip(vals, devs, strict=True)
         ]
 
-    def _fraction(val: float, min_value: float, max_value, objective: str) -> float:
-        if pd.isna(val):
-            return 0.0
-        if max_value <= min_value:
-            return 1.0
-        t = (val - min_value) / (max_value - min_value)
-        return 1 - t if objective == "minimize" else t
-
-    def decorate_solid(idx: int, metric: str) -> str:
-        if idx in best_indices[metric]:
-            fmts = ["font-weight:bold"]
-            if color:
-                fmts += [f"background-color:{color}"]
-            return "; ".join(fmts)
-        if idx in second_best_indices[metric]:
-            return "text-decoration:underline"
-        return ""
-
-    def decorate_gradient(idx: int, metric: str) -> str:
-        def gradient_lerp(hex_color1: str, hex_color2: str, t: float) -> str:
-            cmap = mpl.colors.LinearSegmentedColormap.from_list(None, [hex_color1, hex_color2])
-            return mpl.colors.to_hex(cmap(t), keep_alpha=True)
-
-        fmts = []
-        if color:
-            objective = df.attrs["objective"][metric]
-            values = df[metric]["value"]
-            val = values.at[idx]
-            min_value, max_value = values.min(), values.max()
-
-            frac = _fraction(val, min_value, max_value, objective)
-            gradient = gradient_lerp(f"{color}00", f"{color}ff", frac)
-            fmts += [f"background-color:{gradient}"]
-
-        if idx in best_indices[metric]:
-            fmts += ["font-weight:bold"]
-
-        if idx in second_best_indices[metric]:
-            fmts += ["text-decoration:underline"]
-
-        return "; ".join(fmts)
-
-    def decorate_bar(idx: int, metric: str) -> str:
-        fmts = []
-        if color:
-            objective = df.attrs["objective"][metric]
-            values = df[metric]["value"]
-            val = values.at[idx]
-            min_value, max_value = values.min(), values.max()
-
-            frac = _fraction(val, min_value, max_value, objective)
-            if frac > 0:
-                width = f"{frac * 100:.1f}%"
-                fmts += [f"background: linear-gradient(90deg, {color} {width}, transparent {width})"]
-
-        if idx in best_indices[metric]:
-            fmts += ["font-weight:bold"]
-
-        if idx in second_best_indices[metric]:
-            fmts += ["text-decoration:underline"]
-
-        return "; ".join(fmts)
-
-    def decorate_col(col_series, metric: str, fn: Callable) -> list[str]:
-        return [fn(idx, metric) for idx in col_series.index]
-
     decorators = {"solid": decorate_solid, "gradient": decorate_gradient, "bar": decorate_bar}
     decorator = decorators[color_style]
 
     styler = df_styled.style
 
-    for col, metric in zip(df_styled.columns, metrics, strict=True):
-        styler = styler.apply(partial(decorate_col, metric=metric, fn=decorator), axis=0, subset=[col])
+    # Decorate columns based on a levels groups
+    groups = defaultdict(list)
+    for index in df.index:
+        level_index = index[:level]
+        groups[level_index].append(index)
+
+    for group in groups.values():
+        df_sub = df.loc[group]
+
+        for col, metric in zip(styler.columns, metrics, strict=True):
+            styler = styler.apply(
+                partial(decorate_col, metric=metric, fn=decorator, df=df_sub),
+                axis=0,
+                subset=(df_sub.index, [col]),  # type: ignore
+            )
 
     table_styles = [
         {"selector": "th.col_heading", "props": [("text-align", "center")]},
@@ -487,18 +510,11 @@ def show_table(
         raise ValueError(f"Level should be in range [0;{df.index.nlevels}].")
 
     if hline_level > 0:
-        level_names = [idx[:hline_level] for idx in df.index]
-        changing_rows = []
-        prev = None
-        for i, v in enumerate(level_names):
-            if i != 0 and v != prev:
-                changing_rows.append(i)  # i is 0-based index into dataframe rows
-            prev = v
-
-        for row_idx in changing_rows:
+        rows_iloc = get_changing_rows_iloc(df.index, hline_level)
+        for row_idx in rows_iloc:
             nth_child = row_idx + 1  # add CSS using tbody nth-child (nth-child is 1-based, so add 1)
             selector = f"tbody tr:nth-child({nth_child}) td, tbody tr:nth-child({nth_child}) th"
-            table_styles.append({"selector": selector, "props": [("border-top", "1px solid #ccc")]})
+            table_styles += [({"selector": selector, "props": [("border-top", "1px solid #ccc")]})]
 
     if caption:
         styler = styler.set_caption(caption)
@@ -532,36 +548,6 @@ def to_latex(
         show_arrow: Whether to include the objective arrow in the column names.
         caption: Bottom caption text.
     """
-    # @TODO: support multi-index rows
-    if df.index.nlevels != 1:
-        raise ValueError("to_latex() does not support tuple sequence names.")
-
-    n_metrics = df.shape[1] // 2
-    n_decimals = [n_decimals] * n_metrics if isinstance(n_decimals, int) else n_decimals
-    notation = [notation] * n_metrics if isinstance(notation, str) else notation
-
-    if len(n_decimals) != n_metrics:
-        raise ValueError(
-            f"Expected {n_metrics} decimals, got {len(n_decimals)}. Provide a single int or a list matching the number of metrics."
-        )
-
-    if len(notation) != n_metrics:
-        raise ValueError(
-            f"Expected {n_metrics} notations, got {len(notation)}. Provide a single int or a list matching the number of metrics."
-        )
-
-    df = df.round(dict(zip(df.columns, [d for d in n_decimals for _ in range(2)], strict=True)))
-    best_indices, second_best_indices = _get_top_indices(df)
-
-    objectives = df.attrs["objective"]
-    arrows = {"maximize": "↑", "minimize": "↓"}
-
-    col_names = list(df.columns.get_level_values(0).unique())
-    n_cols = len(col_names)
-    n_row_levels = df.index.nlevels
-    n_cols_and_row_levels = n_row_levels + n_cols
-
-    # LaTeX formatting
 
     def no_escapes(values: list[Any]) -> list[NoEscape]:
         return [NoEscape(v) for v in values]
@@ -587,6 +573,41 @@ def to_latex(
         arrow = arrows[objectives[metric]]
         text = f"{metric} ({arrow})" if show_arrow else metric
         return macro("textbf", text)
+
+    # @TODO: support multi-index rows + levels
+    if df.index.nlevels != 1:
+        raise ValueError("to_latex() does not support tuple sequence names.")
+
+    n_metrics = df.shape[1] // 2
+    n_decimals = [n_decimals] * n_metrics if isinstance(n_decimals, int) else n_decimals
+    notation = [notation] * n_metrics if isinstance(notation, str) else notation
+
+    if len(n_decimals) != n_metrics:
+        raise ValueError(
+            f"Expected {n_metrics} decimals, got {len(n_decimals)}. Provide a single int or a list matching the number of metrics."
+        )
+
+    if len(notation) != n_metrics:
+        raise ValueError(
+            f"Expected {n_metrics} notations, got {len(notation)}. Provide a single int or a list matching the number of metrics."
+        )
+
+    df = df.round(dict(zip(df.columns, [d for d in n_decimals for _ in range(2)], strict=True)))
+
+    best_indices, second_best_indices = {}, {}
+    metrics = pd.unique(df.columns.get_level_values(0)).tolist()
+    for m in metrics:
+        best_indices[m], second_best_indices[m] = _get_top_indices(df, m)
+
+    objectives = df.attrs["objective"]
+    arrows = {"maximize": "↑", "minimize": "↓"}
+
+    col_names = list(df.columns.get_level_values(0).unique())
+    n_cols = len(col_names)
+    n_row_levels = df.index.nlevels
+    n_cols_and_row_levels = n_row_levels + n_cols
+
+    # LaTeX formatting
 
     table = Table()
     table.append(NoEscape(macro("centering")))
@@ -904,8 +925,8 @@ class ModelCache:
         return self.model_to_cache.copy()
 
 
-def _get_top_indices(df: pd.DataFrame) -> tuple[dict[str, set[int]], dict[str, set[int]]]:
-    def get_column_top_indices(top_two: pd.Series) -> tuple[set[int], set[int]]:
+def _get_top_indices(df: pd.DataFrame, metric: str) -> tuple[set[int], set[int]]:
+    def top_indices_helper(top_two: pd.Series) -> tuple[set[int], set[int]]:
         if pd.isna(top_two.values[0]):
             return set(), set()
 
@@ -927,21 +948,14 @@ def _get_top_indices(df: pd.DataFrame) -> tuple[dict[str, set[int]], dict[str, s
     if "objective" not in df.attrs:
         raise ValueError("DataFrame must have an 'objective' attribute. Use compute_metrics to create the DataFrame.")
 
-    objectives = df.attrs["objective"]
-    metrics = pd.unique(df.columns.get_level_values(0)).tolist()
+    objective = df.attrs["objective"][metric]
+    vals = df[(metric, "value")]
 
-    best_indices = {}
-    second_best_indices = {}
+    if objective == "maximize":
+        best_cells = vals.nlargest(2, keep="all")
+    elif objective == "minimize":
+        best_cells = vals.nsmallest(2, keep="all")
+    else:
+        raise ValueError(f"Unknown objective '{objective}' for metric '{metric}'.")
 
-    for m in metrics:
-        vals = df[(m, "value")]
-        if objectives[m] == "maximize":
-            best_cells = vals.nlargest(2, keep="all")
-            best_indices[m], second_best_indices[m] = get_column_top_indices(best_cells)
-        elif objectives[m] == "minimize":
-            best_cells = vals.nsmallest(2, keep="all")
-            best_indices[m], second_best_indices[m] = get_column_top_indices(best_cells)
-        else:
-            raise ValueError(f"Unknown objective '{objectives[m]}' for metric '{m}'.")
-
-    return best_indices, second_best_indices
+    return top_indices_helper(best_cells)
