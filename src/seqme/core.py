@@ -229,7 +229,7 @@ def sort(df: pd.DataFrame, metric: str, *, level: int = 0, order: Literal["best"
     Args:
         df: Metric Dataframe.
         metric: Metric to consider when sorting.
-        level: The tuple index-names level to considers as a group.
+        level: The tuple index-names level to consider as a group.
         order: Which sequences to be first after sorting.
 
     Returns:
@@ -279,7 +279,7 @@ def top_k(
         df: Metric Dataframe.
         metric: Metric to consider when selecting top-k rows.
         k: Number of rows to extract.
-        level: The tuple index-names level to considers as a group.
+        level: The tuple index-names level to consider as a group.
         keep: Which entry to keep if multiple are equally good.
 
     Returns:
@@ -350,7 +350,7 @@ def show_table(
         notation: Whether to use scientific notation (exponent) or fixed-point notation (decimals).
         missing_value: str to show for cells with no metric value, i.e., cells with NaN values.
         show_arrow: Whether to include the objective arrow in the column names.
-        level: The tuple index-names level to considers as a group.
+        level: The tuple index-names level to consider as a group.
         hline_level: When to add horizontal lines seperaing model names. If None, add horizontal lines at the first level if more than 1 level.
         caption: Bottom caption text.
 
