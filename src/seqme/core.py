@@ -817,7 +817,7 @@ class ModelCache:
 
     def __init__(
         self,
-        models: dict[str, Callable[[list[str]], np.ndarray]] | None = None,
+        models: dict[str, Callable[[list[str]], list[Any] | np.ndarray]] | None = None,
         init_cache: dict[str, dict[str, np.ndarray]] | None = None,
     ):
         """Initialize the cache with optional models and precomputed representations.
@@ -833,7 +833,7 @@ class ModelCache:
             if name not in self.model_to_cache:
                 self.model_to_cache[name] = {}
 
-    def __call__(self, sequences: list[str], model_name: str) -> np.ndarray:
+    def __call__(self, sequences: list[str], model_name: str, variable_length: bool) -> list[Any] | np.ndarray:
         """Return embeddings for the given sequences using the specified model.
 
         Uncached sequences are computed and stored automatically.
@@ -841,9 +841,10 @@ class ModelCache:
         Args:
             sequences: List of input texts.
             model_name: Name of the model to use.
+            variable_length: Whether the embeddings are variable size. If true then return a list of embeddings else stack as a numpy array.
 
         Returns:
-            Array of embeddings in the same order as input.
+            Embeddings in the same order as input.
         """
         sequence_to_rep = self.model_to_cache[model_name]
 
@@ -858,22 +859,33 @@ class ModelCache:
             for sequence, rep in zip(new_sequences, new_reps, strict=True):
                 sequence_to_rep[sequence] = rep
 
-        return np.stack([sequence_to_rep[seq] for seq in sequences])
+        reps = [sequence_to_rep[seq] for seq in sequences]
+        return reps if variable_length else np.stack(reps)
 
-    def model(self, model_name: str) -> Callable[[list[str]], np.ndarray]:
+    def model(
+        self,
+        model_name: str,
+        *,
+        variable_length: bool = False,
+    ) -> Callable[[list[str]], list[Any] | np.ndarray]:
         """Return a callable interface for a given model name.
 
         Args:
             model_name: Name of the model to use.
+            variable_length: Whether the embeddings are variable size. If true then return a list of embeddings else stack as a numpy array.
 
         Raises:
             ValueError: If the model is unknown.
         """
         if model_name not in self.model_to_cache:
             raise ValueError(f"'{model_name}' is not callable nor has any pre-cached sequences.")
-        return lambda sequence: self(sequence, model_name)
+        return lambda sequence: self(sequence, model_name, variable_length)
 
-    def add(self, model_name: str, element: Callable[[list[str]], np.ndarray] | dict[str, np.ndarray]):
+    def add(
+        self,
+        model_name: str,
+        element: Callable[[list[str]], list[Any] | np.ndarray] | dict[str, Any],
+    ):
         """Add a new model or precomputed embeddings to the cache.
 
         Args:
@@ -916,7 +928,7 @@ class ModelCache:
         if model_name in self.model_to_callable:
             del self.model_to_callable[model_name]
 
-    def get(self) -> dict[str, dict[str, np.ndarray]]:
+    def get(self) -> dict[str, dict[str, Any]]:
         """Return a copy of the current cache.
 
         Returns:

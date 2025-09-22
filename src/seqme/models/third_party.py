@@ -54,7 +54,7 @@ class ThirdPartyModel:
             python_bin=Path(python_bin) if python_bin else None,
         )
 
-    def __call__(self, sequences: list[str], **kwargs) -> np.ndarray:
+    def __call__(self, sequences: list[str], **kwargs) -> list[Any] | np.ndarray:
         """
         Execute the plugin's function with the given keyword arguments.
 
@@ -63,15 +63,16 @@ class ThirdPartyModel:
             **kwargs: Arbitrary keyword arguments to pass to the plugin function.
 
         Returns:
-            np.ndarray: The result returned by the plugin function.
+            Result per sequence.
 
         Raises:
-            ValueError: If the plugin response is not a numpy.ndarray.
+            ValueError: If the plugin response is not a numpy.ndarray or list[Any].
         """
         kwargs["sequences"] = sequences
         result = self.plugin.run(self.module, self.fn, kwargs)
-        if not isinstance(result, np.ndarray):
-            raise ValueError("Invalid plugin response: expected numpy.ndarray")
+
+        if not (isinstance(result, np.ndarray) or isinstance(result, list)):
+            raise ValueError("Invalid plugin response: expected list[numpy.ndarray] or numpy.ndarray")
         return result
 
 

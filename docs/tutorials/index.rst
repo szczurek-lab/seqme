@@ -11,4 +11,5 @@ The easiest way to get familiar with seqme is to follow along with our tutorials
     third_party
     benchmark_peptides
     benchmark_rna
+    beyond_sequences
     
