@@ -31,7 +31,6 @@ class EsmFold:
         Initialize the ESM2 model.
 
         Args:
-            model_name: Model checkpoint name or enum.
             device: Device to run inference on, e.g., "cuda" or "cpu".
             batch_size: Number of sequences to process per batch.
             verbose: Whether to display a progress bar.

@@ -72,7 +72,7 @@ class ThirdPartyModel:
         result = self.plugin.run(self.module, self.fn, kwargs)
 
         if not (isinstance(result, np.ndarray) or isinstance(result, list)):
-            raise ValueError("Invalid plugin response: expected list[numpy.ndarray] or numpy.ndarray")
+            raise ValueError("Invalid plugin response: expected list[Any] or numpy.ndarray")
         return result
 
 
