@@ -11,7 +11,7 @@ class Diversity(Metric):
 
     def __init__(
         self,
-        aggregate: Literal["mean", "min", "max"] = "mean",
+        aggregate: Literal["mean", "min"] = "mean",
         reference: list[str] = None,
         k: int | None = None,
         seed: int | None = 0,
@@ -66,11 +66,24 @@ class Diversity(Metric):
 def compute_diversity(
     sequences: list[str],
     *,
-    aggregate: Literal["mean", "min", "max"] = "mean",
+    aggregate: Literal["mean", "min"] = "mean",
     reference: list[str] = None,
     k: int | None = None,
     seed: int | None = 0,
 ) -> float:
+    """
+    Compute diversity.
+
+    Args:
+        sequences: Text sequences to compute diversity on.
+        aggregate: How to aggregate the diversity between a sequences and the other sequences.
+        reference: Reference sequences to compare against. If None, compare against other sequences within `sequences`.
+        k: If not None randomly sample `k` other sequences to compute diversity against.
+        seed: For reproducibility. Only used if k is not None.
+
+    Returns:
+        Diversity.
+    """
     if k:
         rng = np.random.default_rng(seed)
 
@@ -90,8 +103,6 @@ def compute_diversity(
             div = norm_edits.mean()
         elif aggregate == "min":
             div = norm_edits.min()
-        elif aggregate == "max":
-            div = norm_edits.max()
         else:
             raise ValueError(f"Unsupported aggregate: '{aggregate}'.")
 
