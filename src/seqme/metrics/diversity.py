@@ -30,9 +30,13 @@ class Diversity(Metric):
         self.k = k
         self.seed = seed
 
-        if self.reference and self.k:
-            if len(self.reference) < self.k:
-                raise ValueError("Fewer sequences in reference than k.")
+        if self.k:
+            if self.k < 1:
+                raise ValueError("Expected k > 0.")
+
+            if self.reference:
+                if len(self.reference) < self.k:
+                    raise ValueError("Fewer sequences in reference than k.")
 
     def __call__(self, sequences: list[str]) -> MetricResult:
         """
