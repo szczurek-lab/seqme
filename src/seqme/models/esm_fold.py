@@ -62,7 +62,7 @@ class EsmFold:
 
         Args:
             sequences: List of input amino acid sequences.
-            convention: Whether to return atom14 or cA.
+            convention: Whether to return atom14 or c_alpha.
 
         Returns:
             A list of variable length numpy array of length (sequence_length, convention)
@@ -81,7 +81,13 @@ class EsmFold:
 
                 outputs = self.model(**tokens)
 
+                # @TODO: atom14 mask extract the correct ones.
+                # print(outputs["atom14_atom_exists"])
+
+                # https://github.com/huggingface/transformers/blob/99b0995138c17ef953959c70f35cb2bdc41111a2/src/transformers/models/esm/openfold_utils/residue_constants.py#L335
+
                 lengths = [len(s) for s in batch]
+
                 if convention == "ca":
                     folded_positions = [outputs.positions[-1, i, :length, 1, :] for i, length in enumerate(lengths)]
                 elif convention == "atom14":
