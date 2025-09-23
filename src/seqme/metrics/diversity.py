@@ -44,9 +44,6 @@ class Diversity(Metric):
         Returns:
             MetricResult contains the diversity score.
         """
-        if len(sequences) < 2:
-            raise ValueError("Expected at least 2 sequences.")
-
         score = compute_diversity(
             sequences,
             aggregate=self.aggregate,
@@ -82,7 +79,7 @@ def compute_diversity(
         others = reference if reference else sequences[:i] + sequences[i + 1 :]
 
         if k:
-            idxs = rng.choice(np.arange(k + 1))
+            idxs = rng.choice(np.arange(len(others)), size=k, replace=False)
             others = [others[i] for i in idxs]
 
         norms = np.maximum(len(sequence), [len(seq) for seq in others])
