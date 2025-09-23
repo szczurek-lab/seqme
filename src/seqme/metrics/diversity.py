@@ -39,6 +39,8 @@ class Diversity(Metric):
         """
         Compute the diversity.
 
+        Note: For a large number of ``sequences``, a small value for ``k`` (e.g., 10) provides a stable approximation of the diversity.
+
         Args:
             sequences: A list of generated sequences to evaluate.
 
@@ -55,7 +57,7 @@ class Diversity(Metric):
 
     @property
     def name(self) -> str:
-        return "Diversity"
+        return f"Diversity ({self.k})" if self.k else "Diversity"
 
     @property
     def objective(self) -> Literal["minimize", "maximize"]:
@@ -74,8 +76,8 @@ def compute_diversity(
 
     Args:
         sequences: Text sequences to compute diversity on.
-        reference: Reference sequences to compare against. If None, compare against other sequences within `sequences`.
-        k: If not None randomly sample `k` other sequences to compute diversity against.
+        reference: Reference sequences to compare against. If None, compare against other sequences within ``sequences``.
+        k: If not None randomly sample ``k`` other sequences to compute diversity against.
         seed: For reproducibility. Only used if k is not None.
 
     Returns:
