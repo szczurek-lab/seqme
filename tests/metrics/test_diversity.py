@@ -14,17 +14,20 @@ def test_multiple_sequences():
     result = metric(["AA", "BB", "CCCCD"])
 
     # Compare value and deviation
-    assert result.value == pytest.approx(4 / 3)
+    assert result.value == 1.0
     assert result.deviation is None
 
 
-def test_single_sequence():
-    metric = Diversity()
+def test_reference():
+    metric = Diversity(reference=["AB", "BA", "CCCC"], k=2, seed=42)
 
     # Name and objective
-    assert metric.name == "Diversity"
+    assert metric.name == "Diversity (2)"
     assert metric.objective == "maximize"
 
-    # Only one input sequence → zero diversity
-    with pytest.raises(ValueError, match=r"^Expected at least 2 sequences.$"):
-        metric(["AAA"])
+    # Compute on a sample set
+    result = metric(["AA"])
+
+    # Compare value and deviation
+    assert result.value == 0.75
+    assert result.deviation is None
