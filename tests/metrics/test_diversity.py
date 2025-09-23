@@ -18,8 +18,8 @@ def test_multiple_sequences():
     assert result.deviation is None
 
 
-def test_reference_with_min():
-    metric = Diversity(reference=["AB", "BA", "CCCC"], k=2, seed=42, aggregate="min")
+def test_reference():
+    metric = Diversity(reference=["AB", "BA", "CCCC"], k=2, seed=42)
 
     # Name and objective
     assert metric.name == "Diversity"
@@ -29,5 +29,5 @@ def test_reference_with_min():
     result = metric(["AA"])
 
     # Compare value and deviation
-    assert result.value == 0.5
+    assert result.value == 0.75
     assert result.deviation is None

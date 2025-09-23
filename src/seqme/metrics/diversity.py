@@ -11,7 +11,6 @@ class Diversity(Metric):
 
     def __init__(
         self,
-        aggregate: Literal["mean", "min"] = "mean",
         reference: list[str] = None,
         k: int | None = None,
         seed: int | None = 0,
@@ -20,12 +19,10 @@ class Diversity(Metric):
         Initialize the metric.
 
         Args:
-            aggregate: How to aggregate the diversity between a sequences and the other sequences.
             reference: Reference sequences to compare against. If None, compare against other sequences within `sequences`.
             k: If not None randomly sample `k` other sequences to compute diversity against.
             seed: For reproducibility. Only used if k is not None.
         """
-        self.aggregate = aggregate
         self.reference = reference
         self.k = k
         self.seed = seed
@@ -50,12 +47,10 @@ class Diversity(Metric):
         """
         score = compute_diversity(
             sequences,
-            aggregate=self.aggregate,
             reference=self.reference,
             k=self.k,
             seed=self.seed,
         )
-
         return MetricResult(score)
 
     @property
@@ -70,7 +65,6 @@ class Diversity(Metric):
 def compute_diversity(
     sequences: list[str],
     *,
-    aggregate: Literal["mean", "min"] = "mean",
     reference: list[str] = None,
     k: int | None = None,
     seed: int | None = 0,
@@ -80,7 +74,6 @@ def compute_diversity(
 
     Args:
         sequences: Text sequences to compute diversity on.
-        aggregate: How to aggregate the diversity between a sequences and the other sequences.
         reference: Reference sequences to compare against. If None, compare against other sequences within `sequences`.
         k: If not None randomly sample `k` other sequences to compute diversity against.
         seed: For reproducibility. Only used if k is not None.
@@ -103,13 +96,7 @@ def compute_diversity(
         edits = np.array([pylev.levenshtein(sequence, seq) for seq in others])
         norm_edits = edits / norms
 
-        if aggregate == "mean":
-            div = norm_edits.mean()
-        elif aggregate == "min":
-            div = norm_edits.min()
-        else:
-            raise ValueError(f"Unsupported aggregate: '{aggregate}'.")
-
+        div = norm_edits.mean()
         divs.append(div)
 
     return np.mean(divs).item()
