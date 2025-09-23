@@ -14,7 +14,7 @@ def test_multiple_sequences():
     result = metric(["AA", "BB", "CCCCD"])
 
     # Compare value and deviation
-    assert result.value == pytest.approx(4 / 3)
+    assert result.value == 1.0
     assert result.deviation is None
 
 

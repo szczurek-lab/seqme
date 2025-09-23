@@ -7,7 +7,32 @@ from seqme.core import Metric, MetricResult
 
 
 class Diversity(Metric):
-    """Pairwise Levenshstein distance between the sequences, normalized by number of sequences and number of residues."""
+    """Normalized pairwise Levenshtein distance between the sequences."""
+
+    def __init__(
+        self,
+        aggregate: Literal["mean", "min", "max"] = "mean",
+        reference: list[str] = None,
+        k: int | None = None,
+        seed: int | None = 0,
+    ):
+        """
+        Initialize the metric.
+
+        Args:
+            aggregate: How to aggregate the diversity between a sequences and the other sequences.
+            reference: Reference sequences to compare against. If None, compare against other sequences within `sequences`.
+            k: If not None randomly sample `k` other sequences to compute diversity against.
+            seed: For reproducibility. Only used if k is not None.
+        """
+        self.aggregate = aggregate
+        self.reference = reference
+        self.k = k
+        self.seed = seed
+
+        if self.reference and self.k:
+            if len(self.reference) < self.k:
+                raise ValueError("Fewer sequences in reference than k.")
 
     def __call__(self, sequences: list[str]) -> MetricResult:
         """
@@ -22,16 +47,15 @@ class Diversity(Metric):
         if len(sequences) < 2:
             raise ValueError("Expected at least 2 sequences.")
 
-        levenshtein_matrix = np.stack(
-            [[pylev.levenshtein(seq1, seq2) for seq2 in sequences] for seq1 in sequences], axis=-1
+        score = compute_diversity(
+            sequences,
+            aggregate=self.aggregate,
+            reference=self.reference,
+            k=self.k,
+            seed=self.seed,
         )
 
-        total_dist = levenshtein_matrix.sum()
-        total_letters = np.sum([len(seq) for seq in sequences])
-
-        diversity = total_dist / (total_letters * (len(sequences) - 1))
-
-        return MetricResult(diversity.item())
+        return MetricResult(score)
 
     @property
     def name(self) -> str:
@@ -40,3 +64,40 @@ class Diversity(Metric):
     @property
     def objective(self) -> Literal["minimize", "maximize"]:
         return "maximize"
+
+
+def compute_diversity(
+    sequences: list[str],
+    *,
+    aggregate: Literal["mean", "min", "max"] = "mean",
+    reference: list[str] = None,
+    k: int | None = None,
+    seed: int | None = 0,
+) -> float:
+    if k:
+        rng = np.random.default_rng(seed)
+
+    divs = []
+    for i, sequence in enumerate(sequences):
+        others = reference if reference else sequences[:i] + sequences[i + 1 :]
+
+        if k:
+            idxs = rng.choice(np.arange(k + 1))
+            others = [others[i] for i in idxs]
+
+        norms = np.maximum(len(sequence), [len(seq) for seq in others])
+        edits = np.array([pylev.levenshtein(sequence, seq) for seq in others])
+        norm_edits = edits / norms
+
+        if aggregate == "mean":
+            div = norm_edits.mean()
+        elif aggregate == "min":
+            div = norm_edits.min()
+        elif aggregate == "max":
+            div = norm_edits.max()
+        else:
+            raise ValueError(f"Unsupported aggregate: '{aggregate}'.")
+
+        divs.append(div)
+
+    return np.mean(divs).item()
