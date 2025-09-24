@@ -382,9 +382,14 @@ def show_table(
         t = (val - min_value) / (max_value - min_value)
         return 1 - t if objective == "minimize" else t
 
-    def decorate_solid(idx: int, metric: str, df: pd.DataFrame) -> str:
+    def decorate_solid(
+        idx: int,
+        metric: str,
+        df: pd.DataFrame,
+        best_indices: set[int],
+        second_best_indices: set[int],
+    ) -> str:
         fmts = []
-        best_indices, second_best_indices = _get_top_indices(df, metric)
         if idx in best_indices:
             if color:
                 fmts += [f"background-color:{color}"]
@@ -393,7 +398,13 @@ def show_table(
             fmts += ["text-decoration:underline"]
         return "; ".join(fmts)
 
-    def decorate_gradient(idx: int, metric: str, df: pd.DataFrame) -> str:
+    def decorate_gradient(
+        idx: int,
+        metric: str,
+        df: pd.DataFrame,
+        best_indices: set[int],
+        second_best_indices: set[int],
+    ) -> str:
         def gradient_lerp(hex_color1: str, hex_color2: str, t: float) -> str:
             cmap = mpl.colors.LinearSegmentedColormap.from_list(None, [hex_color1, hex_color2])
             return mpl.colors.to_hex(cmap(t), keep_alpha=True)
@@ -406,14 +417,19 @@ def show_table(
             gradient = gradient_lerp(f"{color}00", f"{color}ff", frac)
             fmts += [f"background-color:{gradient}"]
 
-        best_indices, second_best_indices = _get_top_indices(df, metric)
         if idx in best_indices:
             fmts += ["font-weight:bold"]
         if idx in second_best_indices:
             fmts += ["text-decoration:underline"]
         return "; ".join(fmts)
 
-    def decorate_bar(idx: int, metric: str, df: pd.DataFrame) -> str:
+    def decorate_bar(
+        idx: int,
+        metric: str,
+        df: pd.DataFrame,
+        best_indices: set[int],
+        second_best_indices: set[int],
+    ) -> str:
         fmts = []
         if color:
             objective = df.attrs["objective"][metric]
@@ -423,7 +439,6 @@ def show_table(
                 width = f"{frac * 100:.1f}%"
                 fmts += [f"background: linear-gradient(90deg, {color} {width}, transparent {width})"]
 
-        best_indices, second_best_indices = _get_top_indices(df, metric)
         if idx in best_indices:
             fmts += ["font-weight:bold"]
         if idx in second_best_indices:
@@ -431,7 +446,8 @@ def show_table(
         return "; ".join(fmts)
 
     def decorate_col(col_series: pd.Series, metric: str, fn: Callable, df: pd.DataFrame) -> list[str]:
-        return [fn(idx, metric, df) for idx in col_series.index]
+        best_indices, second_best_indices = _get_top_indices(df, metric)
+        return [fn(idx, metric, df, best_indices, second_best_indices) for idx in col_series.index]
 
     def get_changing_rows_iloc(indices: pd.Index, hline_level: int) -> list[int]:
         level_names = [idx[:hline_level] for idx in indices]
