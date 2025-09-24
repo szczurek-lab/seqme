@@ -60,7 +60,7 @@ class EsmFold:
         """
         Predict protein sequences 3D-structure, i.e., atom coordinates.
 
-        The atom position / coordinate encoding corresponds is 'atom14':
+        The atoms positions/coordinates is encoded as 'atom14':
 
             residue_atoms: dict[str, list[str]] = {
                 "ALA": ["C", "CA", "CB", "N", "O"],
@@ -87,15 +87,18 @@ class EsmFold:
 
             The atom14 mapping is from here: https://github.com/huggingface/transformers/blob/99b0995138c17ef953959c70f35cb2bdc41111a2/src/transformers/models/esm/openfold_utils/residue_constants.py#L335
 
-            Amino-acids are defined by at most 14 atoms (excluding hydrogens). The shape of a single sequence fold is [sequence_length, 14, 3],
-            where the dimension with 14 elements, corresponds to atom positions of an amino acid, and the dimension with 3 elements corresponds to xyz. If an amino-acid has fewer than 14 atoms, then those positions should be discarded / ignored.
+            Amino-acids are defined by at most 14 atoms (excluding hydrogens). The shape of a sequences fold is [sequence_length, 14, 3],
+            where the dimension with 14 elements, corresponds to an amino acids atom positions, and the dimension with 3 elements corresponds to "xyz"-coordinates. If an amino-acid has fewer than 14 atoms, then those positions should be discarded / ignored as they are unused.
 
         Args:
             sequences: List of input amino acid sequences.
-            convention: Whether to return atom14 or the carbon alphas position of each amino acid ("ca").
+            convention: Whether to return "atom14" or the carbon alphas ("ca") position of each amino acid.
 
         Returns:
-            A list of variable length numpy array of shape (sequence_length, convention (1 or 14), 3 (xyz))
+            A list of numpy arrays of shape:
+
+                - "atom14": (sequence_length, 14, 3)
+                - "ca": (sequence_length, 3)
         """
         folds = []
         with torch.inference_mode():
@@ -111,7 +114,7 @@ class EsmFold:
 
                 outputs = self.model(**tokens)
 
-                # @TODO: Return the atom14 mask as well and return a dict.
+                # @TODO: Return the atom14 mask as well in a dict.
                 # print(outputs["atom14_atom_exists"])
 
                 lengths = [len(s) for s in batch]
