@@ -97,8 +97,8 @@ class EsmFold:
         Returns:
             A list of numpy arrays of shape:
 
-                - "atom14": (sequence_length, 14, 3)
-                - "ca": (sequence_length, 3)
+                - "atom14": sequence_length x 14 x 3
+                - "ca": sequence_length x 3
         """
         folds = []
         with torch.inference_mode():
@@ -119,12 +119,12 @@ class EsmFold:
 
                 lengths = [len(s) for s in batch]
                 if convention == "ca":
-                    folded_positions = [outputs.positions[-1, i, :length, 1, :] for i, length in enumerate(lengths)]
+                    positions = [outputs.positions[-1, i, :length, 1, :] for i, length in enumerate(lengths)]
                 elif convention == "atom14":
-                    folded_positions = [outputs.positions[-1, i, :length, :, :] for i, length in enumerate(lengths)]
+                    positions = [outputs.positions[-1, i, :length, :, :] for i, length in enumerate(lengths)]
                 else:
                     raise ValueError(f"Unsupported convention: '{convention}'.")
 
-                folds += folded_positions
+                folds += positions
 
         return folds
