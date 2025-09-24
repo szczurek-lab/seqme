@@ -5,8 +5,6 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
 
-import numpy as np
-
 
 class ThirdPartyModel:
     """
@@ -54,7 +52,7 @@ class ThirdPartyModel:
             python_bin=Path(python_bin) if python_bin else None,
         )
 
-    def __call__(self, sequences: list[str], **kwargs) -> np.ndarray:
+    def __call__(self, sequences: list[str], **kwargs) -> Any:
         """
         Execute the plugin's function with the given keyword arguments.
 
@@ -63,16 +61,10 @@ class ThirdPartyModel:
             **kwargs: Arbitrary keyword arguments to pass to the plugin function.
 
         Returns:
-            np.ndarray: The result returned by the plugin function.
-
-        Raises:
-            ValueError: If the plugin response is not a numpy.ndarray.
+            Model output.
         """
         kwargs["sequences"] = sequences
-        result = self.plugin.run(self.module, self.fn, kwargs)
-        if not isinstance(result, np.ndarray):
-            raise ValueError("Invalid plugin response: expected numpy.ndarray")
-        return result
+        return self.plugin.run(self.module, self.fn, kwargs)
 
 
 class Plugin:

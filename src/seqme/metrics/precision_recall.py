@@ -11,6 +11,8 @@ class Precision(Metric):
     """
     Precision metric for evaluating generative models based on k-NN overlap.
 
+    The metric approximates a manifold from the reference embeddings and computes the fraction of sequence embeddings on this manifold.
+
     Reference:
         Kynkäänniemi et al., "Improved precision and recall metric for assessing generative models", NeurIPS 2019. (https://arxiv.org/abs/1904.06991)
     """
@@ -86,8 +88,8 @@ class Precision(Metric):
             )
 
         value = compute_precision(
-            reference_embeddings=self.reference_embeddings,
-            eval_embeddings=seq_embeddings,
+            real_embeddings=self.reference_embeddings,
+            generated_embeddings=seq_embeddings,
             neighborhood_size=self.neighborhood_size,
             row_batch_size=self.row_batch_size,
             col_batch_size=self.col_batch_size,
@@ -113,6 +115,8 @@ class Precision(Metric):
 class Recall(Metric):
     """
     Recall metric for evaluating generative models based on k-NN overlap.
+
+    The metric approximates a manifold from the sequence embeddings and computes the fraction of reference embeddings on this manifold.
 
     Reference:
         Kynkäänniemi et al., "Improved precision and recall metric for assessing generative models", NeurIPS 2019. (https://arxiv.org/abs/1904.06991)
@@ -187,8 +191,8 @@ class Recall(Metric):
             )
 
         value = compute_recall(
-            reference_embeddings=self.reference_embeddings,
-            eval_embeddings=seq_embeddings,
+            real_embeddings=self.reference_embeddings,
+            generated_embeddings=seq_embeddings,
             neighborhood_size=self.neighborhood_size,
             row_batch_size=self.row_batch_size,
             col_batch_size=self.col_batch_size,
@@ -212,8 +216,8 @@ class Recall(Metric):
 
 
 def compute_recall(
-    reference_embeddings: np.ndarray,
-    eval_embeddings: np.ndarray,
+    real_embeddings: np.ndarray,
+    generated_embeddings: np.ndarray,
     neighborhood_size: int,
     row_batch_size: int,
     col_batch_size: int,
@@ -223,8 +227,8 @@ def compute_recall(
     """Evaluate recall: fraction of reference manifold covered by eval embeddings.
 
     Args:
-        reference_embeddings: Array of reference points, shape [N_ref, D].
-        eval_embeddings: Array of evaluation points, shape [N_eval, D].
+        real_embeddings: Embeddings of the real data. Array of shape [N_real, D].
+        generated_embeddings: Embeddings of the generated data. Array of shape [N_gen, D].
         neighborhood_size: Number of neighbors (k) in k-NN.
         row_batch_size: Batch size for eval points when computing distances.
         col_batch_size: Batch size for reference points when computing distances.
@@ -234,20 +238,20 @@ def compute_recall(
     Returns:
         Recall value (float).
     """
-    eval_manifold = ManifoldEstimator(
-        eval_embeddings,
+    generated_manifold = ManifoldEstimator(
+        generated_embeddings,
         neighborhood_size=neighborhood_size,
         clamp_to_quantile=clamp_to_quantile,
         row_batch_size=row_batch_size,
         col_batch_size=col_batch_size,
         device=device,
     )
-    return eval_manifold.evaluate(reference_embeddings).mean().item()
+    return generated_manifold.evaluate(real_embeddings).mean().item()
 
 
 def compute_precision(
-    reference_embeddings: np.ndarray,
-    eval_embeddings: np.ndarray,
+    real_embeddings: np.ndarray,
+    generated_embeddings: np.ndarray,
     neighborhood_size: int,
     row_batch_size: int,
     col_batch_size: int,
@@ -257,8 +261,8 @@ def compute_precision(
     """Evaluate precision: fraction of eval points lying in reference manifold.
 
     Args:
-        reference_embeddings: Array of reference points, shape [N_ref, D].
-        eval_embeddings: Array of evaluation points, shape [N_eval, D].
+        real_embeddings: Embeddings of the real data. Array of shape [N_real, D].
+        generated_embeddings: Embeddings of the generated data. Array of shape [N_gen, D].
         neighborhood_size: Number of neighbors (k) in k-NN.
         row_batch_size: Batch size for reference points when computing distances.
         col_batch_size: Batch size for eval points when computing distances.
@@ -268,15 +272,15 @@ def compute_precision(
     Returns:
         Precision value (float).
     """
-    reference_manifold = ManifoldEstimator(
-        reference_embeddings,
+    real_manifold = ManifoldEstimator(
+        real_embeddings,
         neighborhood_size=neighborhood_size,
         clamp_to_quantile=clamp_to_quantile,
         row_batch_size=row_batch_size,
         col_batch_size=col_batch_size,
         device=device,
     )
-    return reference_manifold.evaluate(eval_embeddings).mean().item()
+    return real_manifold.evaluate(generated_embeddings).mean().item()
 
 
 class ManifoldEstimator:

@@ -229,7 +229,7 @@ def sort(df: pd.DataFrame, metric: str, *, level: int = 0, order: Literal["best"
     Args:
         df: Metric Dataframe.
         metric: Metric to consider when sorting.
-        level: The tuple index-names level to considers as a group.
+        level: The tuple index-names level to consider as a group.
         order: Which sequences to be first after sorting.
 
     Returns:
@@ -279,7 +279,7 @@ def top_k(
         df: Metric Dataframe.
         metric: Metric to consider when selecting top-k rows.
         k: Number of rows to extract.
-        level: The tuple index-names level to considers as a group.
+        level: The tuple index-names level to consider as a group.
         keep: Which entry to keep if multiple are equally good.
 
     Returns:
@@ -350,7 +350,7 @@ def show_table(
         notation: Whether to use scientific notation (exponent) or fixed-point notation (decimals).
         missing_value: str to show for cells with no metric value, i.e., cells with NaN values.
         show_arrow: Whether to include the objective arrow in the column names.
-        level: The tuple index-names level to considers as a group.
+        level: The tuple index-names level to consider as a group.
         hline_level: When to add horizontal lines seperaing model names. If None, add horizontal lines at the first level if more than 1 level.
         caption: Bottom caption text.
 
@@ -382,9 +382,14 @@ def show_table(
         t = (val - min_value) / (max_value - min_value)
         return 1 - t if objective == "minimize" else t
 
-    def decorate_solid(idx: int, metric: str, df: pd.DataFrame) -> str:
+    def decorate_solid(
+        idx: int,
+        metric: str,
+        df: pd.DataFrame,
+        best_indices: set[int],
+        second_best_indices: set[int],
+    ) -> str:
         fmts = []
-        best_indices, second_best_indices = _get_top_indices(df, metric)
         if idx in best_indices:
             if color:
                 fmts += [f"background-color:{color}"]
@@ -393,7 +398,13 @@ def show_table(
             fmts += ["text-decoration:underline"]
         return "; ".join(fmts)
 
-    def decorate_gradient(idx: int, metric: str, df: pd.DataFrame) -> str:
+    def decorate_gradient(
+        idx: int,
+        metric: str,
+        df: pd.DataFrame,
+        best_indices: set[int],
+        second_best_indices: set[int],
+    ) -> str:
         def gradient_lerp(hex_color1: str, hex_color2: str, t: float) -> str:
             cmap = mpl.colors.LinearSegmentedColormap.from_list(None, [hex_color1, hex_color2])
             return mpl.colors.to_hex(cmap(t), keep_alpha=True)
@@ -406,14 +417,19 @@ def show_table(
             gradient = gradient_lerp(f"{color}00", f"{color}ff", frac)
             fmts += [f"background-color:{gradient}"]
 
-        best_indices, second_best_indices = _get_top_indices(df, metric)
         if idx in best_indices:
             fmts += ["font-weight:bold"]
         if idx in second_best_indices:
             fmts += ["text-decoration:underline"]
         return "; ".join(fmts)
 
-    def decorate_bar(idx: int, metric: str, df: pd.DataFrame) -> str:
+    def decorate_bar(
+        idx: int,
+        metric: str,
+        df: pd.DataFrame,
+        best_indices: set[int],
+        second_best_indices: set[int],
+    ) -> str:
         fmts = []
         if color:
             objective = df.attrs["objective"][metric]
@@ -423,7 +439,6 @@ def show_table(
                 width = f"{frac * 100:.1f}%"
                 fmts += [f"background: linear-gradient(90deg, {color} {width}, transparent {width})"]
 
-        best_indices, second_best_indices = _get_top_indices(df, metric)
         if idx in best_indices:
             fmts += ["font-weight:bold"]
         if idx in second_best_indices:
@@ -431,7 +446,8 @@ def show_table(
         return "; ".join(fmts)
 
     def decorate_col(col_series: pd.Series, metric: str, fn: Callable, df: pd.DataFrame) -> list[str]:
-        return [fn(idx, metric, df) for idx in col_series.index]
+        best_indices, second_best_indices = _get_top_indices(df, metric)
+        return [fn(idx, metric, df, best_indices, second_best_indices) for idx in col_series.index]
 
     def get_changing_rows_iloc(indices: pd.Index, hline_level: int) -> list[int]:
         level_names = [idx[:hline_level] for idx in indices]
@@ -817,7 +833,7 @@ class ModelCache:
 
     def __init__(
         self,
-        models: dict[str, Callable[[list[str]], np.ndarray]] | None = None,
+        models: dict[str, Callable[[list[str]], list[Any] | np.ndarray]] | None = None,
         init_cache: dict[str, dict[str, np.ndarray]] | None = None,
     ):
         """Initialize the cache with optional models and precomputed representations.
@@ -833,7 +849,7 @@ class ModelCache:
             if name not in self.model_to_cache:
                 self.model_to_cache[name] = {}
 
-    def __call__(self, sequences: list[str], model_name: str) -> np.ndarray:
+    def __call__(self, sequences: list[str], model_name: str, variable_length: bool) -> list[Any] | np.ndarray:
         """Return embeddings for the given sequences using the specified model.
 
         Uncached sequences are computed and stored automatically.
@@ -841,9 +857,10 @@ class ModelCache:
         Args:
             sequences: List of input texts.
             model_name: Name of the model to use.
+            variable_length: Whether the embeddings are variable size. If true then return a list of embeddings else stack as a numpy array.
 
         Returns:
-            Array of embeddings in the same order as input.
+            Embeddings in the same order as input.
         """
         sequence_to_rep = self.model_to_cache[model_name]
 
@@ -858,22 +875,33 @@ class ModelCache:
             for sequence, rep in zip(new_sequences, new_reps, strict=True):
                 sequence_to_rep[sequence] = rep
 
-        return np.stack([sequence_to_rep[seq] for seq in sequences])
+        reps = [sequence_to_rep[seq] for seq in sequences]
+        return reps if variable_length else np.stack(reps)
 
-    def model(self, model_name: str) -> Callable[[list[str]], np.ndarray]:
+    def model(
+        self,
+        model_name: str,
+        *,
+        variable_length: bool = False,
+    ) -> Callable[[list[str]], list[Any] | np.ndarray]:
         """Return a callable interface for a given model name.
 
         Args:
             model_name: Name of the model to use.
+            variable_length: Whether the embeddings are variable size. If true then return a list of embeddings else stack as a numpy array.
 
         Raises:
             ValueError: If the model is unknown.
         """
         if model_name not in self.model_to_cache:
             raise ValueError(f"'{model_name}' is not callable nor has any pre-cached sequences.")
-        return lambda sequence: self(sequence, model_name)
+        return lambda sequence: self(sequence, model_name, variable_length)
 
-    def add(self, model_name: str, element: Callable[[list[str]], np.ndarray] | dict[str, np.ndarray]):
+    def add(
+        self,
+        model_name: str,
+        element: Callable[[list[str]], list[Any] | np.ndarray] | dict[str, Any],
+    ):
         """Add a new model or precomputed embeddings to the cache.
 
         Args:
@@ -916,7 +944,7 @@ class ModelCache:
         if model_name in self.model_to_callable:
             del self.model_to_callable[model_name]
 
-    def get(self) -> dict[str, dict[str, np.ndarray]]:
+    def get(self) -> dict[str, dict[str, Any]]:
         """Return a copy of the current cache.
 
         Returns:

@@ -78,4 +78,5 @@ nbsphinx_thumbnails = {
     "tutorials/benchmark_rna": "_static/logo.svg",
     "tutorials/diagnostics": "_static/logo.svg",
     "tutorials/third_party": "_static/logo.svg",
+    "tutorials/beyond_sequences": "_static/logo.svg",
 }
