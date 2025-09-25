@@ -17,3 +17,4 @@ Functionality to manipulate and visualize metric tables, and add new metrics.
     seqme.plot_series
     seqme.top_k
     seqme.sort
+    seqme.rename

@@ -229,7 +229,7 @@ def combine(
 
 
 def rename(df: pd.DataFrame, metrics: dict[str, str]) -> pd.DataFrame:
-    """Rename metrics.
+    """Rename one or more metrics.
 
     Args:
         df: Metric Dataframe.

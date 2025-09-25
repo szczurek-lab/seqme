@@ -42,7 +42,7 @@ Sequence manipulation
     :toctree:
     :nosignatures:
 
-    seqme.utils.shuffle_sequences
+    seqme.utils.shuffle_characters
     seqme.utils.random_subset
 
 

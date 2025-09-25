@@ -1,7 +1,7 @@
 import random
 
 
-def shuffle_sequences(sequences: list[str], seed: int = 42) -> list[str]:
+def shuffle_characters(sequences: list[str], seed: int = 42) -> list[str]:
     """
     Randomly shuffle characters within each sequence, preserving reproducibility.
 
