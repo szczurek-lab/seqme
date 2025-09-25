@@ -357,7 +357,7 @@ def top_k(
     return df_combined.loc[ordered_index]
 
 
-def display(
+def show(
     df: pd.DataFrame,
     *,
     n_decimals: int | list[int] = 2,
