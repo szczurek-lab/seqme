@@ -52,7 +52,7 @@ metrics = [
 ]
 
 df = sm.evaluate(sequences, metrics)
-sm.show_table(df) # Note: Will only display the table in a notebook.
+sm.display(df) # Note: Will only display the table in a notebook.
 ```
 
 Read the [docs](https://seqme.readthedocs.io/en/stable/tutorials/index.html) for more tutorials and examples.

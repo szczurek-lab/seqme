@@ -38,7 +38,7 @@ Run in a Jupyter notebook:
     ]
 
     df = sm.evaluate(sequences, metrics)
-    sm.show_table(df) # Note: Will only display the table in a notebook.
+    sm.display(df) # Note: Will only display the table in a notebook.
 
 
 .. toctree::
