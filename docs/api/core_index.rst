@@ -8,7 +8,7 @@ Functionality to manipulate and visualize metric tables, and add new metrics.
 
     seqme.Metric
     seqme.MetricResult
-    seqme.score
+    seqme.evaluate
     seqme.combine
     seqme.show_table
     seqme.to_latex

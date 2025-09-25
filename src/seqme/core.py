@@ -64,7 +64,7 @@ class Metric(abc.ABC):
         raise NotImplementedError()
 
 
-def score(
+def evaluate(
     sequences: dict[str, list[str]] | dict[tuple[str, ...], list[str]],
     metrics: list[Metric],
     *,

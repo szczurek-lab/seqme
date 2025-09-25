@@ -12,7 +12,7 @@ def test_top_k():
     }
     metrics = [sm.metrics.Uniqueness()]
 
-    df = sm.score(sequences, metrics)
+    df = sm.evaluate(sequences, metrics)
     df = sm.top_k(df, metric="Uniqueness", k=2)
 
     assert df.shape == (2, 2)

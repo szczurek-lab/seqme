@@ -37,7 +37,7 @@ Run in a Jupyter notebook:
         sm.metrics.FBD(reference=sequences["Random"], embedder=cache.model("esm2")),
     ]
 
-    df = sm.score(sequences, metrics)
+    df = sm.evaluate(sequences, metrics)
     sm.show_table(df) # Note: Will only display the table in a notebook.
 
 
