@@ -64,7 +64,7 @@ class Metric(abc.ABC):
         raise NotImplementedError()
 
 
-def compute_metrics(
+def score(
     sequences: dict[str, list[str]] | dict[tuple[str, ...], list[str]],
     metrics: list[Metric],
     *,
@@ -108,7 +108,7 @@ def compute_metrics(
 
             nested[group_name] = group_results
 
-    # Create to a DataFrame with MultiIndex columns
+    # Create a DataFrame with MultiIndex columns
     df_parts = []
     for metric in metrics:
         data = {
@@ -127,7 +127,7 @@ def compute_metrics(
     return df
 
 
-def combine_metric_dataframes(
+def combine(
     dfs: list[pd.DataFrame],
     *,
     on_overlap: Literal["fail", "mean,std"] = "fail",
@@ -164,10 +164,15 @@ def combine_metric_dataframes(
     combined_objectives: dict[str, str] = {}
 
     for df in dfs:
-        for key, value in df.attrs["objective"].items():
-            if key in combined_objectives and combined_objectives[key] != value:
-                raise ValueError(f"Conflicting objective for metric '{key}': '{combined_objectives[key]}' vs '{value}'")
-            combined_objectives[key] = value
+        objectives = df.attrs["objective"]
+        metrics = pd.unique(df.columns.get_level_values(0)).tolist()
+        for metric in metrics:
+            objective = objectives[metric]
+            if metric in combined_objectives and combined_objectives[metric] != objective:
+                raise ValueError(
+                    f"Conflicting objective for metric '{metric}': '{combined_objectives[metric]}' vs '{objective}'"
+                )
+            combined_objectives[metric] = objective
 
         for idx in df.index:
             if idx not in seen_rows:
@@ -221,6 +226,38 @@ def combine_metric_dataframes(
         combined_df.at[row, col] = val
 
     return combined_df
+
+
+def rename(df: pd.DataFrame, metrics: dict[str, str]) -> pd.DataFrame:
+    """Rename metrics.
+
+    Args:
+        df: Metric Dataframe.
+        metrics: Metrics to rename. Format: {old: new, ...}.
+
+    Returns:
+        A subset of the metric dataframe with the top-k rows.
+
+    Raises:
+        ValueError: If an `old` metric name is not present in the `df`, or if a `new` name would create a duplicate objective key.
+    """
+    old_metrics = pd.unique(df.columns.get_level_values(0)).tolist()
+    old_objectives = {metric: df.attrs["objective"][metric] for metric in old_metrics}
+    new_objectives = {mt: obj for mt, obj in old_objectives.items() if mt not in metrics}
+
+    for old, new in metrics.items():
+        if old not in old_objectives:
+            raise ValueError(f"Metric '{old}' does not exist.")
+
+        if new in new_objectives:
+            raise ValueError(f"Duplicate metric name '{new}'.")
+
+        new_objectives[new] = old_objectives[old]
+
+    new_df = df.rename(columns=metrics)
+    new_df.attrs["objective"] = new_objectives
+
+    return new_df
 
 
 def sort(df: pd.DataFrame, metric: str, *, level: int = 0, order: Literal["best", "worst"] = "best") -> pd.DataFrame:
@@ -382,29 +419,17 @@ def show_table(
         t = (val - min_value) / (max_value - min_value)
         return 1 - t if objective == "minimize" else t
 
-    def decorate_solid(
-        idx: int,
-        metric: str,
-        df: pd.DataFrame,
-        best_indices: set[int],
-        second_best_indices: set[int],
-    ) -> str:
+    def decorate_solid(idx: int, metric: str, df: pd.DataFrame, is_best: bool, is_second_best: bool) -> str:
         fmts = []
-        if idx in best_indices:
+        if is_best:
             if color:
                 fmts += [f"background-color:{color}"]
             fmts += ["font-weight:bold"]
-        if idx in second_best_indices:
+        if is_second_best:
             fmts += ["text-decoration:underline"]
         return "; ".join(fmts)
 
-    def decorate_gradient(
-        idx: int,
-        metric: str,
-        df: pd.DataFrame,
-        best_indices: set[int],
-        second_best_indices: set[int],
-    ) -> str:
+    def decorate_gradient(idx: int, metric: str, df: pd.DataFrame, is_best: bool, is_second_best: bool) -> str:
         def gradient_lerp(hex_color1: str, hex_color2: str, t: float) -> str:
             cmap = mpl.colors.LinearSegmentedColormap.from_list(None, [hex_color1, hex_color2])
             return mpl.colors.to_hex(cmap(t), keep_alpha=True)
@@ -417,19 +442,13 @@ def show_table(
             gradient = gradient_lerp(f"{color}00", f"{color}ff", frac)
             fmts += [f"background-color:{gradient}"]
 
-        if idx in best_indices:
+        if is_best:
             fmts += ["font-weight:bold"]
-        if idx in second_best_indices:
+        if is_second_best:
             fmts += ["text-decoration:underline"]
         return "; ".join(fmts)
 
-    def decorate_bar(
-        idx: int,
-        metric: str,
-        df: pd.DataFrame,
-        best_indices: set[int],
-        second_best_indices: set[int],
-    ) -> str:
+    def decorate_bar(idx: int, metric: str, df: pd.DataFrame, is_best: bool, is_second_best: bool) -> str:
         fmts = []
         if color:
             objective = df.attrs["objective"][metric]
@@ -439,15 +458,15 @@ def show_table(
                 width = f"{frac * 100:.1f}%"
                 fmts += [f"background: linear-gradient(90deg, {color} {width}, transparent {width})"]
 
-        if idx in best_indices:
+        if is_best:
             fmts += ["font-weight:bold"]
-        if idx in second_best_indices:
+        if is_second_best:
             fmts += ["text-decoration:underline"]
         return "; ".join(fmts)
 
     def decorate_col(col_series: pd.Series, metric: str, fn: Callable, df: pd.DataFrame) -> list[str]:
         best_indices, second_best_indices = _get_top_indices(df, metric)
-        return [fn(idx, metric, df, best_indices, second_best_indices) for idx in col_series.index]
+        return [fn(idx, metric, df, idx in best_indices, idx in second_best_indices) for idx in col_series.index]
 
     def get_changing_rows_iloc(indices: pd.Index, hline_level: int) -> list[int]:
         level_names = [idx[:hline_level] for idx in indices]
@@ -686,7 +705,7 @@ def barplot(
     metric: str,
     *,
     show_deviation: bool = True,
-    color: str = "#68d6bc",
+    color: str = "#14c299",
     x_ticks_label_rotation: float = 45,
     ylim: tuple[float, float] | None = None,
     figsize: tuple[int, int] = (4, 3),

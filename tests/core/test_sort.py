@@ -12,7 +12,7 @@ def test_sort_best():
     }
     metrics = [sm.metrics.Uniqueness()]
 
-    df = sm.compute_metrics(sequences, metrics)
+    df = sm.score(sequences, metrics)
     df = sm.sort(df, metric="Uniqueness", order="best")
 
     assert df.shape == (3, 2)
@@ -30,7 +30,7 @@ def test_sort_worst():
     }
     metrics = [sm.metrics.Uniqueness()]
 
-    df = sm.compute_metrics(sequences, metrics)
+    df = sm.score(sequences, metrics)
     df = sm.sort(df, metric="Uniqueness", order="worst")
 
     assert df.shape == (3, 2)

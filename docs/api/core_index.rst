@@ -8,8 +8,8 @@ Functionality to manipulate and visualize metric tables, and add new metrics.
 
     seqme.Metric
     seqme.MetricResult
-    seqme.compute_metrics
-    seqme.combine_metric_dataframes
+    seqme.score
+    seqme.combine
     seqme.show_table
     seqme.to_latex
     seqme.ModelCache

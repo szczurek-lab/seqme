@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from seqme import compute_metrics
+from seqme import score
 from seqme.metrics import Novelty
 
 
@@ -9,7 +9,7 @@ def test_compute_metrics():
     sequences = {"my_model": ["KKW", "RRR", "RRR"]}
     metrics = [Novelty(reference=["KKW"])]
 
-    df = compute_metrics(sequences, metrics)
+    df = score(sequences, metrics)
 
     # shape
     assert df.shape == (1, 2)
@@ -28,7 +28,7 @@ def test_empty_metrics_list_raises():
     metrics = []
 
     with pytest.raises(ValueError, match=r"^No metrics provided$"):
-        compute_metrics(sequences, metrics)
+        score(sequences, metrics)
 
 
 def test_empty_sequence_list_raises():
@@ -36,7 +36,7 @@ def test_empty_sequence_list_raises():
     metrics = [Novelty(reference=["KKW", "RKSPL"])]
 
     with pytest.raises(ValueError, match=r"^'random' has no sequences.$"):
-        compute_metrics(sequences, metrics)
+        score(sequences, metrics)
 
 
 def test_duplicate_metric_names_raises():
@@ -51,4 +51,4 @@ def test_duplicate_metric_names_raises():
         ValueError,
         match=r"^Metrics must have unique names\. Found duplicates: Novelty.$",
     ):
-        compute_metrics(sequences, metrics)
+        score(sequences, metrics)

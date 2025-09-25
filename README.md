@@ -51,7 +51,7 @@ metrics = [
     sm.metrics.FBD(reference=sequences["Random"], embedder=cache.model("esm2")),
 ]
 
-df = sm.compute_metrics(sequences, metrics)
+df = sm.score(sequences, metrics)
 sm.show_table(df) # Note: Will only display the table in a notebook.
 ```
 

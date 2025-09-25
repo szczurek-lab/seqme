@@ -52,6 +52,6 @@ IO
     :toctree:
     :nosignatures:
 
-    seqme.utils.read_fasta_file
-    seqme.utils.write_to_fasta_file
+    seqme.utils.read_fasta
+    seqme.utils.to_fasta
     
