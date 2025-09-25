@@ -993,7 +993,7 @@ def _get_top_indices(df: pd.DataFrame, metric: str) -> tuple[set[int], set[int]]
         return set(indices1), set(indices2)
 
     if "objective" not in df.attrs:
-        raise ValueError("DataFrame must have an 'objective' attribute. Use compute_metrics to create the DataFrame.")
+        raise ValueError("DataFrame must have an 'objective' attribute. Use 'sm.evaluate' to create the DataFrame.")
 
     objective = df.attrs["objective"][metric]
     vals = df[(metric, "value")]

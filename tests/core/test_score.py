@@ -5,7 +5,7 @@ from seqme import evaluate
 from seqme.metrics import Novelty
 
 
-def test_compute_metrics():
+def test_evaluate():
     sequences = {"my_model": ["KKW", "RRR", "RRR"]}
     metrics = [Novelty(reference=["KKW"])]
 

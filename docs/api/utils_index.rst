@@ -9,7 +9,7 @@ Plots
     :toctree:
     :nosignatures:
 
-    seqme.utils.plot_2d_embeddings
+    seqme.utils.plot_embeddings
     seqme.utils.plot_hist
     seqme.utils.plot_kde
     seqme.utils.plot_violin
