@@ -1,6 +1,5 @@
 from enum import Enum
-from itertools import islice
-
+ 
 import numpy as np
 import torch
 from tqdm import tqdm
@@ -67,6 +66,7 @@ class Hyformer:
 
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.model = AutoModel.from_pretrained(model_name)
+        self._create_dataloader_fn = create_dataloader
 
         self.model.to(device)
         self.model.eval()
@@ -91,10 +91,11 @@ class Hyformer:
         Returns:
             A NumPy array of shape (n_sequences, embedding_dim) containing the embeddings.
         """
+
         _CLS_TOKEN_IDX = 0
         _TASKS = {"prediction": 1.0}
         
-        _dataloader = create_dataloader(
+        _dataloader = self._create_dataloader_fn(
             dataset=sequences,
             tasks=_TASKS,
             tokenizer=self.tokenizer,
@@ -109,9 +110,9 @@ class Hyformer:
                 disable=not self.verbose,
             ):
                 batch = batch.to_device(self.device)
-            output = self.model(**batch, return_loss=False)
-            batch_embeddings = output["embeddings"][:, _CLS_TOKEN_IDX].detach().cpu().numpy()
-            embeddings.append(batch_embeddings)
+                output = self.model(**batch, return_loss=False)
+                batch_embeddings = output["embeddings"][:, _CLS_TOKEN_IDX].detach().cpu().numpy()
+                embeddings.append(batch_embeddings)
         return np.concatenate(embeddings, axis=0)
 
     def compute_perplexity(self, sequences: list[str]) -> np.ndarray:
@@ -124,5 +125,70 @@ class Hyformer:
         Returns:
             np.ndarray: Perplexity scores, in the same order as the input sequences.
         """
-        pass
+        _TASKS = {"lm": 1.0}
+        _dataloader = self._create_dataloader_fn(
+            dataset=sequences,
+            tasks=_TASKS,
+            tokenizer=self.tokenizer,
+            batch_size=min(len(sequences), self.batch_size),
+            shuffle=False,
+        )
+
+        logits = []
+        labels = []
         
+        with torch.inference_mode():
+            for batch in tqdm(
+                _dataloader,
+                disable=not self.verbose,
+            ):
+                batch = batch.to_device(self.device)
+                output = self.model(**batch, return_loss=False)
+                logits.append(output["logits"].cpu())
+                labels.append(batch["input_labels"].cpu())
+        
+        logits = torch.cat(logits, dim=0)
+        labels = torch.cat(labels, dim=0)
+
+        return self._perplexity_from_logits(logits, labels)
+
+    @staticmethod
+    def _perplexity_from_logits(logits: "torch.Tensor", labels: "torch.Tensor", ignore_index: int = -100) -> np.ndarray:
+        """Compute sequence-level perplexity from token logits.
+
+        Args:
+            logits: Float tensor of shape (batch, seq_len, vocab_size) with unnormalized scores.
+            labels: Long tensor of shape (batch, seq_len) with token ids used as targets.
+            ignore_index: Index to ignore in the labels.
+
+        Returns:
+            Array of shape (batch,) with perplexity per sequence.
+        """
+
+        if logits.ndim != 3:
+            raise ValueError("logits must have shape (batch, seq_len, vocab_size)")
+        if labels.ndim != 2:
+            raise ValueError("labels must have shape (batch, seq_len)")
+        if labels.shape[:2] != logits.shape[:2]:
+            raise ValueError("labels and logits must share (batch, seq_len)")
+        
+        # log-softmax over the vocabulary for numerical stability
+        log_probs = torch.log_softmax(logits, dim=-1)  # (batch, seq_len, vocab)
+
+        # shift logits and labels by one
+        logits = logits[:, :-1, :].contiguous()
+        labels = labels[:, 1:].contiguous()
+
+        ppls = torch.zeros(logits.shape[0])
+        for idx, (log_prob, label) in enumerate(zip(log_probs, labels)):
+            ppl = 0
+            n = 0
+            for lp, lab in zip(log_prob, label):
+                if lab == ignore_index:
+                    continue
+                n += 1
+                ppl += lp[lab]
+            ppls[idx] = ppl / n
+        ppls = torch.exp(-ppls)
+
+        return ppls.cpu().numpy().astype(float)
