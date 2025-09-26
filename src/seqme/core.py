@@ -1,4 +1,5 @@
 import abc
+import random
 from collections import Counter, defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -64,7 +65,7 @@ class Metric(abc.ABC):
         raise NotImplementedError()
 
 
-def compute_metrics(
+def evaluate(
     sequences: dict[str, list[str]] | dict[tuple[str, ...], list[str]],
     metrics: list[Metric],
     *,
@@ -108,7 +109,7 @@ def compute_metrics(
 
             nested[group_name] = group_results
 
-    # Create to a DataFrame with MultiIndex columns
+    # Create a DataFrame with MultiIndex columns
     df_parts = []
     for metric in metrics:
         data = {
@@ -127,7 +128,7 @@ def compute_metrics(
     return df
 
 
-def combine_metric_dataframes(
+def combine(
     dfs: list[pd.DataFrame],
     *,
     on_overlap: Literal["fail", "mean,std"] = "fail",
@@ -164,10 +165,15 @@ def combine_metric_dataframes(
     combined_objectives: dict[str, str] = {}
 
     for df in dfs:
-        for key, value in df.attrs["objective"].items():
-            if key in combined_objectives and combined_objectives[key] != value:
-                raise ValueError(f"Conflicting objective for metric '{key}': '{combined_objectives[key]}' vs '{value}'")
-            combined_objectives[key] = value
+        objectives = df.attrs["objective"]
+        metrics = pd.unique(df.columns.get_level_values(0)).tolist()
+        for metric in metrics:
+            objective = objectives[metric]
+            if metric in combined_objectives and combined_objectives[metric] != objective:
+                raise ValueError(
+                    f"Conflicting objective for metric '{metric}': '{combined_objectives[metric]}' vs '{objective}'"
+                )
+            combined_objectives[metric] = objective
 
         for idx in df.index:
             if idx not in seen_rows:
@@ -221,6 +227,38 @@ def combine_metric_dataframes(
         combined_df.at[row, col] = val
 
     return combined_df
+
+
+def rename(df: pd.DataFrame, metrics: dict[str, str]) -> pd.DataFrame:
+    """Rename one or more metrics.
+
+    Args:
+        df: Metric Dataframe.
+        metrics: Metrics to rename. Format: {old: new, ...}.
+
+    Returns:
+        A subset of the metric dataframe with the top-k rows.
+
+    Raises:
+        ValueError: If an `old` metric name is not present in the `df`, or if a `new` name would create a duplicate objective key.
+    """
+    old_metrics = pd.unique(df.columns.get_level_values(0)).tolist()
+    old_objectives = {metric: df.attrs["objective"][metric] for metric in old_metrics}
+    new_objectives = {mt: obj for mt, obj in old_objectives.items() if mt not in metrics}
+
+    for old, new in metrics.items():
+        if old not in old_objectives:
+            raise ValueError(f"Metric '{old}' does not exist.")
+
+        if new in new_objectives:
+            raise ValueError(f"Duplicate metric name '{new}'.")
+
+        new_objectives[new] = old_objectives[old]
+
+    new_df = df.rename(columns=metrics)
+    new_df.attrs["objective"] = new_objectives
+
+    return new_df
 
 
 def sort(df: pd.DataFrame, metric: str, *, level: int = 0, order: Literal["best", "worst"] = "best") -> pd.DataFrame:
@@ -320,7 +358,7 @@ def top_k(
     return df_combined.loc[ordered_index]
 
 
-def show_table(
+def show(
     df: pd.DataFrame,
     *,
     n_decimals: int | list[int] = 2,
@@ -382,29 +420,17 @@ def show_table(
         t = (val - min_value) / (max_value - min_value)
         return 1 - t if objective == "minimize" else t
 
-    def decorate_solid(
-        idx: int,
-        metric: str,
-        df: pd.DataFrame,
-        best_indices: set[int],
-        second_best_indices: set[int],
-    ) -> str:
+    def decorate_solid(idx: int, metric: str, df: pd.DataFrame, is_best: bool, is_second_best: bool) -> str:
         fmts = []
-        if idx in best_indices:
+        if is_best:
             if color:
                 fmts += [f"background-color:{color}"]
             fmts += ["font-weight:bold"]
-        if idx in second_best_indices:
+        if is_second_best:
             fmts += ["text-decoration:underline"]
         return "; ".join(fmts)
 
-    def decorate_gradient(
-        idx: int,
-        metric: str,
-        df: pd.DataFrame,
-        best_indices: set[int],
-        second_best_indices: set[int],
-    ) -> str:
+    def decorate_gradient(idx: int, metric: str, df: pd.DataFrame, is_best: bool, is_second_best: bool) -> str:
         def gradient_lerp(hex_color1: str, hex_color2: str, t: float) -> str:
             cmap = mpl.colors.LinearSegmentedColormap.from_list(None, [hex_color1, hex_color2])
             return mpl.colors.to_hex(cmap(t), keep_alpha=True)
@@ -417,19 +443,13 @@ def show_table(
             gradient = gradient_lerp(f"{color}00", f"{color}ff", frac)
             fmts += [f"background-color:{gradient}"]
 
-        if idx in best_indices:
+        if is_best:
             fmts += ["font-weight:bold"]
-        if idx in second_best_indices:
+        if is_second_best:
             fmts += ["text-decoration:underline"]
         return "; ".join(fmts)
 
-    def decorate_bar(
-        idx: int,
-        metric: str,
-        df: pd.DataFrame,
-        best_indices: set[int],
-        second_best_indices: set[int],
-    ) -> str:
+    def decorate_bar(idx: int, metric: str, df: pd.DataFrame, is_best: bool, is_second_best: bool) -> str:
         fmts = []
         if color:
             objective = df.attrs["objective"][metric]
@@ -439,15 +459,15 @@ def show_table(
                 width = f"{frac * 100:.1f}%"
                 fmts += [f"background: linear-gradient(90deg, {color} {width}, transparent {width})"]
 
-        if idx in best_indices:
+        if is_best:
             fmts += ["font-weight:bold"]
-        if idx in second_best_indices:
+        if is_second_best:
             fmts += ["text-decoration:underline"]
         return "; ".join(fmts)
 
     def decorate_col(col_series: pd.Series, metric: str, fn: Callable, df: pd.DataFrame) -> list[str]:
         best_indices, second_best_indices = _get_top_indices(df, metric)
-        return [fn(idx, metric, df, best_indices, second_best_indices) for idx in col_series.index]
+        return [fn(idx, metric, df, idx in best_indices, idx in second_best_indices) for idx in col_series.index]
 
     def get_changing_rows_iloc(indices: pd.Index, hline_level: int) -> list[int]:
         level_names = [idx[:hline_level] for idx in indices]
@@ -542,8 +562,8 @@ def show_table(
 
 
 def to_latex(
-    fname: str | Path,
     df: pd.DataFrame,
+    fname: str | Path,
     *,
     n_decimals: int | list[int] = 2,
     color: str | None = None,
@@ -555,8 +575,8 @@ def to_latex(
     """Convert a metric dataframe to a LaTeX table.
 
     Args:
-        fname: Output filename, e.g., "table.tex".
         df: DataFrame with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], attributed with 'objective'.
+        fname: Output filename, e.g., "table.tex".
         n_decimals: Decimal precision for formatting.
         color: Color (hex) for highlighting best scores.
         notation: Whether to use scientific notation (exponent) or fixed-point notation (decimals).
@@ -974,7 +994,7 @@ def _get_top_indices(df: pd.DataFrame, metric: str) -> tuple[set[int], set[int]]
         return set(indices1), set(indices2)
 
     if "objective" not in df.attrs:
-        raise ValueError("DataFrame must have an 'objective' attribute. Use compute_metrics to create the DataFrame.")
+        raise ValueError("DataFrame must have an 'objective' attribute. Use 'sm.evaluate' to create the DataFrame.")
 
     objective = df.attrs["objective"][metric]
     vals = df[(metric, "value")]
@@ -987,3 +1007,102 @@ def _get_top_indices(df: pd.DataFrame, metric: str) -> tuple[set[int], set[int]]
         raise ValueError(f"Unknown objective '{objective}' for metric '{metric}'.")
 
     return top_indices_helper(best_cells)
+
+
+def shuffle_characters(sequences: list[str], seed: int = 0) -> list[str]:
+    """
+    Randomly shuffle characters within each sequence, preserving reproducibility.
+
+    Args:
+        sequences: List of input strings to shuffle.
+        seed: Seed for the random number generator to ensure determinism.
+
+    Returns:
+        A new list where each sequence's characters have been shuffled.
+    """
+    rng = random.Random(seed)
+    shuffled = []
+    for seq in sequences:
+        chars = list(seq)
+        rng.shuffle(chars)
+        shuffled.append("".join(chars))
+    return shuffled
+
+
+def random_subset(sequences: list[str], n_samples: int, seed: int = 0) -> list[str]:
+    """
+    Select a random subset of unique sequences with deterministic behavior.
+
+    Args:
+        sequences: The list of input sequences to sample from.
+        n_samples: The number of sequences to sample.
+        seed: The random seed for reproducibility.
+
+    Returns:
+        A list of `n_samples` randomly chosen, unique sequences.
+
+    Raises:
+        ValueError: If `n_samples` exceeds the number of available sequences.
+    """
+    if n_samples > len(sequences):
+        raise ValueError(f"Cannot sample {n_samples} sequences from a list of length {len(sequences)}.")
+
+    rng = random.Random(seed)
+    return rng.sample(sequences, n_samples)
+
+
+def read_fasta(path: str) -> list[str]:
+    """Retrieve sequences from a fasta file.
+
+    Args:
+        path: Path to FASTA file.
+
+    Returns:
+        The list of sequences.
+    """
+    sequences: list[str] = []
+    current_seq: list[str] = []
+
+    with open(path) as file:
+        for line in file:
+            line = line.strip()
+            if not line:
+                continue  # skip empty lines
+            if line.startswith(">"):
+                if current_seq:
+                    sequence = "".join(current_seq)
+                    if sequence:
+                        sequences.append(sequence)
+                    current_seq = []
+            else:
+                current_seq.append(line)
+
+        # Add the last sequence if present
+        if current_seq:
+            sequence = "".join(current_seq)
+            if sequence:
+                sequences.append(sequence)
+
+    return sequences
+
+
+def to_fasta(sequences: list[str], path: str, *, headers: list[str] | None = None):
+    """Write sequences to a fasta file.
+
+    Args:
+       sequences: List of text sequences.
+       path: Output filepath, e.g., "seqs.fasta".
+       headers: Optional sequence names.
+    """
+    if headers is not None and len(headers) != len(sequences):
+        raise ValueError("headers length must match sequences length")
+
+    with open(path, "w") as f:
+        for i, seq in enumerate(sequences):
+            header = headers[i] if headers else f">seq_{i + 1}"
+
+            if not header.startswith(">"):
+                header = ">" + header
+
+            f.write(f"{header}\n")
+            f.write(f"{seq}\n")

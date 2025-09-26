@@ -55,7 +55,7 @@ def test_standard_with_ideal_hv():
         method="standard",
         nadir=np.zeros(2),
         ideal=np.array([10, 10]),
-        include_objective_count_in_name=False,
+        include_count_in_name=False,
     )
 
     # Name and objective properties

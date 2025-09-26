@@ -215,7 +215,7 @@ def plot_violin(
         plt.show()
 
 
-def plot_2d_embeddings(
+def plot_embeddings(
     embeddings: np.ndarray | list[np.ndarray],
     *,
     values: (str | np.ndarray) | (list[str] | list[np.ndarray]) | None = None,

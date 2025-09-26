@@ -37,8 +37,8 @@ Run in a Jupyter notebook:
         sm.metrics.FBD(reference=sequences["Random"], embedder=cache.model("esm2")),
     ]
 
-    df = sm.compute_metrics(sequences, metrics)
-    sm.show_table(df) # Note: Will only display the table in a notebook.
+    df = sm.evaluate(sequences, metrics)
+    sm.show(df) # Note: Will only display the table in a notebook.
 
 
 .. toctree::

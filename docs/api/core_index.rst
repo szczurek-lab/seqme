@@ -8,12 +8,17 @@ Functionality to manipulate and visualize metric tables, and add new metrics.
 
     seqme.Metric
     seqme.MetricResult
-    seqme.compute_metrics
-    seqme.combine_metric_dataframes
-    seqme.show_table
+    seqme.evaluate
+    seqme.combine
+    seqme.show
     seqme.to_latex
     seqme.ModelCache
     seqme.barplot
     seqme.plot_series
     seqme.top_k
     seqme.sort
+    seqme.rename
+    seqme.shuffle_characters
+    seqme.random_subset
+    seqme.read_fasta
+    seqme.to_fasta

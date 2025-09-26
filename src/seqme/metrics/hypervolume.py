@@ -19,7 +19,7 @@ class Hypervolume(Metric):
         nadir: np.ndarray | None = None,
         ideal: np.ndarray | None = None,
         strict: bool = True,
-        include_objective_count_in_name: bool = True,
+        include_count_in_name: bool = True,
     ):
         """
         Initialize the Hypervolume metric.
@@ -30,14 +30,14 @@ class Hypervolume(Metric):
             nadir: Worst acceptable value in each objective dimension.
             ideal: Best value in each objective dimension (used for normalizing points to [0;1]).
             strict: If true and values < nadir (or values > ideal) raise an exception.
-            include_objective_count_in_name: Whether to append the number of objectives to the metric's name.
+            include_count_in_name: Whether to append the number of objectives to the metric's name.
         """
         self.predictors = predictors
         self.method = method
         self.nadir = nadir if nadir is not None else np.zeros(len(predictors))
         self.ideal = ideal
         self.strict = strict
-        self.include_objective_count_in_name = include_objective_count_in_name
+        self.include_count_in_name = include_count_in_name
 
         if self.nadir.shape[0] != len(predictors):
             raise ValueError(
@@ -53,7 +53,7 @@ class Hypervolume(Metric):
     @property
     def name(self) -> str:
         name = "HV"
-        if self.include_objective_count_in_name:
+        if self.include_count_in_name:
             name += f"-{len(self.predictors)}"
         if self.method == "convex-hull":
             name += " (convex-hull)"

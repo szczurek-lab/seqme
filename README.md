@@ -51,8 +51,8 @@ metrics = [
     sm.metrics.FBD(reference=sequences["Random"], embedder=cache.model("esm2")),
 ]
 
-df = sm.compute_metrics(sequences, metrics)
-sm.show_table(df) # Note: Will only display the table in a notebook.
+df = sm.evaluate(sequences, metrics)
+sm.show(df) # Note: Will only display the table in a notebook.
 ```
 
 Read the [docs](https://seqme.readthedocs.io/en/stable/tutorials/index.html) for more tutorials and examples.
