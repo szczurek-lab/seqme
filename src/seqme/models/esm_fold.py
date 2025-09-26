@@ -119,9 +119,13 @@ class EsmFold:
 
                 lengths = [len(s) for s in batch]
                 if convention == "ca":
-                    positions = [outputs.positions[-1, i, :length, 1, :] for i, length in enumerate(lengths)]
+                    positions = [
+                        outputs.positions[-1, i, :length, 1, :].cpu().numpy() for i, length in enumerate(lengths)
+                    ]
                 elif convention == "atom14":
-                    positions = [outputs.positions[-1, i, :length, :, :] for i, length in enumerate(lengths)]
+                    positions = [
+                        outputs.positions[-1, i, :length, :, :].cpu().numpy() for i, length in enumerate(lengths)
+                    ]
                 else:
                     raise ValueError(f"Unsupported convention: '{convention}'.")
 
