@@ -12,7 +12,7 @@ class Authenticity(Metric):
     Proportion of authentic generated samples.
 
     Reference:
-        Alaa et al., "How Faithful is your Synthetic Data? Sample-level Metrics for Evaluating and Auditing Generative Models." (2022). (https://arxiv.org/pdf/1910.14137)
+        Alaa et al., "How Faithful is your Synthetic Data? Sample-level Metrics for Evaluating and Auditing Generative Models." (2022). (https://arxiv.org/abs/2102.08921)
     """
 
     def __init__(
@@ -101,7 +101,7 @@ class AuthPct(Authenticity):
     Proportion of authentic generated samples.
 
     Reference:
-        Alaa et al., "How Faithful is your Synthetic Data? Sample-level Metrics for Evaluating and Auditing Generative Models." (2022). (https://arxiv.org/pdf/1910.14137)
+        Alaa et al., "How Faithful is your Synthetic Data? Sample-level Metrics for Evaluating and Auditing Generative Models." (2022). (https://arxiv.org/abs/2102.08921)
     """
 
     pass
