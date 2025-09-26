@@ -165,6 +165,8 @@ exclude = ["docs", "docs/**"]
 [tool.hatch.build.targets.wheel]
 exclude = ["docs", "docs/**"]
 
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [tool.coverage.run]
 branch = true
