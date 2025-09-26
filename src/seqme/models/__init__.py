@@ -2,6 +2,7 @@ from seqme.models.dna_bert2 import DNABert2
 from seqme.models.ensemble import Ensemble
 from seqme.models.esm2 import Esm2, Esm2Checkpoint
 from seqme.models.esm_fold import EsmFold
+from seqme.models.hyformer import Hyformer, HyformerCheckpoint
 from seqme.models.kmers import KmerFrequencyEmbedding
 from seqme.models.physicochemical import (
     AliphaticIndex,
@@ -35,6 +36,8 @@ __all__ = [
     "Esm2Checkpoint",
     "Esm2",
     "EsmFold",
+    "Hyformer",
+    "HyformerCheckpoint",
     "KmerFrequencyEmbedding",
     "ProstT5",
     "RNA_FM",
