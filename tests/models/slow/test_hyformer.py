@@ -29,7 +29,7 @@ def test_hyformer_shape_and_means(hyformer):
     expected_means = np.array(
         [
             0.00181393,
-            0.0472128, 
+            0.0472128,
             -0.00306486,
             0.00684623,
             -0.0189725,

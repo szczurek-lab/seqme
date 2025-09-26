@@ -1,5 +1,5 @@
 from enum import Enum
- 
+
 import numpy as np
 import torch
 from tqdm import tqdm
@@ -11,11 +11,11 @@ class HyformerCheckpoint(str, Enum):
     # molecules checkpoints
     molecules_8M = "SzczurekLab/hyformer_molecules_8M"
     molecules_50M = "SzczurekLab/hyformer_molecules_50M"
-    
+
     # peptides checkpoints
     peptides = "SzczurekLab/hyformer_peptides"
     peptides_mic = "SzczurekLab/hyformer_peptides_mic"
-    
+
 
 class Hyformer:
     """
@@ -37,7 +37,6 @@ class Hyformer:
         device: str | None = None,
         batch_size: int = 256,
         verbose: bool = False,
-        seed: int = 1337,
     ):
         """
         Initialize Hyformer model.
@@ -59,7 +58,7 @@ class Hyformer:
         self.verbose = verbose
 
         try:
-            from hyformer import AutoTokenizer, AutoModel
+            from hyformer import AutoModel, AutoTokenizer
             from hyformer.utils import create_dataloader
         except ModuleNotFoundError:
             raise OptionalDependencyError("hyformer") from None
@@ -91,10 +90,9 @@ class Hyformer:
         Returns:
             A NumPy array of shape (n_sequences, embedding_dim) containing the embeddings.
         """
-
         _CLS_TOKEN_IDX = 0
         _TASKS = {"prediction": 1.0}
-        
+
         _dataloader = self._create_dataloader_fn(
             dataset=sequences,
             tasks=_TASKS,
@@ -134,9 +132,9 @@ class Hyformer:
             shuffle=False,
         )
 
-        logits = []
-        labels = []
-        
+        logit_batches: list[torch.Tensor] = []
+        label_batches: list[torch.Tensor] = []
+
         with torch.inference_mode():
             for batch in tqdm(
                 _dataloader,
@@ -144,16 +142,16 @@ class Hyformer:
             ):
                 batch = batch.to_device(self.device)
                 output = self.model(**batch, return_loss=False)
-                logits.append(output["logits"].cpu())
-                labels.append(batch["input_labels"].cpu())
-        
-        logits = torch.cat(logits, dim=0)
-        labels = torch.cat(labels, dim=0)
+                logit_batches.append(output["logits"].cpu())
+                label_batches.append(batch["input_labels"].cpu())
+
+        logits = torch.cat(logit_batches, dim=0)
+        labels = torch.cat(label_batches, dim=0)
 
         return self._perplexity_from_logits(logits, labels)
 
     @staticmethod
-    def _perplexity_from_logits(logits: "torch.Tensor", labels: "torch.Tensor", ignore_index: int = -100) -> np.ndarray:
+    def _perplexity_from_logits(logits: torch.Tensor, labels: torch.Tensor, ignore_index: int = -100) -> np.ndarray:
         """Compute sequence-level perplexity from token logits.
 
         Args:
@@ -164,14 +162,13 @@ class Hyformer:
         Returns:
             Array of shape (batch,) with perplexity per sequence.
         """
-
         if logits.ndim != 3:
             raise ValueError("logits must have shape (batch, seq_len, vocab_size)")
         if labels.ndim != 2:
             raise ValueError("labels must have shape (batch, seq_len)")
         if labels.shape[:2] != logits.shape[:2]:
             raise ValueError("labels and logits must share (batch, seq_len)")
-        
+
         # log-softmax over the vocabulary for numerical stability
         log_probs = torch.log_softmax(logits, dim=-1)  # (batch, seq_len, vocab)
 
@@ -180,10 +177,10 @@ class Hyformer:
         labels = labels[:, 1:].contiguous()
 
         ppls = torch.zeros(logits.shape[0])
-        for idx, (log_prob, label) in enumerate(zip(log_probs, labels)):
+        for idx, (log_prob, label) in enumerate(zip(log_probs, labels, strict=False)):
             ppl = 0
             n = 0
-            for lp, lab in zip(log_prob, label):
+            for lp, lab in zip(log_prob, label, strict=False):
                 if lab == ignore_index:
                     continue
                 n += 1
