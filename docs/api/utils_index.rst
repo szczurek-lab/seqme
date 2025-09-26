@@ -36,22 +36,4 @@ Diagnostics
     seqme.utils.plot_feature_alignment_score
 
 
-Sequence manipulation
----------------------
-.. autosummary::
-    :toctree:
-    :nosignatures:
-
-    seqme.utils.shuffle_characters
-    seqme.utils.random_subset
-
-
-IO
----
-.. autosummary::
-    :toctree:
-    :nosignatures:
-
-    seqme.utils.read_fasta
-    seqme.utils.to_fasta
     

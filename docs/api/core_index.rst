@@ -18,3 +18,7 @@ Functionality to manipulate and visualize metric tables, and add new metrics.
     seqme.top_k
     seqme.sort
     seqme.rename
+    seqme.shuffle_characters
+    seqme.random_subset
+    seqme.read_fasta
+    seqme.to_fasta
