@@ -562,8 +562,8 @@ def show(
 
 
 def to_latex(
-    fname: str | Path,
     df: pd.DataFrame,
+    fname: str | Path,
     *,
     n_decimals: int | list[int] = 2,
     color: str | None = None,
@@ -575,8 +575,8 @@ def to_latex(
     """Convert a metric dataframe to a LaTeX table.
 
     Args:
-        fname: Output filename, e.g., "table.tex".
         df: DataFrame with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], attributed with 'objective'.
+        fname: Output filename, e.g., "table.tex".
         n_decimals: Decimal precision for formatting.
         color: Color (hex) for highlighting best scores.
         notation: Whether to use scientific notation (exponent) or fixed-point notation (decimals).
@@ -1052,7 +1052,14 @@ def random_subset(sequences: list[str], n_samples: int, seed: int = 0) -> list[s
 
 
 def read_fasta(path: str) -> list[str]:
-    """Retrieve sequences from a fasta file."""
+    """Retrieve sequences from a fasta file.
+
+    Args:
+        path: Path to FASTA file.
+
+    Returns:
+        The list of sequences.
+    """
     sequences: list[str] = []
     current_seq: list[str] = []
 
@@ -1079,14 +1086,23 @@ def read_fasta(path: str) -> list[str]:
     return sequences
 
 
-def to_fasta(path: str, sequences: list[str], headers: list[str] | None = None):
-    """Write sequences to a fasta file."""
+def to_fasta(sequences: list[str], path: str, *, headers: list[str] | None = None):
+    """Write sequences to a fasta file.
+
+    Args:
+       sequences: List of text sequences.
+       path: Output filepath, e.g., "seqs.fasta".
+       headers: Optional sequence names.
+    """
+    if headers is not None and len(headers) != len(sequences):
+        raise ValueError("headers length must match sequences length")
+
     with open(path, "w") as f:
         for i, seq in enumerate(sequences):
             header = headers[i] if headers else f">seq_{i + 1}"
 
             if not header.startswith(">"):
-                raise ValueError("Missing prefix '>' in header.")
+                header = ">" + header
 
             f.write(f"{header}\n")
             f.write(f"{seq}\n")
