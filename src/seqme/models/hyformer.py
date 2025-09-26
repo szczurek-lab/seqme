@@ -8,6 +8,23 @@ from .exceptions import OptionalDependencyError
 
 
 class HyformerCheckpoint(str, Enum):
+    """
+    Hyformer checkpoints from Izdebski et al.
+
+    Available checkpoints:
+        molecules_8M: 8M parameters, 8 layers, embedding dim 256, pretrained on GuacaMol dataset [Brown et al.]
+        molecules_50M: 50M parameters, 12 layers, embedding dim 512, pretrained on Uni-Mol dataset [Zhou et al.]
+        peptides: 34M parameters, 8 layers, embedding dim 512, pretrained on combined general-purpose peptide and AMP datasets [Izdebski et al.]
+        peptides_mic: 34M parameters, 8 layers, embedding dim 512, pretrained on combined general-purpose peptide and MIC datasets [Izdebski et al.]
+            and subsequently jointly fine-tuned on peptides with MIC values against E. coli bacteria [Szymczak et al.]
+
+    Reference:
+        Izdebski et al. "Synergistic Benefits of Joint Molecule Generation and Property Prediction"
+        Brown et al. "GuacaMol: benchmarking models for de novo molecular design"
+        Zhou et al. "Uni-mol: A universal 3d molecular representation learning framework"
+        Szymczak et al. "Discovering highly potent antimicrobial peptides with deep generative model hydramp"
+    """
+
     # molecules checkpoints
     molecules_8M = "SzczurekLab/hyformer_molecules_8M"
     molecules_50M = "SzczurekLab/hyformer_molecules_50M"
@@ -81,11 +98,10 @@ class Hyformer:
         Compute embeddings for a list of sequences.
 
         Each sequence is tokenized and passed through the model.
-        Token embeddings are averaged (excluding special tokens) to produce a single embedding per sequence.
+        Token embeddings are [CLS] token embeddings.
 
         Args:
             sequences: List of input amino acid sequences.
-            layer: Layer to retrieve embeddings from.
 
         Returns:
             A NumPy array of shape (n_sequences, embedding_dim) containing the embeddings.
