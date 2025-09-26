@@ -59,10 +59,15 @@ dependencies = [
 esm2 = ["transformers"]
 prostT5 = ["transformers", "sentencepiece"]
 aaDescriptors = ["modlamp"]
+hyformer = [
+    "transformers",
+    "torchvision",
+    "einops>=0.7",
+    "hyformer @ git+https://github.com/szczurek-lab/hyformer.git@v2.0"
+]
 
 # RNA
 RNA_FM = ["rna-fm"]
-
 
 # DNA
 DNABert2 = ["transformers", "einops"]
