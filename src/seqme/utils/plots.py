@@ -70,7 +70,6 @@ def plot_hist(
     ax.set_ylabel(ylabels[ytype])
 
     if created_fig:
-        plt.tight_layout()
         plt.show()
 
 
@@ -137,7 +136,6 @@ def plot_kde(
         ax.set_xlim(xlim[0], xlim[1])
 
     if created_fig:
-        plt.tight_layout()
         plt.show()
 
 
@@ -211,7 +209,6 @@ def plot_violin(
     ax.grid(True, axis="y", linestyle="--", linewidth=0.5, alpha=0.7)
 
     if created_fig:
-        plt.tight_layout()
         plt.show()
 
 
@@ -228,6 +225,7 @@ def plot_embeddings(
     outline_width: float = 0,
     point_size: float = 20,
     show_legend: bool = True,
+    legend_loc: Literal["right margin"] | str | None = "right margin",
     legend_point_size: float | None = None,
     alpha: float = 0.6,
     show_ticks: bool = False,
@@ -247,7 +245,8 @@ def plot_embeddings(
         figsize: Size of the figure (if no Axes provided).
         outline_width: Width of the outline around points.
         point_size: Size of scatter points.
-        show_legend: Whether to show legend (only for categorical data)
+        show_legend: Whether to show legend (only for categorical data).
+        legend_loc: Legend location.
         legend_point_size: Size of scatter points in the legend.
         alpha: Transparency of points.
         show_ticks: Whether to show axis ticks.
@@ -319,13 +318,22 @@ def plot_embeddings(
                     linewidth=outline_width,
                 )
 
-                if show_legend:
-                    leg = ax.legend(frameon=True)
+            if show_legend:
+                if legend_loc == "right margin":
+                    leg = ax.legend(
+                        frameon=False,
+                        loc="center left",
+                        bbox_to_anchor=(1, 0.5),
+                        ncol=(1 if len(embeddings) <= 14 else 2 if len(embeddings) <= 30 else 3),
+                    )
+                else:
+                    leg = ax.legend(loc=legend_loc)
 
-                    if legend_point_size is not None:
-                        for lh in leg.legend_handles:
-                            lh.set_sizes([legend_point_size])  # type: ignore
-                            lh.set_alpha(1.0)
+                if legend_point_size is not None:
+                    for lh in leg.legend_handles:
+                        lh.set_sizes([legend_point_size])  # type: ignore
+                        lh.set_alpha(1.0)
+
     else:
         for i, group in enumerate(embeddings):
             ax.scatter(
@@ -349,5 +357,4 @@ def plot_embeddings(
         ax.set_title(title)
 
     if created_fig:
-        plt.tight_layout()
         plt.show()

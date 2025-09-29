@@ -1,3 +1,5 @@
+from typing import Literal
+
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.axes import Axes
@@ -48,6 +50,7 @@ def plot_feature_alignment_score(
     labels: np.ndarray,
     n_neighbors: list[int],
     label: str = None,
+    legend_loc: Literal["right margin"] | str | None = "right margin",
     ax: Axes = None,
 ):
     """
@@ -58,6 +61,7 @@ def plot_feature_alignment_score(
         labels: Label for each sequence.
         n_neighbors: Number of neighbors used by k-NN.
         label: Model name.
+        legend_loc: Legend location.
         ax: Optional Axes.
 
     """
@@ -69,13 +73,22 @@ def plot_feature_alignment_score(
         created_fig = True
 
     ax.plot(n_neighbors, scores, label=label)
-    ax.legend()
     ax.set_xlabel("N_neighbors")
     ax.set_ylabel("Score")
     ax.set_title("Feature alignment score")
     ax.grid(True, linestyle="--", linewidth=0.5, alpha=0.5)
     ax.set_ylim(0, 1)
 
+    if legend_loc == "right margin":
+        n_labels = len(np.unique(labels))
+        ax.legend(
+            frameon=False,
+            loc="center left",
+            bbox_to_anchor=(1, 0.5),
+            ncol=(1 if n_labels <= 14 else 2 if n_labels <= 30 else 3),
+        )
+    else:
+        ax.legend(loc=legend_loc)
+
     if created_fig:
-        plt.tight_layout()
         plt.show()
