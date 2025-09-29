@@ -1,5 +1,3 @@
-import pytest
-
 from seqme.metrics import Diversity
 
 

@@ -884,7 +884,7 @@ class ModelCache:
         """
         sequence_to_rep = self.model_to_cache[model_name]
 
-        new_sequences = [seq for seq in sequences if seq not in sequence_to_rep]
+        new_sequences = [seq for seq in set(sequences) if seq not in sequence_to_rep]
         if len(new_sequences) > 0:
             model = self.model_to_callable.get(model_name)
             if model is None:
@@ -1052,7 +1052,7 @@ def random_subset(sequences: list[str], n_samples: int, seed: int = 0) -> list[s
 
 
 def read_fasta(path: str) -> list[str]:
-    """Retrieve sequences from a fasta file.
+    """Retrieve sequences from a FASTA file.
 
     Args:
         path: Path to FASTA file.
@@ -1087,7 +1087,7 @@ def read_fasta(path: str) -> list[str]:
 
 
 def to_fasta(sequences: list[str], path: str, *, headers: list[str] | None = None):
-    """Write sequences to a fasta file.
+    """Write sequences to a FASTA file.
 
     Args:
        sequences: List of text sequences.
