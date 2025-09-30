@@ -53,7 +53,8 @@ class Hyformer:
         *,
         device: str | None = None,
         batch_size: int = 256,
-        verbose: bool = False
+        verbose: bool = False,
+        cache_dir: str | None = None,
     ):
         """
         Initialize Hyformer model.
@@ -63,6 +64,7 @@ class Hyformer:
             device: Device to run inference on, e.g., "cuda" or "cpu".
             batch_size: Number of sequences to process per batch.
             verbose: Whether to display a progress bar.
+            cache_dir: Directory to cache the model.
         """
         if isinstance(model_name, HyformerCheckpoint):
             model_name = model_name.value
@@ -80,24 +82,23 @@ class Hyformer:
         except ModuleNotFoundError:
             raise OptionalDependencyError("hyformer") from None
 
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self.model = AutoModel.from_pretrained(model_name)
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name, local_dir=cache_dir)
+        self.model = AutoModel.from_pretrained(model_name, local_dir=cache_dir)
         self._create_dataloader_fn = create_dataloader
 
         self.model.to(device)
         self.model.eval()
-        
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
         return self.embed(sequences)
 
-    def generate(self, num_samples: int, temperature: float = 1.0, top_k: int = None) -> list[str]:
+    def generate(self, num_samples: int, temperature: float = 1.0, top_k: int | None = None, seed: int = 1337) -> list[str]:
         _MAX_SEQUENCE_LENGTH = 256
         _PREFIX_INPUT_IDS = torch.tensor(
-            [[self.tokenizer.task_token_id('lm'), self.tokenizer.bos_token_id]] * self.batch_size,
+            [[self.tokenizer.task_token_id("lm"), self.tokenizer.bos_token_id]] * self.batch_size,
             dtype=torch.long,
-            device=self.device
-            )
+            device=self.device,
+        )
         _USE_CACHE = False
 
         generated_samples = []
@@ -106,19 +107,20 @@ class Hyformer:
             for _ in tqdm(range(0, num_samples, self.batch_size), "Generating samples"):
                 outputs = self.model.generate(
                     prefix_input_ids=_PREFIX_INPUT_IDS,
-                    num_tokens_to_generate=_MAX_SEQUENCE_LENGTH - len(_PREFIX_INPUT_IDS[0]), 
+                    num_tokens_to_generate=_MAX_SEQUENCE_LENGTH - len(_PREFIX_INPUT_IDS[0]),
                     eos_token_id=self.tokenizer.eos_token_id,
                     pad_token_id=self.tokenizer.pad_token_id,
                     temperature=temperature,
                     top_k=top_k,
                     top_p=None,
-                    use_cache=_USE_CACHE
+                    use_cache=_USE_CACHE,
+                    seed=seed
                 )
                 generated_samples.extend(self.tokenizer.decode(outputs))
 
         return generated_samples[:num_samples]
 
-    def predict(self, sequences: list[str]) -> np.ndarray:  
+    def predict(self, sequences: list[str]) -> np.ndarray:
         """
         Compute predictions for a list of sequences.
 
@@ -149,7 +151,11 @@ class Hyformer:
                 disable=not self.verbose,
             ):
                 batch = batch.to_device(self.device)
-                batch_predictions = self.model.predict(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"]).cpu().numpy()
+                batch_predictions = (
+                    self.model.predict(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"])
+                    .cpu()
+                    .numpy()
+                )
                 predictions.append(batch_predictions)
         return np.concatenate(predictions, axis=0)
 
