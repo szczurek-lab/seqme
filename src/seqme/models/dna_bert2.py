@@ -15,8 +15,7 @@ class DNABert2:
 
     Checkpoint: 127M parameters.
 
-
-    The model only runs a GPU.
+    The model only runs on a GPU.
 
     Reference:
         Zhou et al., "DNABERT-2: Efficient Foundation Model and Benchmark For Multi-Species Genome"

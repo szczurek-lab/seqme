@@ -11,7 +11,7 @@ class ProstT5:
 
     Computes sequence-level embeddings by averaging token embeddings.
 
-    Checkpoint: 3B parameters, 24 layers, embedding dim 1024, trained on protein sequences and 3Di structure.
+    Checkpoint: 3B parameters, 24 layers, embedding dim 1024, trained on protein sequences and 3Di structures.
 
     Installation: ``pip install seqme[prostT5]``
 
