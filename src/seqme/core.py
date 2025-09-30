@@ -855,7 +855,7 @@ def plot_series(
         plt.show()
 
 
-class ModelCache:
+class Cache:
     """Caches model-generated feature representations of sequences.
 
     Allows storing and retrieving embeddings per model to avoid
@@ -1020,16 +1020,16 @@ def _get_top_indices(df: pd.DataFrame, metric: str) -> tuple[set[int], set[int]]
     return top_indices_helper(best_cells)
 
 
-def shuffle_characters(sequences: list[str], seed: int = 0) -> list[str]:
+def shuffle_characters(sequences: list[str], seed: int | None = 0) -> list[str]:
     """
     Randomly shuffle characters within each sequence, preserving reproducibility.
 
     Args:
         sequences: List of input strings to shuffle.
-        seed: Seed for the random number generator to ensure determinism.
+        seed: Local seed when sampling. If None, no fixed local seed is used.
 
     Returns:
-        A new list where each sequence's characters have been shuffled.
+        A new list where each sequences characters have been shuffled.
     """
     rng = random.Random(seed)
     shuffled = []

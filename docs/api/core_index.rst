@@ -12,7 +12,7 @@ Functionality to manipulate and visualize metric tables, and add new metrics.
     seqme.combine
     seqme.show
     seqme.to_latex
-    seqme.ModelCache
+    seqme.Cache
     seqme.barplot
     seqme.plot_series
     seqme.top_k

@@ -1,8 +1,8 @@
 from seqme import metrics, models, utils
 from seqme.core import (
+    Cache,
     Metric,
     MetricResult,
-    ModelCache,
     barplot,
     combine,
     evaluate,
@@ -21,7 +21,7 @@ from seqme.core import (
 __all__ = [
     "Metric",
     "MetricResult",
-    "ModelCache",
+    "Cache",
     "barplot",
     "combine",
     "evaluate",
