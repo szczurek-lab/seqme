@@ -13,6 +13,11 @@ class DNABert2:
 
     Installation: ``pip install seqme[DNABert2]``
 
+    Checkpoint: 127M parameters.
+
+
+    The model only runs a GPU.
+
     Reference:
         Zhou et al., "DNABERT-2: Efficient Foundation Model and Benchmark For Multi-Species Genome"
         (https://arxiv.org/abs/2306.15006)
@@ -24,6 +29,7 @@ class DNABert2:
         *,
         device: str | None = None,
         batch_size: int = 256,
+        cache_dir: str | None = None,
         verbose: bool = False,
     ):
         """
@@ -32,6 +38,7 @@ class DNABert2:
         Args:
             device: Device to run inference on, e.g., "cuda" or "cpu".
             batch_size: Number of sequences to process per batch.
+            cache_dir: Directory to cache the model.
             verbose: Whether to display a progress bar.
         """
         if device is None:
@@ -46,8 +53,10 @@ class DNABert2:
         except ModuleNotFoundError:
             raise OptionalDependencyError("DNABert2") from None
 
-        self.tokenizer = AutoTokenizer.from_pretrained("zhihan1996/DNABERT-2-117M", trust_remote_code=True)
-        self.model = AutoModel.from_pretrained("zhihan1996/DNABERT-2-117M", trust_remote_code=True)
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            "zhihan1996/DNABERT-2-117M", trust_remote_code=True, cache_dir=cache_dir
+        )
+        self.model = AutoModel.from_pretrained("zhihan1996/DNABERT-2-117M", trust_remote_code=True, cache_dir=cache_dir)
 
         self.model.to(device)
         self.model.eval()

@@ -9,6 +9,20 @@ from .exceptions import OptionalDependencyError
 
 
 class Esm2Checkpoint(str, Enum):
+    """
+    ESM-2 checkpoints.
+
+    Available checkpoints:
+        t6_8M: 8M parameters, 6 layers, embedding dim 320 - compact variant for quick prototyping and resource-constrained inference.
+        t12_35M: 35M parameters, 12 layers, embedding dim 512 - mid-size variant balancing compute and performance.
+        t30_150M: 150M parameters, 30 layers, embedding dim 1024 - larger variant that improves representation power for downstream tasks.
+        t33_650M: 650M parameters, 33 layers, embedding dim 1280, commonly used medium-large model that performs well on structure and property prediction tasks.
+        t36_3B: 3B parameters, 36 layers, embedding dim 2560 - large model for more accurate representations and structure inference.
+        t48_15B: 15B parameters, 48 layers, embedding dim 5120 - the largest public ESM-2 variant; offers the highest capacity and best single-sequence structure representational power.
+
+        shukla_group_peptide_650M: 650M parameters, 33 layers, trained on peptide sequences.
+    """
+
     # protein checkpoints
     t6_8M = "facebook/esm2_t6_8M_UR50D"
     t12_35M = "facebook/esm2_t12_35M_UR50D"
@@ -42,6 +56,7 @@ class Esm2:
         device: str | None = None,
         batch_size: int = 256,
         verbose: bool = False,
+        cache_dir: str | None = None,
     ):
         """
         Initialize the ESM2 model.
@@ -51,6 +66,7 @@ class Esm2:
             device: Device to run inference on, e.g., "cuda" or "cpu".
             batch_size: Number of sequences to process per batch.
             verbose: Whether to display a progress bar.
+            cache_dir: Directory to cache the model.
         """
         if isinstance(model_name, Esm2Checkpoint):
             model_name = model_name.value
@@ -67,8 +83,8 @@ class Esm2:
         except ModuleNotFoundError:
             raise OptionalDependencyError("esm2") from None
 
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self.model = AutoModelForMaskedLM.from_pretrained(model_name)
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name, cache_dir=cache_dir)
+        self.model = AutoModelForMaskedLM.from_pretrained(model_name, cache_dir=cache_dir)
 
         self.model.to(device)
         self.model.eval()

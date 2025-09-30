@@ -25,6 +25,7 @@ class EsmFold:
         *,
         device: str | None = None,
         batch_size: int = 256,
+        cache_dir: str | None = None,
         verbose: bool = False,
     ):
         """
@@ -33,6 +34,7 @@ class EsmFold:
         Args:
             device: Device to run inference on, e.g., "cuda" or "cpu".
             batch_size: Number of sequences to process per batch.
+            cache_dir: Directory to cache the model.
             verbose: Whether to display a progress bar.
         """
         if device is None:
@@ -47,8 +49,8 @@ class EsmFold:
         except ModuleNotFoundError:
             raise OptionalDependencyError("esm2") from None
 
-        self.tokenizer = AutoTokenizer.from_pretrained("facebook/esmfold_v1")
-        self.model = EsmForProteinFolding.from_pretrained("facebook/esmfold_v1")
+        self.tokenizer = AutoTokenizer.from_pretrained("facebook/esmfold_v1", cache_dir=cache_dir)
+        self.model = EsmForProteinFolding.from_pretrained("facebook/esmfold_v1", cache_dir=cache_dir)
 
         self.model.to(device)
         self.model.eval()

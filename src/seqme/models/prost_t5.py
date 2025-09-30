@@ -11,6 +11,8 @@ class ProstT5:
 
     Computes sequence-level embeddings by averaging token embeddings.
 
+    Checkpoint: 3B parameters, 24 layers, embedding dim 1024, trained on protein sequences and 3Di structure.
+
     Installation: ``pip install seqme[prostT5]``
 
     Reference:
@@ -23,6 +25,7 @@ class ProstT5:
         *,
         device: str | None = None,
         batch_size: int = 64,
+        cache_dir: str | None = None,
         verbose: bool = False,
     ):
         """
@@ -31,6 +34,7 @@ class ProstT5:
         Args:
             device: Device to run inference on, e.g., "cuda" or "cpu".
             batch_size: Number of sequences to process per batch.
+            cache_dir: Directory to cache the model.
             verbose: Whether to display a progress bar.
         """
         if device is None:
@@ -45,8 +49,13 @@ class ProstT5:
         except ModuleNotFoundError:
             raise OptionalDependencyError("prostT5") from None
 
-        self.tokenizer = T5Tokenizer.from_pretrained("Rostlab/ProstT5", do_lower_case=False, legacy=True)
-        self.model = T5EncoderModel.from_pretrained("Rostlab/ProstT5").to(device)
+        self.tokenizer = T5Tokenizer.from_pretrained(
+            "Rostlab/ProstT5",
+            do_lower_case=False,
+            legacy=True,
+            cache_dir=cache_dir,
+        )
+        self.model = T5EncoderModel.from_pretrained("Rostlab/ProstT5", cache_dir=cache_dir).to(device)
         self.model.float() if device == "cpu" else self.model.half()
         self.model.eval()
 

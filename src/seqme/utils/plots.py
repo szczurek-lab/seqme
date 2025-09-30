@@ -329,10 +329,11 @@ def plot_embeddings(
                 else:
                     leg = ax.legend(loc=legend_loc)
 
-                if legend_point_size is not None:
-                    for lh in leg.legend_handles:
+                for lh in leg.legend_handles:
+                    lh.set_alpha(1.0)
+
+                    if legend_point_size is not None:
                         lh.set_sizes([legend_point_size])  # type: ignore
-                        lh.set_alpha(1.0)
 
     else:
         for i, group in enumerate(embeddings):
