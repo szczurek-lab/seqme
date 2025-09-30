@@ -14,8 +14,8 @@ class HyformerCheckpoint(str, Enum):
     Available checkpoints:
         molecules_8M: 8M parameters, 8 layers, embedding dim 256, pretrained on GuacaMol dataset [Brown et al.]
         molecules_50M: 50M parameters, 12 layers, embedding dim 512, pretrained on Uni-Mol dataset [Zhou et al.]
-        peptides: 34M parameters, 8 layers, embedding dim 512, pretrained on combined general-purpose peptide and AMP datasets [Izdebski et al.]
-        peptides_mic: 34M parameters, 8 layers, embedding dim 512, pretrained on combined general-purpose peptide and MIC datasets [Izdebski et al.]
+        peptides_34M: 34M parameters, 8 layers, embedding dim 512, pretrained on combined general-purpose peptide and AMP datasets [Izdebski et al.]
+        peptides_34M_mic: 34M parameters, 8 layers, embedding dim 512, pretrained on combined general-purpose peptide and MIC datasets [Izdebski et al.]
             and subsequently jointly fine-tuned on peptides with MIC values against E. coli bacteria [Szymczak et al.]
 
     Reference:
@@ -30,8 +30,8 @@ class HyformerCheckpoint(str, Enum):
     molecules_50M = "SzczurekLab/hyformer_molecules_50M"
 
     # peptides checkpoints
-    peptides = "SzczurekLab/hyformer_peptides"
-    peptides_mic = "SzczurekLab/hyformer_peptides_mic"
+    peptides_34M = "SzczurekLab/hyformer_peptides_34M"
+    peptides_34M_mic = "SzczurekLab/hyformer_peptides_34M_mic"
 
 
 class Hyformer:
@@ -53,7 +53,7 @@ class Hyformer:
         *,
         device: str | None = None,
         batch_size: int = 256,
-        verbose: bool = False,
+        verbose: bool = False
     ):
         """
         Initialize Hyformer model.
@@ -86,12 +86,72 @@ class Hyformer:
 
         self.model.to(device)
         self.model.eval()
+        
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
         return self.embed(sequences)
 
-    def generate(self, sequences: list[str]) -> np.ndarray:
-        pass
+    def generate(self, num_samples: int, temperature: float = 1.0, top_k: int = None) -> list[str]:
+        _MAX_SEQUENCE_LENGTH = 256
+        _PREFIX_INPUT_IDS = torch.tensor(
+            [[self.tokenizer.task_token_id('lm'), self.tokenizer.bos_token_id]] * self.batch_size,
+            dtype=torch.long,
+            device=self.device
+            )
+        _USE_CACHE = False
+
+        generated_samples = []
+
+        with torch.inference_mode():
+            for _ in tqdm(range(0, num_samples, self.batch_size), "Generating samples"):
+                outputs = self.model.generate(
+                    prefix_input_ids=_PREFIX_INPUT_IDS,
+                    num_tokens_to_generate=_MAX_SEQUENCE_LENGTH - len(_PREFIX_INPUT_IDS[0]), 
+                    eos_token_id=self.tokenizer.eos_token_id,
+                    pad_token_id=self.tokenizer.pad_token_id,
+                    temperature=temperature,
+                    top_k=top_k,
+                    top_p=None,
+                    use_cache=_USE_CACHE
+                )
+                generated_samples.extend(self.tokenizer.decode(outputs))
+
+        return generated_samples[:num_samples]
+
+    def predict(self, sequences: list[str]) -> np.ndarray:  
+        """
+        Compute predictions for a list of sequences.
+
+        Each sequence is tokenized and passed through the model.
+        Token predictions are [CLS] token predictions.
+
+        Args:
+            sequences: List of input sequences.
+
+        Returns:
+            A NumPy array of shape (n_sequences, num_prediction_tasks) containing the predictions.
+        """
+        _CLS_TOKEN_IDX = 0
+        _TASKS = {"prediction": 1.0}
+
+        _dataloader = self._create_dataloader_fn(
+            dataset=sequences,
+            tasks=_TASKS,
+            tokenizer=self.tokenizer,
+            batch_size=min(len(sequences), self.batch_size),
+            shuffle=False,
+        )
+
+        predictions = []
+        with torch.inference_mode():
+            for batch in tqdm(
+                _dataloader,
+                disable=not self.verbose,
+            ):
+                batch = batch.to_device(self.device)
+                batch_predictions = self.model.predict(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"]).cpu().numpy()
+                predictions.append(batch_predictions)
+        return np.concatenate(predictions, axis=0)
 
     def embed(self, sequences: list[str]) -> np.ndarray:
         """

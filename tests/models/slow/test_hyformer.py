@@ -52,3 +52,12 @@ def test_hyformer_shape_and_means(hyformer):
         5.95252991,
     ]
     assert perplexity.tolist() == pytest.approx(expected_perplexity, abs=1e-6)
+
+    generated_samples = hyformer.generate(num_samples=2)
+    assert isinstance(generated_samples, list)
+    assert isinstance(generated_samples[0], str)
+
+
+    predictions = hyformer.predict(data)
+    assert predictions.shape == (6, 1)
+    assert isinstance(predictions[0], float)
