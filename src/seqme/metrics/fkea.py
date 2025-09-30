@@ -202,12 +202,12 @@ def _cov_random_fourier_features(xs: torch.Tensor, feature_dim: int, std: float,
     generator = torch.Generator(device=xs.device).manual_seed(seed)
     omegas = torch.randn((xs.shape[-1], feature_dim), device=xs.device, generator=generator) * (1 / std)
 
-    x_cov, x_feature = _cov_cov_random_fourier_features2(xs, feature_dim, batch_size=batch_size, omegas=omegas)
+    x_cov, x_feature = _cov_random_fourier_features2(xs, feature_dim, batch_size=batch_size, omegas=omegas)
 
     return x_cov, omegas, x_feature  # [2 * feature_dim, 2 * feature_dim], [D, feature_dim], [B, 2 * feature_dim]
 
 
-def _cov_cov_random_fourier_features2(
+def _cov_random_fourier_features2(
     xs: torch.Tensor,
     feature_dim: int,
     batch_size: int,

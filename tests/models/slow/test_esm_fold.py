@@ -1,4 +1,3 @@
-import numpy as np
 import pytest
 
 from seqme.models import EsmFold

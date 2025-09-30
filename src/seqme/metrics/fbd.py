@@ -109,7 +109,7 @@ def wasserstein_distance(e1: np.ndarray, e2: np.ndarray, eps: float = 1e-6) -> f
     # Handle numerical issues with imaginary components
     if np.iscomplexobj(covmean):
         if not np.allclose(np.diagonal(covmean).imag, 0, atol=1e-3):
-            raise ValueError("Imaginary component")
+            return float("nan")
         covmean = covmean.real
 
     diff = mu1 - mu2

@@ -8,13 +8,13 @@ def p_count_aa(sequences: list[str], aa: str) -> np.ndarray:
     return np.array([sequence.count(aa) for sequence in sequences])
 
 
-def test_standard_hv():
+def test_hvi():
     metric = Hypervolume(
         predictors=[
             lambda seqs: p_count_aa(seqs, aa="K"),
             lambda seqs: p_count_aa(seqs, aa="R"),
         ],
-        method="standard",
+        method="hvi",
         nadir=np.zeros(2),
     )
 
@@ -46,13 +46,13 @@ def test_convex_hull_hv():
     assert result.deviation is None
 
 
-def test_standard_with_ideal_hv():
+def test_hvi_with_ideal_hv():
     metric = Hypervolume(
         predictors=[
             lambda seqs: p_count_aa(seqs, aa="K"),
             lambda seqs: p_count_aa(seqs, aa="R"),
         ],
-        method="standard",
+        method="hvi",
         nadir=np.zeros(2),
         ideal=np.array([10, 10]),
         include_count_in_name=False,
@@ -73,7 +73,7 @@ def test_strict():
             lambda seqs: p_count_aa(seqs, aa="K"),
             lambda seqs: p_count_aa(seqs, aa="R"),
         ],
-        method="standard",
+        method="hvi",
         nadir=np.ones(2),
     )
 
@@ -91,7 +91,7 @@ def test_not_strict():
             lambda seqs: p_count_aa(seqs, aa="K"),
             lambda seqs: p_count_aa(seqs, aa="R"),
         ],
-        method="standard",
+        method="hvi",
         nadir=np.zeros(2),
         ideal=np.ones(2) * 3,
         strict=False,

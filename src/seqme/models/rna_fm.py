@@ -12,8 +12,8 @@ class RNA_FM:
     A language model trained on RNA sequences, which computes sequence-level embeddings by averaging token embeddings.
 
     Two checkpoints are available:
-        mRNA: Trained on 45 million mRNA coding sequences (CDS).
-        ncRNA: Trained on 23+ million non-coding RNA (ncRNA) sequences.
+        mRNA: 239M parameters, 12 layers, embedding dim 1280, trained on 45 million mRNA coding sequences (CDS). Must be codon aligned.
+        ncRNA: 99M parameters, 12 layers, embedding dim 640, trained on 23.7 million non-coding RNA (ncRNA) sequences.
 
     Installation: ``pip install seqme[RNA_FM]``
 

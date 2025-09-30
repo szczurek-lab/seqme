@@ -274,7 +274,7 @@ def sort(df: pd.DataFrame, metric: str, *, level: int = 0, order: Literal["best"
         Sorted metric dataframe.
     """
 
-    def sort_df(df: pd.DataFrame, metric: str) -> pd.DataFrame:
+    def sort_df(df: pd.DataFrame, metric: str, order: str) -> pd.DataFrame:
         ascending = df.attrs["objective"][metric] == "minimize"
         if order == "worst":
             ascending = not ascending
@@ -297,7 +297,7 @@ def sort(df: pd.DataFrame, metric: str, *, level: int = 0, order: Literal["best"
     dfs_sorted = []
     for group in groups.values():
         df_sub = df.loc[group]
-        df_sub_sorted = sort_df(df_sub, metric)
+        df_sub_sorted = sort_df(df_sub, metric, order)
         dfs_sorted.append(df_sub_sorted)
 
     return pd.concat(dfs_sorted)
@@ -768,7 +768,6 @@ def barplot(
     ax.set_axisbelow(True)
 
     if created_fig:
-        plt.tight_layout()
         plt.show()
 
 
@@ -779,9 +778,11 @@ def plot_series(
     show_deviation: bool = True,
     figsize: tuple[int, int] = (4, 3),
     marker: str | None = "x",
+    marker_size: float | None = None,
     xlabel: str = "Iteration",
     alpha: float = 0.4,
     show_arrow: bool = True,
+    legend_loc: Literal["right margin"] | str | None = "right margin",
     ax: Axes | None = None,
 ):
     """Plot a graph for a given metric across multiple iterations/steps, optionally with error bars.
@@ -790,11 +791,13 @@ def plot_series(
         df: A DataFrame with a MultiIndex column [metric, {"value", "deviation"}].
         metric: The name of the metric to plot.
         show_deviation: Whether to the plot deviation if available.
-        marker: Marker type for graphs.
+        marker: Marker type for graphs. If None, no marker is shown.
+        marker_size: Size of marker. If None, auto-chooses size.
         xlabel: Name of x-label.
         alpha: opacity level of deviation intervals.
         figsize: Size of the figure.
         show_arrow: Whether to show an arrow indicating maximize/minimize (default is True).
+        legend_loc: Legend location.
         ax: Optional matplotlib Axes to plot on.
     """
     if metric not in df.columns.get_level_values(0):
@@ -828,7 +831,7 @@ def plot_series(
         if show_deviation:
             ax.fill_between(xs, vs - dev, vs + dev, alpha=alpha)
 
-        ax.plot(xs, vs, marker=marker, label=model_name)
+        ax.plot(xs, vs, marker=marker, markersize=marker_size, label=model_name)
 
     objective = df.attrs["objective"][metric]
     arrows = {"maximize": "↑", "minimize": "↓"}
@@ -837,10 +840,18 @@ def plot_series(
     ax.set_ylabel(f"{metric}{arrows[objective]}" if show_arrow else metric)
 
     ax.grid(True, linestyle="--", alpha=0.4)
-    ax.legend()
+
+    if legend_loc == "right margin":
+        ax.legend(
+            frameon=False,
+            loc="center left",
+            bbox_to_anchor=(1, 0.5),
+            ncol=(1 if len(model_names) <= 14 else 2 if len(model_names) <= 30 else 3),
+        )
+    else:
+        ax.legend(loc=legend_loc)
 
     if created_fig:
-        plt.tight_layout()
         plt.show()
 
 
@@ -884,7 +895,7 @@ class ModelCache:
         """
         sequence_to_rep = self.model_to_cache[model_name]
 
-        new_sequences = [seq for seq in sequences if seq not in sequence_to_rep]
+        new_sequences = [seq for seq in set(sequences) if seq not in sequence_to_rep]
         if len(new_sequences) > 0:
             model = self.model_to_callable.get(model_name)
             if model is None:
@@ -1052,7 +1063,7 @@ def random_subset(sequences: list[str], n_samples: int, seed: int = 0) -> list[s
 
 
 def read_fasta(path: str) -> list[str]:
-    """Retrieve sequences from a fasta file.
+    """Retrieve sequences from a FASTA file.
 
     Args:
         path: Path to FASTA file.
@@ -1087,7 +1098,7 @@ def read_fasta(path: str) -> list[str]:
 
 
 def to_fasta(sequences: list[str], path: str, *, headers: list[str] | None = None):
-    """Write sequences to a fasta file.
+    """Write sequences to a FASTA file.
 
     Args:
        sequences: List of text sequences.
