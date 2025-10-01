@@ -855,7 +855,7 @@ def plot_series(
         plt.show()
 
 
-class ModelCache:
+class Cache:
     """Caches model-generated feature representations of sequences.
 
     Allows storing and retrieving embeddings per model to avoid
@@ -1020,16 +1020,16 @@ def _get_top_indices(df: pd.DataFrame, metric: str) -> tuple[set[int], set[int]]
     return top_indices_helper(best_cells)
 
 
-def shuffle_characters(sequences: list[str], seed: int = 0) -> list[str]:
+def shuffle_characters(sequences: list[str], seed: int | None = 0) -> list[str]:
     """
     Randomly shuffle characters within each sequence, preserving reproducibility.
 
     Args:
         sequences: List of input strings to shuffle.
-        seed: Seed for the random number generator to ensure determinism.
+        seed: Local seed when sampling. If None, no fixed local seed is used.
 
     Returns:
-        A new list where each sequence's characters have been shuffled.
+        A new list where each sequences characters have been shuffled.
     """
     rng = random.Random(seed)
     shuffled = []
@@ -1040,17 +1040,23 @@ def shuffle_characters(sequences: list[str], seed: int = 0) -> list[str]:
     return shuffled
 
 
-def random_subset(sequences: list[str], n_samples: int, seed: int = 0) -> list[str]:
+def random_subset(
+    sequences: list[str],
+    n_samples: int,
+    return_indices: bool = False,
+    seed: int | None = 0,
+) -> list[str] | tuple[list[str], np.ndarray]:
     """
-    Select a random subset of unique sequences with deterministic behavior.
+    Sample a subset of the sequences with no replacement.
 
     Args:
-        sequences: The list of input sequences to sample from.
+        sequences: The list of sequences to sample from.
         n_samples: The number of sequences to sample.
-        seed: The random seed for reproducibility.
+        return_indices: If true, return a tuple of the sequence subset and indices else return only the sequence subset.
+        seed: Local seed when sampling. If None, no fixed local seed is used.
 
     Returns:
-        A list of `n_samples` randomly chosen, unique sequences.
+        A list of `n_samples` randomly chosen, unique sequences. Optionally, including the indices.
 
     Raises:
         ValueError: If `n_samples` exceeds the number of available sequences.
@@ -1058,8 +1064,14 @@ def random_subset(sequences: list[str], n_samples: int, seed: int = 0) -> list[s
     if n_samples > len(sequences):
         raise ValueError(f"Cannot sample {n_samples} sequences from a list of length {len(sequences)}.")
 
-    rng = random.Random(seed)
-    return rng.sample(sequences, n_samples)
+    rng = np.random.default_rng(seed)
+    indices = rng.choice(np.arange(len(sequences), dtype=int), size=n_samples, replace=False)
+    subset = [sequences[idx] for idx in indices]
+
+    if return_indices:
+        return subset, indices
+
+    return subset
 
 
 def read_fasta(path: str) -> list[str]:
