@@ -59,6 +59,13 @@ dependencies = [
 esm2 = ["transformers"]
 prostT5 = ["transformers", "sentencepiece"]
 aaDescriptors = ["modlamp"]
+hyformer_molecules = [
+    "deepchem",
+    "torchvision",
+    "transformers",
+    "hyformer @ git+https://github.com/szczurek-lab/hyformer.git@main"
+    ]
+
 hyformer = [
     "transformers",
     "torchvision",
