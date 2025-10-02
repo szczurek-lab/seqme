@@ -14,12 +14,11 @@ def hyformer():
 
 
 def test_hyformer_shape_and_means(hyformer):
-    
     data = [
         "RVKRVWPLVIRTVIAGYNLYRAIKKK",
         "RKRIHIGPGRAFYTT",
     ]
-    
+
     # test embeddings
     embeddings = hyformer(data)
     assert embeddings.shape == (len(data), _EMBEDDING_DIM)
@@ -37,7 +36,7 @@ def test_hyformer_shape_and_means(hyformer):
     generated_samples = hyformer.generate(num_samples=2, seed=1337)
     assert isinstance(generated_samples, list)
     assert isinstance(generated_samples[0], str)
-    expected_samples = np.array(['KCKKWKWKKKLV', 'RWWRWWRWG'])
+    expected_samples = np.array(["KCKKWKWKKKLV", "RWWRWWRWG"])
     assert len(generated_samples) == len(expected_samples)
     assert (generated_samples == expected_samples).all()
 

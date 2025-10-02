@@ -5,6 +5,7 @@ import torch
 from tqdm import tqdm
 
 from .exceptions import OptionalDependencyError
+from packaging.version import Version
 
 
 class HyformerCheckpoint(str, Enum):
@@ -16,7 +17,10 @@ class HyformerCheckpoint(str, Enum):
         molecules_50M: 50M parameters, 12 layers, embedding dim 512, pretrained on Uni-Mol dataset [Zhou et al.]
         peptides_34M: 34M parameters, 8 layers, embedding dim 512, pretrained on combined general-purpose peptide and AMP datasets [Izdebski et al.]
         peptides_34M_mic: 34M parameters, 8 layers, embedding dim 512, pretrained on combined general-purpose peptide and MIC datasets [Izdebski et al.]
-            and subsequently jointly fine-tuned on peptides with MIC values against E. coli bacteria [Szymczak et al.]
+            and subsequently jointly fine-tuned on peptides with (log2 transformed) MIC values against E. coli bacteria [Szymczak et al.]
+
+    If used for prediction, pre-trained models, i.e., `molecules_8M` and `molecules_50M` and `peptides_34M`, predict the physicochemical properties used for pre-training.
+    Jointly fine-tuned model `peptides_34M_mic` predicts the log2 transformed MIC values against E. coli bacteria.
 
     Reference:
         Izdebski et al. "Synergistic Benefits of Joint Molecule Generation and Property Prediction"
@@ -32,7 +36,7 @@ class HyformerCheckpoint(str, Enum):
     # peptides checkpoints
     peptides_34M = "SzczurekLab/hyformer_peptides_34M"
     peptides_34M_mic = "SzczurekLab/hyformer_peptides_34M_mic"
-
+    
 
 class Hyformer:
     """
@@ -77,14 +81,22 @@ class Hyformer:
         self.verbose = verbose
 
         try:
-            from hyformer import AutoModel, AutoTokenizer
+            from hyformer import AutoModel, AutoTokenizer, __version__ as hyformer_version
             from hyformer.utils import create_dataloader
         except ModuleNotFoundError:
             raise OptionalDependencyError("hyformer") from None
 
         self.tokenizer = AutoTokenizer.from_pretrained(model_name, local_dir=cache_dir)
         self.model = AutoModel.from_pretrained(model_name, local_dir=cache_dir)
+      
+        # Hyformer version-specific attributes
+        self._version = Version(hyformer_version)
         self._create_dataloader_fn = create_dataloader
+        self._generative_task_key = "generation" if self._version < Version("2.0.0") else "lm"
+        self._predictive_task_key = "prediction"
+        self._max_sequence_length = self.tokenizer.max_molecule_length if self._version < Version("2.0.0") else _MAX_SEQUENCE_LENGTH
+        self._logits_generation_key = "logits_generation" if self._version < Version("2.0.0") else "logits"
+        self._logits_prediction_key = "logits_physchem" if self._version < Version("2.0.0") else "logits"
 
         self.model.to(device)
         self.model.eval()
@@ -93,9 +105,21 @@ class Hyformer:
         return self.embed(sequences)
 
     def generate(self, num_samples: int, temperature: float = 1.0, top_k: int | None = None, seed: int = 1337) -> list[str]:
-        _MAX_SEQUENCE_LENGTH = 256
+        if self._version < Version("2.0.0"):
+            return self._generate_legacy(num_samples, temperature, top_k, seed)
+        else:
+            return self._generate(num_samples, temperature, top_k, seed)
+
+    def _generate_legacy(self, num_samples: int, temperature: float = 1.0, top_k: int | None = None, seed: int = 1337) -> list[str]:
+        generated = []
+        for _ in tqdm(range(0, num_samples, self.batch_size), "Generating samples"):
+            samples: list[str] = self.model.generate(self.tokenizer, min(num_samples, self.batch_size), temperature, top_k, self.device)
+            generated.extend(self.tokenizer.decode(samples))
+        return generated[:num_samples]
+
+    def _generate(self, num_samples: int, temperature: float = 1.0, top_k: int | None = None, seed: int = 1337) -> list[str]:
         _PREFIX_INPUT_IDS = torch.tensor(
-            [[self.tokenizer.task_token_id("lm"), self.tokenizer.bos_token_id]] * self.batch_size,
+            [[self.tokenizer.task_token_id(self._generative_task_key), self.tokenizer.bos_token_id]] * self.batch_size,
             dtype=torch.long,
             device=self.device,
         )
@@ -107,7 +131,7 @@ class Hyformer:
             for _ in tqdm(range(0, num_samples, self.batch_size), "Generating samples"):
                 outputs = self.model.generate(
                     prefix_input_ids=_PREFIX_INPUT_IDS,
-                    num_tokens_to_generate=_MAX_SEQUENCE_LENGTH - len(_PREFIX_INPUT_IDS[0]),
+                    num_tokens_to_generate=self._max_sequence_length - len(_PREFIX_INPUT_IDS[0]),
                     eos_token_id=self.tokenizer.eos_token_id,
                     pad_token_id=self.tokenizer.pad_token_id,
                     temperature=temperature,
@@ -134,7 +158,7 @@ class Hyformer:
             A NumPy array of shape (n_sequences, num_prediction_tasks) containing the predictions.
         """
         _CLS_TOKEN_IDX = 0
-        _TASKS = {"prediction": 1.0}
+        _TASKS = {self._predictive_task_key: 1.0}
 
         _dataloader = self._create_dataloader_fn(
             dataset=sequences,
@@ -151,12 +175,9 @@ class Hyformer:
                 disable=not self.verbose,
             ):
                 batch = batch.to_device(self.device)
-                batch_predictions = (
-                    self.model.predict(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"])
-                    .cpu()
-                    .numpy()
-                )
-                predictions.append(batch_predictions)
+                batch_predictions = self.model.predict(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"])
+                batch_predictions = batch_predictions[self._logits_prediction_key] if self._version < Version("2.0.0") else batch_predictions
+                predictions.append(batch_predictions.cpu().numpy())
         return np.concatenate(predictions, axis=0)
 
     def embed(self, sequences: list[str]) -> np.ndarray:
@@ -173,7 +194,7 @@ class Hyformer:
             A NumPy array of shape (n_sequences, embedding_dim) containing the embeddings.
         """
         _CLS_TOKEN_IDX = 0
-        _TASKS = {"prediction": 1.0}
+        _TASKS = {self._predictive_task_key: 1.0}
 
         _dataloader = self._create_dataloader_fn(
             dataset=sequences,
@@ -205,7 +226,7 @@ class Hyformer:
         Returns:
             np.ndarray: Perplexity scores, in the same order as the input sequences.
         """
-        _TASKS = {"lm": 1.0}
+        _TASKS = {self._generative_task_key: 1.0}
         _dataloader = self._create_dataloader_fn(
             dataset=sequences,
             tasks=_TASKS,
@@ -224,7 +245,7 @@ class Hyformer:
             ):
                 batch = batch.to_device(self.device)
                 output = self.model(**batch, return_loss=False)
-                logit_batches.append(output["logits"].cpu())
+                logit_batches.append(output[self._logits_generation_key].cpu())
                 label_batches.append(batch["input_labels"].cpu())
 
         logits = torch.cat(logit_batches, dim=0)
