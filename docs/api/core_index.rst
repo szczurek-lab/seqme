@@ -14,6 +14,7 @@ Functionality to manipulate and visualize metric tables, and add new metrics.
     seqme.to_latex
     seqme.Cache
     seqme.barplot
+    seqme.parallel_coordinates
     seqme.plot_series
     seqme.top_k
     seqme.sort

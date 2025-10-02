@@ -365,7 +365,7 @@ def show(
     color: str | None = "#68d6bc",
     color_style: Literal["solid", "gradient", "bar"] = "solid",
     notation: Literal["decimals", "exponent"] | list[Literal["decimals", "exponent"]] = "decimals",
-    missing_value: str = "-",
+    na_value: str = "-",
     show_arrow: bool = True,
     level: int = 0,
     hline_level: int | None = None,
@@ -386,7 +386,7 @@ def show(
         color: Color (hex) for highlighting best scores.
         color_style: Style of the coloring. Ignored if color is None.
         notation: Whether to use scientific notation (exponent) or fixed-point notation (decimals).
-        missing_value: str to show for cells with no metric value, i.e., cells with NaN values.
+        na_value: str to show for cells with no metric value, i.e., cells with NaN values.
         show_arrow: Whether to include the objective arrow in the column names.
         level: The tuple index-names level to consider as a group.
         hline_level: When to add horizontal lines seperaing model names. If None, add horizontal lines at the first level if more than 1 level.
@@ -508,8 +508,7 @@ def show(
         arrow = arrows[objectives[m]]
         col_name = f"{m}{arrow}" if show_arrow else m
         df_styled[col_name] = [
-            format_cell(val, dev, n_decimals[i], notation[i], missing_value)
-            for val, dev in zip(vals, devs, strict=True)
+            format_cell(val, dev, n_decimals[i], notation[i], na_value) for val, dev in zip(vals, devs, strict=True)
         ]
 
     decorators = {"solid": decorate_solid, "gradient": decorate_gradient, "bar": decorate_bar}
@@ -568,7 +567,7 @@ def to_latex(
     n_decimals: int | list[int] = 2,
     color: str | None = None,
     notation: Literal["decimals", "exponent"] | list[Literal["decimals", "exponent"]] = "decimals",
-    missing_value: str = "-",
+    na_value: str = "-",
     show_arrow: bool = True,
     caption: str = None,
 ):
@@ -580,7 +579,7 @@ def to_latex(
         n_decimals: Decimal precision for formatting.
         color: Color (hex) for highlighting best scores.
         notation: Whether to use scientific notation (exponent) or fixed-point notation (decimals).
-        missing_value: str to show for cells with no metric value, i.e., cells with NaN values.
+        na_value: str to show for cells with no metric value, i.e., cells with NaN values.
         show_arrow: Whether to include the objective arrow in the column names.
         caption: Bottom caption text.
     """
@@ -662,7 +661,7 @@ def to_latex(
         values = [row_name]
         for i, (col_name, val, dev) in enumerate(zip(col_names, row[::2], row[1::2], strict=True)):
             if pd.isna(val):
-                values.append(missing_value)
+                values.append(na_value)
                 continue
 
             best = row_name in best_indices[col_name]
@@ -707,9 +706,9 @@ def barplot(
     *,
     show_deviation: bool = True,
     color: str = "#68d6bc",
-    x_ticks_label_rotation: float = 45,
+    x_ticks_rotation: float = 45,
     ylim: tuple[float, float] | None = None,
-    figsize: tuple[int, int] = (4, 3),
+    figsize: tuple[int, int] = (5, 3),
     show_arrow: bool = True,
     ax: Axes | None = None,
 ):
@@ -720,10 +719,10 @@ def barplot(
         metric: The name of the metric to plot.
         show_deviation: Whether to plot the deviation if available.
         color: Bar color (optional, default is teal).
-        x_ticks_label_rotation: Rotation angle for x-axis tick labels.
+        x_ticks_rotation: Rotation angle for x-axis tick labels.
         ylim: Y-axis limits (optional).
         figsize: Size of the figure.
-        show_arrow: Whether to show an arrow indicating maximize/minimize (default is True).
+        show_arrow: Whether to show an arrow indicating maximize/minimize in the x-labels (default is True).
         ax: Optional matplotlib Axes to plot on.
     """
     if metric not in df.columns.get_level_values(0):
@@ -757,7 +756,7 @@ def barplot(
     arrow = arrows[df.attrs["objective"][metric]]
 
     ax.set_xticks(range(len(values)))
-    ax.set_xticklabels(bar_names, rotation=x_ticks_label_rotation, ha="center")
+    ax.set_xticklabels(bar_names, rotation=x_ticks_rotation, ha="center")
 
     ax.set_ylabel(f"{metric}{arrow}" if show_arrow else metric)
 
@@ -766,6 +765,180 @@ def barplot(
 
     ax.grid(axis="y", linestyle="--", alpha=0.7)
     ax.set_axisbelow(True)
+
+    if created_fig:
+        plt.show()
+
+
+def parallel_coordinates(
+    df: pd.DataFrame,
+    *,
+    n_decimals: int | list[int] = 2,
+    figsize: tuple[int, int] = (4, 3),
+    legend_loc: Literal["right margin"] | str | None = "right margin",
+    x_ticks_fontsize: float = 9,
+    x_ticks_rotation: float = 90,
+    y_ticks_fontsize: float = 8,
+    show_yticks: bool = True,
+    show_arrow: bool = True,
+    arrow_size: float | None = None,
+    zero_width: float | None = 0.25,
+    x_pad: float = 0.25,
+    ax: Axes | None = None,
+):
+    """Plot a parallel coordinates plots where each coordinate is a metric.
+
+    Args:
+        df: A DataFrame with a MultiIndex column [metric, {"value", "deviation"}].
+        n_decimals: Decimal precision for formatting.
+        figsize: Size of the figure.
+        legend_loc: Legend location.
+        x_ticks_fontsize: Font size of x ticks.
+        x_ticks_rotation: Rotation angle for x-axis tick labels.
+        y_ticks_fontsize: Font size of y labels.
+        show_yticks: Whether to you show minimum and maximum value as ticks on the y-axis for each metric.
+        show_arrow: Whether to show an arrow indicating maximize/minimize in the x-labels (default is True).
+        arrow_size: Size of arrows displayed in the plot. If None, don't show arrows.
+        zero_width: Width of the zero value indicator. If None, dont' show.
+        x_pad: Left and right padding of axes.
+        ax: Optional matplotlib Axes to plot on.
+    """
+    for idx in df.index:
+        vals = df.loc[idx, pd.IndexSlice[:, "value"]]  # type: ignore
+        if vals.isna().any():
+            raise ValueError(f"'{idx}' has NaN values.")
+
+    metric_names = list(df.columns.get_level_values(0).unique())
+    n_metrics = len(metric_names)
+    n_decimals = [n_decimals] * n_metrics if isinstance(n_decimals, int) else n_decimals
+
+    if len(n_decimals) != n_metrics:
+        raise ValueError(
+            f"Expected {n_metrics} decimals, got {len(n_decimals)}. Provide a single int or a list matching the number of metrics."
+        )
+
+    names = (
+        [" ".join(map(str, row_index)) for row_index in df.index.to_flat_index()]
+        if df.index.nlevels > 1
+        else list(df.index)
+    )
+
+    created_fig = False
+    if ax is None:
+        _, ax = plt.subplots(figsize=figsize)
+        created_fig = True
+
+    ax.set_xlim(0 - x_pad, n_metrics - 1 + x_pad)
+    ax.set_xticks(range(n_metrics))
+
+    ax.set_yticklabels([])
+
+    ax.grid(True, axis="x", linewidth=1.0, color="black", linestyle="-", alpha=0.3)
+    ax.grid(True, axis="y", linewidth=0.8, color="gray", linestyle="--", alpha=0.2)
+
+    # Normalize each metric separately
+    normalized = {}
+    ranges = {}
+    for m in metric_names:
+        vals = df[m]["value"].values
+        vmin, vmax = vals.min(), vals.max()
+        ranges[m] = (vmin, vmax)
+        normalized[m] = (vals - vmin) / (vmax - vmin) if vmax > vmin else np.zeros_like(vals)
+
+    for i, name in enumerate(names):
+        values = [normalized[m][i] for m in metric_names]
+        ax.plot(values, label=name)
+
+    if zero_width:
+        for i, m in enumerate(metric_names):
+            vmin, vmax = ranges[m]
+            if vmin <= 0 <= vmax:
+                ax.hlines(
+                    y=(0 - vmin) / (vmax - vmin),
+                    xmin=i - zero_width / 2,
+                    xmax=i + zero_width / 2,
+                    color="gray",
+                    linewidth=1.1,
+                    alpha=0.8,
+                )
+
+    for i, m in enumerate(metric_names):
+        vmin, vmax = ranges[m]
+        ax2 = ax.twinx()
+        ax2.set_ylim(0, 1)
+        ax2.yaxis.set_ticks_position("left")
+        ax2.set_yticks([])
+        ax2.spines["left"].set_position(("data", i))
+        ax2.spines["left"].set_visible(False)  # Hide duplicate spines
+
+    if legend_loc == "right margin":
+        ax.legend(
+            frameon=False,
+            loc="center left",
+            bbox_to_anchor=(1, 0.5),
+            ncol=(1 if len(names) <= 14 else 2 if len(names) <= 30 else 3),
+        )
+    else:
+        ax.legend(loc=legend_loc)
+
+    objectives = df.attrs["objective"]
+
+    arrows = {"maximize": "↑", "minimize": "↓"}
+    xlabels = [f"{m}{arrows[objectives[m]]}" if show_arrow else m for m in metric_names]
+    ax.set_xticklabels(xlabels, rotation=x_ticks_rotation, ha="center", va="top", fontsize=x_ticks_fontsize)
+
+    if arrow_size is not None:
+        for i, m in enumerate(metric_names):
+            vmin, vmax = ranges[m]
+            y_min, y_max = ax.get_ylim()
+
+            ax.text(
+                i,
+                1.0 if objectives[m] == "maximize" else 0.0,
+                f"{arrows[objectives[m]]}",
+                ha="center",
+                va="top" if objectives[m] == "maximize" else "bottom",
+                fontsize=arrow_size,
+                color="black",
+                clip_on=False,
+            )
+
+    if show_yticks:
+        y_min, y_max = ax.get_ylim()
+
+        y_offset_top = 0.05 * (y_max - y_min) / figsize[1]
+        y_offset_bottom = 0.1 * (y_max - y_min) / figsize[1]
+
+        x_label_y_pad = 0.5
+        auto_pad = y_ticks_fontsize + y_offset_bottom + x_label_y_pad
+        ax.tick_params(axis="x", pad=auto_pad)
+
+        for i, m in enumerate(metric_names):
+            vmin, vmax = ranges[m]
+
+            ax.text(
+                i,
+                y_max + y_offset_top,
+                f"{vmax:.{n_decimals[i]}f}",
+                ha="center",
+                va="bottom",
+                fontsize=y_ticks_fontsize,
+                color="black",
+                clip_on=False,
+                fontweight="bold" if objectives[m] == "maximize" else None,
+            )
+
+            ax.text(
+                i,
+                y_min - y_offset_bottom,
+                f"{vmin:.{n_decimals[i]}f}",
+                ha="center",
+                va="top",
+                fontsize=y_ticks_fontsize,
+                color="black",
+                clip_on=False,
+                fontweight="bold" if objectives[m] == "minimize" else None,
+            )
 
     if created_fig:
         plt.show()

@@ -68,6 +68,7 @@ RNA_FM = ["rna-fm"]
 DNABert2 = ["transformers", "einops"]
 
 doc = [
+    "seaborn",
     "ipykernel",
     "ipywidgets",
     "sphinx",
