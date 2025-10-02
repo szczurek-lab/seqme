@@ -2,10 +2,12 @@ from enum import Enum
 
 import numpy as np
 import torch
+from packaging.version import Version
 from tqdm import tqdm
 
 from .exceptions import OptionalDependencyError
-from packaging.version import Version
+
+_MAX_SEQUENCE_LENGTH = 512
 
 
 class HyformerCheckpoint(str, Enum):
@@ -36,7 +38,7 @@ class HyformerCheckpoint(str, Enum):
     # peptides checkpoints
     peptides_34M = "SzczurekLab/hyformer_peptides_34M"
     peptides_34M_mic = "SzczurekLab/hyformer_peptides_34M_mic"
-    
+
 
 class Hyformer:
     """
@@ -81,20 +83,23 @@ class Hyformer:
         self.verbose = verbose
 
         try:
-            from hyformer import AutoModel, AutoTokenizer, __version__ as hyformer_version
+            from hyformer import AutoModel, AutoTokenizer
+            from hyformer import __version__ as hyformer_version
             from hyformer.utils import create_dataloader
         except ModuleNotFoundError:
             raise OptionalDependencyError("hyformer") from None
 
         self.tokenizer = AutoTokenizer.from_pretrained(model_name, local_dir=cache_dir)
         self.model = AutoModel.from_pretrained(model_name, local_dir=cache_dir)
-      
+
         # Hyformer version-specific attributes
         self._version = Version(hyformer_version)
         self._create_dataloader_fn = create_dataloader
         self._generative_task_key = "generation" if self._version < Version("2.0.0") else "lm"
         self._predictive_task_key = "prediction"
-        self._max_sequence_length = self.tokenizer.max_molecule_length if self._version < Version("2.0.0") else _MAX_SEQUENCE_LENGTH
+        self._max_sequence_length = (
+            self.tokenizer.max_molecule_length if self._version < Version("2.0.0") else _MAX_SEQUENCE_LENGTH
+        )
         self._logits_generation_key = "logits_generation" if self._version < Version("2.0.0") else "logits"
         self._logits_prediction_key = "logits_physchem" if self._version < Version("2.0.0") else "logits"
 
@@ -104,20 +109,28 @@ class Hyformer:
     def __call__(self, sequences: list[str]) -> np.ndarray:
         return self.embed(sequences)
 
-    def generate(self, num_samples: int, temperature: float = 1.0, top_k: int | None = None, seed: int = 1337) -> list[str]:
+    def generate(
+        self, num_samples: int, temperature: float = 1.0, top_k: int | None = None, seed: int = 1337
+    ) -> list[str]:
         if self._version < Version("2.0.0"):
             return self._generate_legacy(num_samples, temperature, top_k, seed)
         else:
             return self._generate(num_samples, temperature, top_k, seed)
 
-    def _generate_legacy(self, num_samples: int, temperature: float = 1.0, top_k: int | None = None, seed: int = 1337) -> list[str]:
+    def _generate_legacy(
+        self, num_samples: int, temperature: float = 1.0, top_k: int | None = None, seed: int = 1337
+    ) -> list[str]:
         generated = []
         for _ in tqdm(range(0, num_samples, self.batch_size), "Generating samples"):
-            samples: list[str] = self.model.generate(self.tokenizer, min(num_samples, self.batch_size), temperature, top_k, self.device)
+            samples: list[str] = self.model.generate(
+                self.tokenizer, min(num_samples, self.batch_size), temperature, top_k, self.device
+            )
             generated.extend(self.tokenizer.decode(samples))
         return generated[:num_samples]
 
-    def _generate(self, num_samples: int, temperature: float = 1.0, top_k: int | None = None, seed: int = 1337) -> list[str]:
+    def _generate(
+        self, num_samples: int, temperature: float = 1.0, top_k: int | None = None, seed: int = 1337
+    ) -> list[str]:
         _PREFIX_INPUT_IDS = torch.tensor(
             [[self.tokenizer.task_token_id(self._generative_task_key), self.tokenizer.bos_token_id]] * self.batch_size,
             dtype=torch.long,
@@ -138,7 +151,7 @@ class Hyformer:
                     top_k=top_k,
                     top_p=None,
                     use_cache=_USE_CACHE,
-                    seed=seed
+                    seed=seed,
                 )
                 generated_samples.extend(self.tokenizer.decode(outputs))
 
@@ -175,8 +188,14 @@ class Hyformer:
                 disable=not self.verbose,
             ):
                 batch = batch.to_device(self.device)
-                batch_predictions = self.model.predict(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"])
-                batch_predictions = batch_predictions[self._logits_prediction_key] if self._version < Version("2.0.0") else batch_predictions
+                batch_predictions = self.model.predict(
+                    input_ids=batch["input_ids"], attention_mask=batch["attention_mask"]
+                )
+                batch_predictions = (
+                    batch_predictions[self._logits_prediction_key]
+                    if self._version < Version("2.0.0")
+                    else batch_predictions
+                )
                 predictions.append(batch_predictions.cpu().numpy())
         return np.concatenate(predictions, axis=0)
 
