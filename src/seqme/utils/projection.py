@@ -1,7 +1,160 @@
+from typing import Literal
+
+import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.axes import Axes
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from umap import UMAP
+
+
+def plot_embeddings(
+    embeddings: np.ndarray | list[np.ndarray],
+    *,
+    values: (str | np.ndarray) | (list[str] | list[np.ndarray]) | None = None,
+    colors: str | list[str] | None = None,
+    cmap: str | None = None,
+    title: str | None = None,
+    xlabel: str = "dim1",
+    ylabel: str = "dim2",
+    figsize: tuple[int, int] = (4, 3),
+    outline_width: float = 0,
+    point_size: float = 20,
+    show_legend: bool = True,
+    legend_loc: Literal["right margin"] | str | None = "right margin",
+    legend_point_size: float | None = None,
+    alpha: float = 0.6,
+    show_ticks: bool = False,
+    ax: Axes | None = None,
+):
+    """Plot projections for one or more groups.
+
+    Args:
+        embeddings: Groups of arrays, each containing 2d embeddings.
+        values: Either group names or values for each individual embedding.
+        colors: Colors for each group of points.
+        cmap: Colors used for values.
+        title: Optional plot title.
+        ax: Optional matplotlib Axes to plot on.
+        xlabel: x-axis label.
+        ylabel: y-axis label.
+        figsize: Size of the figure (if no Axes provided).
+        outline_width: Width of the outline around points.
+        point_size: Size of scatter points.
+        show_legend: Whether to show legend (only for categorical data).
+        legend_loc: Legend location.
+        legend_point_size: Size of scatter points in the legend.
+        alpha: Transparency of points.
+        show_ticks: Whether to show axis ticks.
+    """
+    # try making the parameters lists then parse those normally.
+
+    if isinstance(embeddings, np.ndarray):
+        embeddings = [embeddings]
+
+    if isinstance(values, str) or isinstance(values, np.ndarray):
+        values = [values]  # type: ignore
+
+    if isinstance(colors, str):
+        colors = [colors]
+
+    embeddings = list(embeddings)
+    values = list(values) if values else None  # type: ignore
+    colors = list(colors) if colors else None
+
+    for projection in embeddings:
+        if projection.ndim != 2:
+            raise ValueError(
+                f"All projection groups should have two dimensions [embeddings, 2], but a group has {projection.ndim} dimensions."
+            )
+        if projection.shape[-1] != 2:
+            raise ValueError(f"Only 2D embeddings can be plotted, but got {projection.shape[-1]}D embeddings.")
+
+    created_fig = False
+    if ax is None:
+        _, ax = plt.subplots(figsize=figsize)
+        created_fig = True
+
+    if values:
+        if isinstance(values[0], np.ndarray):
+            group = np.vstack(embeddings)
+            c = np.vstack(values)
+            sc = ax.scatter(
+                group[:, 0],
+                group[:, 1],
+                c=c,
+                s=point_size,
+                alpha=alpha,
+                edgecolor="black",
+                linewidth=outline_width,
+                cmap=cmap,
+            )
+            ax.figure.colorbar(sc, ax=ax)
+        else:
+            if len(values) != len(embeddings):
+                raise ValueError(
+                    f"'group_or_values' has {len(values)} groups (elements). 'projections' has {len(embeddings)} list elements. Required the same sizes."
+                )
+
+            if colors:
+                if len(colors) != len(values):
+                    raise ValueError(
+                        f"'group_colors' has {len(colors)} list elements. 'group_or_values' has {len(values)} list elements. Required the same sizes."
+                    )
+
+            for i, group in enumerate(embeddings):
+                ax.scatter(
+                    group[:, 0],
+                    group[:, 1],
+                    label=values[i],
+                    c=colors[i] if colors else None,
+                    s=point_size,
+                    alpha=alpha,
+                    edgecolor="black",
+                    linewidth=outline_width,
+                )
+
+            if show_legend:
+                if legend_loc == "right margin":
+                    leg = ax.legend(
+                        frameon=False,
+                        loc="center left",
+                        bbox_to_anchor=(1, 0.5),
+                        ncol=(1 if len(embeddings) <= 14 else 2 if len(embeddings) <= 30 else 3),
+                    )
+                else:
+                    leg = ax.legend(loc=legend_loc)
+
+                for lh in leg.legend_handles:
+                    lh.set_alpha(1.0)
+
+                    if legend_point_size is not None:
+                        lh.set_sizes([legend_point_size])  # type: ignore
+
+    else:
+        for i, group in enumerate(embeddings):
+            ax.scatter(
+                group[:, 0],
+                group[:, 1],
+                c=colors[i] if colors else None,
+                s=point_size,
+                alpha=alpha,
+                edgecolor="black",
+                linewidth=outline_width,
+            )
+
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+
+    if not show_ticks:
+        ax.set_xticks([])
+        ax.set_yticks([])
+
+    if title is not None:
+        ax.set_title(title)
+
+    if created_fig:
+        plt.show()
 
 
 def pca(embeddings: np.ndarray | list[np.ndarray], seed: int = 42) -> np.ndarray | list[np.ndarray]:

@@ -3,16 +3,6 @@ Utils
 Utility functions for models and metrics.
 Plotting functionality for models mapping sequences to either embedding- or property-space. Diagnostics to evaluate embedding models alignment with the feature(s) of interest.
 
-Plots
------
-.. autosummary::
-    :toctree:
-    :nosignatures:
-
-    seqme.utils.plot_embeddings
-    seqme.utils.plot_hist
-    seqme.utils.plot_kde
-    seqme.utils.plot_violin
 
 Projections
 -----------
@@ -23,6 +13,7 @@ Projections
     seqme.utils.pca
     seqme.utils.tsne
     seqme.utils.umap
+    seqme.utils.plot_embeddings
 
 
 Diagnostics
