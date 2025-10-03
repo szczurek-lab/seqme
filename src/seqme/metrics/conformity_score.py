@@ -31,10 +31,8 @@ class ConformityScore(Metric):
         Initialize the conformity score metric.
 
         Args:
-            reference: Reference sequences assumed to represent the
-                target distribution.
-            predictors: A list of descriptor functions. Each should
-                take a list of sequences and return a 1D NumPy array of features.
+            reference: Reference sequences assumed to represent the target distribution.
+            predictors: A list of descriptor functions. Each should take a list of sequences and return a 1D NumPy array of features.
             n_splits: Number of cross-validation folds for KDE.
             kde_bandwidth: Bandwidth parameter for the Gaussian KDE.
             reference_name: Optional name for the reference dataset.

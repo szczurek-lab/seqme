@@ -29,15 +29,14 @@ class MaximumMeanDiscrepancy(Metric):
         embedder_name: str | None = None,
     ):
         """
-        Initialize the MMD metric.
+        Initialize the metric.
 
         Args:
             reference: List of reference sequences representing real data.
-            embedder: Function that maps a list of sequences to their embeddings.
-                Should return a 2D array of shape (num_sequences, embedding_dim).
-            sigma: Bandwidth parameter for the Gaussian RBF kernel. Default is 10.
-            scale: Scaling factor for the MMD score. Default is 1000.
-            device: Device to run the computations on. Default is "cpu".
+            embedder: Function that maps a list of sequences to their embeddings. Should return a 2D array of shape (num_sequences, embedding_dim).
+            sigma: Bandwidth parameter for the Gaussian RBF kernel.
+            scale: Scaling factor for the MMD score.
+            device: Device to run the computations on.
             reference_name: Optional name for the reference dataset.
             embedder_name: Optional name for the embedder used.
         """
@@ -58,7 +57,7 @@ class MaximumMeanDiscrepancy(Metric):
         """Compute the MMD between embeddings of the input sequences and the reference.
 
         Args:
-            sequences: Generated sequences to evaluate.
+            sequences: Sequences to evaluate.
 
         Returns:
             MetricResult contains the MMD score, where lower values indicate better performance.

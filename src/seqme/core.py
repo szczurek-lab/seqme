@@ -19,14 +19,14 @@ from tqdm import tqdm
 
 @dataclass
 class MetricResult:
-    """Data structure to store metric result."""
+    """Data structure to store a metric result."""
 
     value: float | int
     deviation: float | None = None
 
 
 class Metric(abc.ABC):
-    """Abstract base for metrics evaluating lists of text sequences.
+    """Abstract base class for defining a metric.
 
     Subclasses implement a callable interface to compute a score and
     specify a name and optimization direction.
@@ -34,7 +34,7 @@ class Metric(abc.ABC):
 
     @abc.abstractmethod
     def __call__(self, sequences: list[str]) -> MetricResult:
-        """Calculate the metric over provided sequences.
+        """Calculate the metric for the provided sequences.
 
         Args:
             sequences: Text inputs to evaluate.
@@ -71,11 +71,11 @@ def evaluate(
     *,
     verbose: bool = True,
 ) -> pd.DataFrame:
-    """Compute a set of metrics on multiple sequence groups.
+    """Compute a set of metrics for multiple sequence groups.
 
     Args:
         sequences: A dict mapping group names to lists of sequences.
-        metrics: A list of Metric instances to apply.
+        metrics: A list of metrics to compute per sequence group.
         verbose: Whether to show a progress-bar.
 
     Returns:
@@ -133,10 +133,10 @@ def combine(
     *,
     on_overlap: Literal["fail", "mean,std"] = "fail",
 ) -> pd.DataFrame:
-    """Combine multiple DataFrames with metrics results into a single DataFrame.
+    """Combine multiple DataFrames with metric results into a single DataFrame.
 
     Args:
-        dfs: list of DataFrames, each with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], and an 'objective' attribute.
+        dfs: List of DataFrames, each with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], and an 'objective' attribute.
         on_overlap: How to handle cells with multiple values.
 
             - "fail": raises an exception on overlap.
@@ -237,7 +237,7 @@ def rename(df: pd.DataFrame, metrics: dict[str, str]) -> pd.DataFrame:
         metrics: Metrics to rename. Format: {old: new, ...}.
 
     Returns:
-        A subset of the metric dataframe with the top-k rows.
+        A copy of the original dataframe with the metrics (columns) renamed.
 
     Raises:
         ValueError: If an `old` metric name is not present in the `df`, or if a `new` name would create a duplicate objective key.
@@ -262,7 +262,7 @@ def rename(df: pd.DataFrame, metrics: dict[str, str]) -> pd.DataFrame:
 
 
 def sort(df: pd.DataFrame, metric: str, *, level: int = 0, order: Literal["best", "worst"] = "best") -> pd.DataFrame:
-    """Sort metric dataframe by metric value.
+    """Sort metric dataframe by a metrics values.
 
     Args:
         df: Metric Dataframe.
@@ -371,7 +371,7 @@ def show(
     hline_level: int | None = None,
     caption: str | None = None,
 ) -> Styler:
-    """Visualize a table of a metric dataframe.
+    """Display a metric dataframe as a styled table.
 
     Render a styled DataFrame that:
         - Combines 'value' and 'deviation' into "value ± deviation".
@@ -383,7 +383,7 @@ def show(
     Args:
         df: DataFrame with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], attributed with 'objective'.
         n_decimals: Decimal precision for formatting.
-        color: Color (hex) for highlighting best scores.
+        color: Color (hex) for highlighting best scores. If None, no coloring.
         color_style: Style of the coloring. Ignored if color is None.
         notation: Whether to use scientific notation (exponent) or fixed-point notation (decimals).
         na_value: str to show for cells with no metric value, i.e., cells with NaN values.
@@ -575,9 +575,9 @@ def to_latex(
 
     Args:
         df: DataFrame with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], attributed with 'objective'.
-        fname: Output filename, e.g., "table.tex".
+        fname: Output filename, e.g., "./path/table.tex".
         n_decimals: Decimal precision for formatting.
-        color: Color (hex) for highlighting best scores.
+        color: Color (hex) for highlighting best scores. If None, no coloring.
         notation: Whether to use scientific notation (exponent) or fixed-point notation (decimals).
         na_value: str to show for cells with no metric value, i.e., cells with NaN values.
         show_arrow: Whether to include the objective arrow in the column names.
@@ -708,21 +708,21 @@ def barplot(
     color: str = "#68d6bc",
     x_ticks_rotation: float = 45,
     ylim: tuple[float, float] | None = None,
-    figsize: tuple[int, int] = (5, 3),
+    figsize: tuple[int, int] = (4, 3),
     show_arrow: bool = True,
     ax: Axes | None = None,
 ):
-    """Plot a bar chart for a given metric, optionally with error bars.
+    """Plot a bar chart for a given metric with optional error bars.
 
     Args:
         df: A DataFrame with a MultiIndex column [metric, {"value", "deviation"}].
         metric: The name of the metric to plot.
         show_deviation: Whether to plot the deviation if available.
-        color: Bar color (optional, default is teal).
-        x_ticks_rotation: Rotation angle for x-axis tick labels.
-        ylim: Y-axis limits (optional).
+        color: Bar color. Default is teal.
+        x_ticks_rotation: Rotation angle for x-axis labels.
+        ylim: y-axis limits (optional).
         figsize: Size of the figure.
-        show_arrow: Whether to show an arrow indicating maximize/minimize in the x-labels (default is True).
+        show_arrow: Whether to show an arrow indicating maximize/minimize in the x-labels.
         ax: Optional matplotlib Axes to plot on.
     """
     if metric not in df.columns.get_level_values(0):
@@ -774,9 +774,9 @@ def parallel_coordinates(
     df: pd.DataFrame,
     *,
     n_decimals: int | list[int] = 2,
-    figsize: tuple[int, int] = (4, 3),
+    figsize: tuple[int, int] = (5, 3),
     legend_loc: Literal["right margin"] | str | None = "right margin",
-    x_ticks_fontsize: float = 9,
+    x_ticks_fontsize: float | None = None,
     x_ticks_rotation: float = 90,
     y_ticks_fontsize: float = 8,
     show_yticks: bool = True,
@@ -786,20 +786,20 @@ def parallel_coordinates(
     x_pad: float = 0.25,
     ax: Axes | None = None,
 ):
-    """Plot a parallel coordinates plots where each coordinate is a metric.
+    """Plot a parallel coordinates plot where each coordinate is a metric.
 
     Args:
         df: A DataFrame with a MultiIndex column [metric, {"value", "deviation"}].
         n_decimals: Decimal precision for formatting.
         figsize: Size of the figure.
         legend_loc: Legend location.
-        x_ticks_fontsize: Font size of x ticks.
+        x_ticks_fontsize: Font size of x-ticks. If None, selects default fontsize.
         x_ticks_rotation: Rotation angle for x-axis tick labels.
-        y_ticks_fontsize: Font size of y labels.
-        show_yticks: Whether to you show minimum and maximum value as ticks on the y-axis for each metric.
-        show_arrow: Whether to show an arrow indicating maximize/minimize in the x-labels (default is True).
-        arrow_size: Size of arrows displayed in the plot. If None, don't show arrows.
-        zero_width: Width of the zero value indicator. If None, dont' show.
+        y_ticks_fontsize: Font size of y-labels.
+        show_yticks: Whether to you show the minimum and maximum value on the y-axis for each metric.
+        show_arrow: Whether to show an arrow indicating maximize/minimize in the x-labels.
+        arrow_size: Size of arrows displayed in the plot. If None, do not show.
+        zero_width: Width of the zero value indicator. If None, do not show.
         x_pad: Left and right padding of axes.
         ax: Optional matplotlib Axes to plot on.
     """
@@ -958,18 +958,18 @@ def plot_series(
     legend_loc: Literal["right margin"] | str | None = "right margin",
     ax: Axes | None = None,
 ):
-    """Plot a graph for a given metric across multiple iterations/steps, optionally with error bars.
+    """Plot a series for a given metric across multiple iterations/steps with optional error bars.
 
     Args:
         df: A DataFrame with a MultiIndex column [metric, {"value", "deviation"}].
         metric: The name of the metric to plot.
         show_deviation: Whether to the plot deviation if available.
-        marker: Marker type for graphs. If None, no marker is shown.
-        marker_size: Size of marker. If None, auto-chooses size.
+        marker: Marker type for serie values. If None, no marker is shown.
+        marker_size: Size of marker. If None, auto-selects size.
         xlabel: Name of x-label.
         alpha: opacity level of deviation intervals.
         figsize: Size of the figure.
-        show_arrow: Whether to show an arrow indicating maximize/minimize (default is True).
+        show_arrow: Whether to show an arrow indicating maximize/minimize.
         legend_loc: Legend location.
         ax: Optional matplotlib Axes to plot on.
     """
@@ -1056,7 +1056,7 @@ class Cache:
     def __call__(self, sequences: list[str], model_name: str, variable_length: bool) -> list[Any] | np.ndarray:
         """Return embeddings for the given sequences using the specified model.
 
-        Uncached sequences are computed and stored automatically.
+        Uncached sequences are computed and stored.
 
         Args:
             sequences: List of input texts.
@@ -1064,7 +1064,7 @@ class Cache:
             variable_length: Whether the embeddings are variable size. If true then return a list of embeddings else stack as a numpy array.
 
         Returns:
-            Embeddings in the same order as input.
+            Embeddings in the same order as the input sequences.
         """
         sequence_to_rep = self.model_to_cache[model_name]
 
@@ -1195,7 +1195,7 @@ def _get_top_indices(df: pd.DataFrame, metric: str) -> tuple[set[int], set[int]]
 
 def shuffle_characters(sequences: list[str], seed: int | None = 0) -> list[str]:
     """
-    Randomly shuffle characters within each sequence, preserving reproducibility.
+    Randomly shuffle characters within each sequence.
 
     Args:
         sequences: List of input strings to shuffle.
@@ -1287,7 +1287,7 @@ def to_fasta(sequences: list[str], path: str, *, headers: list[str] | None = Non
 
     Args:
        sequences: List of text sequences.
-       path: Output filepath, e.g., "seqs.fasta".
+       path: Output filepath, e.g., "/path/seqs.fasta".
        headers: Optional sequence names.
     """
     if headers is not None and len(headers) != len(sequences):

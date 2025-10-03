@@ -35,7 +35,6 @@ class Precision(Metric):
         Initialize the metric.
 
         Args:
-            metric: Which metric to compute, either "precision" or "recall".
             neighborhood_size: Number of nearest neighbors (k) for k-NN graph.
             reference: List of reference sequences to build the reference manifold.
             embedder: Function that maps sequences to embeddings.
@@ -139,7 +138,6 @@ class Recall(Metric):
         """Initialize the metric.
 
         Args:
-            metric: Which metric to compute, either "precision" or "recall".
             neighborhood_size: Number of nearest neighbors (k) for k-NN graph.
             reference: List of reference sequences to build the reference manifold.
             embedder: Function that maps sequences to embeddings.

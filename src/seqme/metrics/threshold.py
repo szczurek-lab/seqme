@@ -19,7 +19,7 @@ class Threshold(Metric):
         inclusive: bool = True,
     ):
         """
-        Initialize the Threshold metric.
+        Initialize the metric.
 
         Args:
             predictor: A function that takes a list of sequences and returns a 1D array of scalar values.
