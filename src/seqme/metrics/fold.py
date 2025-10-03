@@ -8,7 +8,7 @@ from seqme.core import Metric, MetricResult
 class Fold(Metric):
     """A cross-validation wrapper for any Metric.
 
-    Fold splits the data into k folds or fixed-size splits, with optional shuffling, then aggregates the results.
+    Fold splits the data into k-folds or fixed-size splits, with optional shuffling, and then aggregates the results.
     """
 
     def __init__(
@@ -57,13 +57,13 @@ class Fold(Metric):
 
     def __call__(self, sequences: list[str]) -> MetricResult:
         """
-        Execute the wrapped metric on each fold of `sequences` and aggregate.
+        Call the wrapped metric on each fold of `sequences` and aggregate the results.
 
         Args:
-            sequences: Input data to split into folds.
+            sequences: Input sequences to split into folds.
 
         Returns:
-            Aggregated mean value and standard error or variance across folds.
+            Aggregated mean value and standard error, standard error or variance across folds.
         """
         n = len(sequences)
         indices = np.arange(n)

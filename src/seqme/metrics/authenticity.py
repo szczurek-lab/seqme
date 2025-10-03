@@ -27,7 +27,7 @@ class Authenticity(Metric):
 
         Args:
             train_set: List of sequences used to train the generative model.
-            embedder: A function that maps a list of sequences to a 2D NumPy array of embeddings.
+            embedder: A function mapping a list of sequences to a 2D NumPy array of embeddings.
             embedder_name: Optional name for the embedder used.
         """
         self.train_set = train_set

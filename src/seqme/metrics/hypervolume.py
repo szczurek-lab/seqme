@@ -26,7 +26,11 @@ class Hypervolume(Metric):
 
         Args:
             predictors: A list of functions. Each function maps a sequence to a numeric value aimed to be maximized.
-            method: Which Hypervolume computation method to use ("hvi" or "convex-hull").
+            method: Which Hypervolume computation method to use
+
+                - ``hvi``: Hypervalue indicator
+                - ``convex-hull``: Volume of the convex-hull
+
             nadir: Worst acceptable value in each objective dimension.
             ideal: Best value in each objective dimension (used for normalizing points to [0;1]).
             strict: If true and values < nadir (or values > ideal) raise an exception.

@@ -8,15 +8,12 @@ class Novelty(Metric):
 
     def __init__(self, reference: list[str], *, reference_name: str | None = None):
         """
-        Initialize the Novelty metric with a reference corpus.
+        Initialize the metric with a reference corpus.
 
         Args:
-            reference: A list of reference sequences against which
-                generated sequences will be compared. Sequences found in this
-                list are considered non-novel.
-            reference_name: An optional label for the reference data.
-                This name will be appended to the metric name for identification.
-                Defaults to None.
+            reference: A list of reference sequences against which generated sequences will be compared.
+                Sequences found in this list are considered non-novel.
+            reference_name: An optional label for the reference data. This name will be appended to the metric name for identification.
         """
         self.reference = set(reference)
         self.data_name = reference_name

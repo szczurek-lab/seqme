@@ -11,20 +11,20 @@ class HitRate(Metric):
 
     def __init__(self, condition_fn: Callable[[list[str]], np.ndarray], *, name: str = "Hit-rate"):
         """
-        Initializes the hit‐rate metric.
+        Initializes the hit-rate metric.
 
         Args:
             condition_fn: A function that takes a list of sequences and returns
                        a boolean NumPy array of the same length, where True
                        indicates a “hit” for that sequence.
-            name: Name of the metric. Defaults to "Hit-rate".
+            name: Name of the metric.
         """
         self.condition_fn = condition_fn
         self._name = name
 
     def __call__(self, sequences: list[str]) -> MetricResult:
         """
-        Applies the filter to count hits and returns the average hit rate.
+        Applies the filter to count hits and returns the average hit-rate.
 
         Args:
             sequences: List of sequences to evaluate.

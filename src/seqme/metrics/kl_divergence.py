@@ -21,12 +21,12 @@ class KLDivergence(Metric):
         seed: int | None = 0,
     ):
         """
-        Initialize the KL-divergence.
+        Initialize the metric.
 
         Args:
             reference: Reference sequences assumed to represent the target distribution.
             descriptor: Descriptor function which return a 1D NumPy array.
-            n_draws: Number of Monte Carlo samples to draw from distribution P.
+            n_draws: Number of Monte Carlo samples to draw from reference distribution.
             kde_bandwidth: Bandwidth parameter for the Gaussian KDE.
             reference_name: Optional name for the reference dataset.
             seed: Seed for KL-divergence Monte-Carlo sampling.
