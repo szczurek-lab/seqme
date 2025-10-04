@@ -22,7 +22,7 @@ def plot_embeddings(
     point_size: float = 20,
     show_legend: bool = True,
     legend_loc: Literal["right margin"] | str | None = "right margin",
-    legend_point_size: float | None = None,
+    legend_point_size: float | None = 20,
     alpha: float = 0.6,
     show_ticks: bool = False,
     ax: Axes | None = None,
