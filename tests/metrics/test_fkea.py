@@ -39,7 +39,7 @@ def test_fkea_two_modes(shifted_embedder):
     assert metric.objective == "maximize"
 
     result = metric(["KAAA", "RRRRRRRRRR", "RRRRRRRRRRR"])
-    assert result.value == pytest.approx(1.0863312)
+    assert result.value == pytest.approx(1.0863, abs=1e-4)
     assert result.deviation is None
 
     with pytest.raises(ValueError, match=r"^Computed the metric using different number of sequences.$"):

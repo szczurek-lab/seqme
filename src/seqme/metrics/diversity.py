@@ -90,7 +90,7 @@ def compute_diversity(
     for i, sequence in enumerate(sequences):
         others = reference if reference else sequences[:i] + sequences[i + 1 :]
 
-        if k:
+        if k and k < len(others):
             idxs = rng.choice(np.arange(len(others)), size=k, replace=False)
             others = [others[i] for i in idxs]
 
