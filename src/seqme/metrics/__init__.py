@@ -10,6 +10,7 @@ from seqme.metrics.hypervolume import Hypervolume
 from seqme.metrics.id import ID
 from seqme.metrics.jaccard_similarity import NGramJaccardSimilarity
 from seqme.metrics.kl_divergence import KLDivergence
+from seqme.metrics.length import Length
 from seqme.metrics.mmd import MMD
 from seqme.metrics.novelty import Novelty
 from seqme.metrics.precision_recall import Precision, Recall
@@ -29,6 +30,7 @@ __all__ = [
     "ID",
     "NGramJaccardSimilarity",
     "KLDivergence",
+    "Length",
     "MMD",
     "Novelty",
     "Precision",

@@ -52,3 +52,4 @@ Miscellaneous
 
     seqme.metrics.Fold
     seqme.metrics.Count
+    seqme.metrics.Length
