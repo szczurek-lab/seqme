@@ -33,4 +33,5 @@ Miscellaneous
     :nosignatures:
 
     seqme.models.ThirdPartyModel
+    seqme.models.PCA
     seqme.models.Ensemble
