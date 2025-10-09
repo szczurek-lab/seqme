@@ -10,6 +10,7 @@ Models
 
     seqme.models.Esm2
     seqme.models.EsmFold
+    seqme.models.Hyformer
     seqme.models.ProstT5
     seqme.models.RNA_FM
     seqme.models.DNABert2
