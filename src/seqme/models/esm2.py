@@ -92,6 +92,7 @@ class Esm2:
     def __call__(self, sequences: list[str]) -> np.ndarray:
         return self.embed(sequences)
 
+    @torch.inference_mode()
     def embed(self, sequences: list[str], layer: int = -1) -> np.ndarray:
         """
         Compute embeddings for a list of sequences.
@@ -107,24 +108,21 @@ class Esm2:
             A NumPy array of shape (n_sequences, embedding_dim) containing the embeddings.
         """
         embeddings = []
-        with torch.inference_mode():
-            for i in tqdm(
-                range(0, len(sequences), self.batch_size),
-                disable=not self.verbose,
-            ):
-                batch = sequences[i : i + self.batch_size]
-                tokens = self.tokenizer(batch, return_tensors="pt", padding=True, truncation=False)
-                tokens = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in tokens.items()}
-                hidden_state = self.model(**tokens, output_hidden_states=True).hidden_states[layer]
+        for i in tqdm(range(0, len(sequences), self.batch_size), disable=not self.verbose):
+            batch = sequences[i : i + self.batch_size]
+            tokens = self.tokenizer(batch, return_tensors="pt", padding=True, truncation=False)
+            tokens = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in tokens.items()}
+            hidden_state = self.model(**tokens, output_hidden_states=True).hidden_states[layer]
 
-                lengths = [len(s) for s in batch]
-                means = [hidden_state[i, 1 : length + 1].mean(dim=-2) for i, length in enumerate(lengths)]
-                embed = torch.stack(means, dim=0)
+            lengths = [len(s) for s in batch]
+            means = [hidden_state[i, 1 : length + 1].mean(dim=-2) for i, length in enumerate(lengths)]
+            embed = torch.stack(means, dim=0)
 
-                embeddings.append(embed.cpu().numpy())
+            embeddings.append(embed.cpu().numpy())
 
         return np.concatenate(embeddings)
 
+    @torch.inference_mode()
     def compute_pseudo_perplexity(self, sequences: list[str], mask_size: int = 1) -> np.ndarray:
         """
         Compute pseudo-perplexity for a list of sequences, masking `mask_size` positions per pass.
@@ -163,9 +161,8 @@ class Esm2:
                 real = attention_mask[:, pos] == 1
                 masked_in[real, pos] = self.tokenizer.mask_token_id
 
-            with torch.no_grad():
-                logits = self.model(masked_in, attention_mask=attention_mask.to(self.device)).logits
-                log_probs = torch.log_softmax(logits, dim=-1)
+            logits = self.model(masked_in, attention_mask=attention_mask.to(self.device)).logits
+            log_probs = torch.log_softmax(logits, dim=-1)
 
             for pos in pos_chunk:
                 real = attention_mask[:, pos] == 1

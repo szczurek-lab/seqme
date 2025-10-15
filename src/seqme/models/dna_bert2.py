@@ -63,6 +63,7 @@ class DNABert2:
     def __call__(self, sequences: list[str]) -> np.ndarray:
         return self.embed(sequences)
 
+    @torch.inference_mode()
     def embed(self, sequences: list[str]) -> np.ndarray:
         """
         Compute embeddings for a list of sequences.
@@ -77,22 +78,18 @@ class DNABert2:
             A NumPy array of shape (n_sequences, embedding_dim) containing the embeddings.
         """
         embeddings = []
-        with torch.inference_mode():
-            for i in tqdm(
-                range(0, len(sequences), self.batch_size),
-                disable=not self.verbose,
-            ):
-                batch = sequences[i : i + self.batch_size]
+        for i in tqdm(range(0, len(sequences), self.batch_size), disable=not self.verbose):
+            batch = sequences[i : i + self.batch_size]
 
-                tokens = self.tokenizer(batch, return_tensors="pt", padding=True, truncation=False)
-                tokens = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in tokens.items()}
+            tokens = self.tokenizer(batch, return_tensors="pt", padding=True, truncation=False)
+            tokens = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in tokens.items()}
 
-                hidden_state = self.model(**tokens)[0]
+            hidden_state = self.model(**tokens)[0]
 
-                lengths = [len(s) for s in batch]
-                means = [hidden_state[i, :length].mean(dim=-2) for i, length in enumerate(lengths)]
-                embed = torch.stack(means, dim=0)
+            lengths = [len(s) for s in batch]
+            means = [hidden_state[i, :length].mean(dim=-2) for i, length in enumerate(lengths)]
+            embed = torch.stack(means, dim=0)
 
-                embeddings.append(embed.cpu().numpy())
+            embeddings.append(embed.cpu().numpy())
 
         return np.concatenate(embeddings)

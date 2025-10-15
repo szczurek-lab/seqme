@@ -62,6 +62,7 @@ class ProstT5:
     def __call__(self, sequences: list[str]) -> np.ndarray:
         return self.embed(sequences)
 
+    @torch.inference_mode()
     def embed(self, sequences: list[str]) -> np.ndarray:
         """
         Compute embeddings for a list of sequences.
@@ -76,29 +77,23 @@ class ProstT5:
             A NumPy array of shape (n_sequences, embedding_dim) containing the embeddings.
         """
         embeddings = []
-        with torch.inference_mode():
-            for i in tqdm(
-                range(0, len(sequences), self.batch_size),
-                disable=not self.verbose,
-            ):
-                batch = sequences[i : i + self.batch_size]
-                prefixed_batch = ["<AA2fold> " + " ".join(sequence) for sequence in batch]
+        for i in tqdm(range(0, len(sequences), self.batch_size), disable=not self.verbose):
+            batch = sequences[i : i + self.batch_size]
+            prefixed_batch = ["<AA2fold> " + " ".join(sequence) for sequence in batch]
 
-                tokens = self.tokenizer.batch_encode_plus(
-                    prefixed_batch,
-                    add_special_tokens=True,
-                    padding="longest",
-                    return_tensors="pt",
-                ).to(self.device)
+            tokens = self.tokenizer.batch_encode_plus(
+                prefixed_batch,
+                add_special_tokens=True,
+                padding="longest",
+                return_tensors="pt",
+            ).to(self.device)
 
-                hidden_state = self.model(
-                    tokens["input_ids"], attention_mask=tokens["attention_mask"]
-                ).last_hidden_state
+            hidden_state = self.model(tokens["input_ids"], attention_mask=tokens["attention_mask"]).last_hidden_state
 
-                lengths = [len(s) for s in batch]
-                means = [hidden_state[i, 1 : length + 1].mean(dim=-2) for i, length in enumerate(lengths)]
-                embed = torch.stack(means, dim=0)
+            lengths = [len(s) for s in batch]
+            means = [hidden_state[i, 1 : length + 1].mean(dim=-2) for i, length in enumerate(lengths)]
+            embed = torch.stack(means, dim=0)
 
-                embeddings.append(embed.cpu().numpy())
+            embeddings.append(embed.cpu().numpy())
 
         return np.concatenate(embeddings)

@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing import Literal
 
 import numpy as np
@@ -40,8 +41,8 @@ class EsmFold:
         if device is None:
             device = "cuda" if torch.cuda.is_available() else "cpu"
 
-        self.batch_size = batch_size
         self.device = device
+        self.batch_size = batch_size
         self.verbose = verbose
 
         try:
@@ -56,11 +57,19 @@ class EsmFold:
         self.model.eval()
 
     def __call__(self, sequences: list[str]) -> list[np.ndarray]:
-        return self.fold(sequences)
+        return self.fold(sequences, compute_ptm=False, return_type="dict")["positions"]  # type: ignore
 
-    def fold(self, sequences: list[str], convention: Literal["atom14", "ca"] = "ca") -> list[np.ndarray]:
+    @torch.inference_mode()
+    def fold(
+        self,
+        sequences: list[str],
+        *,
+        convention: Literal["atom14", "ca"] = "ca",
+        compute_ptm: bool = True,
+        return_type: Literal["dict", "list"] = "list",
+    ) -> dict[str, list] | list[dict]:
         """
-        Predict protein sequences 3D-structure, i.e., atom coordinates.
+        Predict protein sequences TM-score and 3D-structure, i.e., atom coordinates.
 
         The atoms positions/coordinates is encoded as 'atom14':
 
@@ -95,42 +104,46 @@ class EsmFold:
         Args:
             sequences: List of input amino acid sequences.
             convention: Whether to return "atom14" or the carbon alphas ("ca") position of each amino acid.
+            compute_ptm: If true, computes the ptm score (structure confidence score) but reduces the batch size to 1 in order to do so.
+            return_type: if "list", return list of dict else if "dict" return dict of lists.
 
         Returns:
-            A list of numpy arrays of shape:
+            A dict with
+                "position": Numpy arrays of shape:
 
-                - "atom14": sequence_length x 14 x 3
-                - "ca": sequence_length x 3
+                    - "atom14": sequence_length x 14 x 3
+                    - "ca": sequence_length x 3
+                "ptm": predicted TM-scores if `compute_ptm` is true.
         """
-        folds = []
-        with torch.inference_mode():
-            for i in tqdm(
-                range(0, len(sequences), self.batch_size),
-                disable=not self.verbose,
-            ):
-                batch = sequences[i : i + self.batch_size]
-                tokens = self.tokenizer(
-                    batch, return_tensors="pt", add_special_tokens=False, padding=True, truncation=False
-                )
-                tokens = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in tokens.items()}
+        batch_size = 1 if compute_ptm else self.batch_size
 
-                outputs = self.model(**tokens)
+        folds: dict[str, list] = defaultdict(list)
+        for i in tqdm(range(0, len(sequences), batch_size), disable=not self.verbose):
+            batch = sequences[i : i + batch_size]
+            tokens = self.tokenizer(
+                batch, return_tensors="pt", add_special_tokens=False, padding=True, truncation=False
+            )
+            tokens = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in tokens.items()}
 
-                # @TODO: Return the atom14 mask as well in a dict.
-                # print(outputs["atom14_atom_exists"])
+            outputs = self.model(**tokens)
 
-                lengths = [len(s) for s in batch]
-                if convention == "ca":
-                    positions = [
-                        outputs.positions[-1, i, :length, 1, :].cpu().numpy() for i, length in enumerate(lengths)
-                    ]
-                elif convention == "atom14":
-                    positions = [
-                        outputs.positions[-1, i, :length, :, :].cpu().numpy() for i, length in enumerate(lengths)
-                    ]
-                else:
-                    raise ValueError(f"Unsupported convention: '{convention}'.")
+            lengths = [len(s) for s in batch]
+            if convention == "ca":
+                positions = [outputs.positions[-1, i, :length, 1, :].cpu().numpy() for i, length in enumerate(lengths)]
+            elif convention == "atom14":
+                positions = [outputs.positions[-1, i, :length, :, :].cpu().numpy() for i, length in enumerate(lengths)]
+            else:
+                raise ValueError(f"Unsupported convention: '{convention}'.")
 
-                folds += positions
+            folds["positions"] += positions
 
-        return folds
+            if compute_ptm:
+                folds["ptm"] += [outputs["ptm"].cpu().item()]
+
+        if return_type == "list":
+            return [dict(zip(folds, vals, strict=True)) for vals in zip(*folds.values(), strict=True)]
+
+        if return_type == "dict":
+            return folds
+
+        raise ValueError(f"Invalid return_type: '{return_type}'.")

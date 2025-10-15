@@ -13,7 +13,12 @@ authors = [
     { name = "Rasmus Møller-Larsen" },
     { name = "Adam Izdebski" },
     { name = "Jan Olszewski" },
+    { name = "Pankhil Gawade" },
+    { name = "Michal Kmicikiewicz" },
+    { name = "Wojciech Zarzecki" },
+    { name = "Ewa Szczurek" },
 ]
+
 maintainers = [{ name = "Rasmus Møller-Larsen" }]
 urls.Documentation = "https://seqme.readthedocs.io"
 urls.Source = "https://github.com/szczurek-lab/seqme"
