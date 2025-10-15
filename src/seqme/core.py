@@ -1053,7 +1053,7 @@ class Cache:
             if name not in self.model_to_cache:
                 self.model_to_cache[name] = {}
 
-    def __call__(self, sequences: list[str], model_name: str, variable_length: bool) -> list[Any] | np.ndarray:
+    def __call__(self, sequences: list[str], model_name: str, stack: bool) -> list[Any] | np.ndarray:
         """Return embeddings for the given sequences using the specified model.
 
         Uncached sequences are computed and stored.
@@ -1061,7 +1061,7 @@ class Cache:
         Args:
             sequences: List of input texts.
             model_name: Name of the model to use.
-            variable_length: Whether the embeddings are variable size. If true then return a list of embeddings else stack as a numpy array.
+            stack: Whether the embeddings should be stacked as a numpy array. If true then stack as a numpy array else return a list of embeddings.
 
         Returns:
             Embeddings in the same order as the input sequences.
@@ -1080,26 +1080,26 @@ class Cache:
                 sequence_to_rep[sequence] = rep
 
         reps = [sequence_to_rep[seq] for seq in sequences]
-        return reps if variable_length else np.stack(reps)
+        return np.stack(reps) if stack else reps
 
     def model(
         self,
         model_name: str,
         *,
-        variable_length: bool = False,
+        stack: bool = True,
     ) -> Callable[[list[str]], list[Any] | np.ndarray]:
         """Return a callable interface for a given model name.
 
         Args:
             model_name: Name of the model to use.
-            variable_length: Whether the embeddings are variable size. If true then return a list of embeddings else stack as a numpy array.
+            stack: Whether the embeddings should be stacked as a numpy array. If true then stack as a numpy array else return a list of embeddings.
 
         Raises:
             ValueError: If the model is unknown.
         """
         if model_name not in self.model_to_cache:
             raise ValueError(f"'{model_name}' is not callable nor has any pre-cached sequences.")
-        return lambda sequence: self(sequence, model_name, variable_length)
+        return lambda sequence: self(sequence, model_name, stack)
 
     def add(
         self,

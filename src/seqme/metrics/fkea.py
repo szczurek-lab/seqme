@@ -165,31 +165,31 @@ def _calculate_renyi_entropy(eigenvalues: torch.Tensor, alpha: float | int = 2, 
     return score.item()
 
 
-def _cov_random_fourier_features(xs: torch.Tensor, feature_dim: int, std: float, batch_size: int, seed: int):
+def _cov_random_fourier_features(xs: torch.Tensor, n_features: int, std: float, batch_size: int, seed: int):
     assert len(xs.shape) == 2  # [B, dim]
 
     generator = torch.Generator(device=xs.device).manual_seed(seed)
-    omegas = torch.randn((xs.shape[-1], feature_dim), device=xs.device, generator=generator) * (1 / std)
+    omegas = torch.randn((xs.shape[-1], n_features), device=xs.device, generator=generator) * (1 / std)
 
     product = torch.matmul(xs, omegas)
-    batched_rff_cos = torch.cos(product)  # [B, feature_dim]
-    batched_rff_sin = torch.sin(product)  # [B, feature_dim]
+    rff_cos = torch.cos(product)  # [B, feature_dim]
+    rff_sin = torch.sin(product)  # [B, feature_dim]
 
-    batched_rff = torch.cat([batched_rff_cos, batched_rff_sin], dim=1) / np.sqrt(feature_dim)  # [B, 2 * feature_dim]
-    batched_rff = batched_rff.unsqueeze(2)  # [B, 2 * feature_dim, 1]
+    rff = torch.cat([rff_cos, rff_sin], dim=1) / np.sqrt(n_features)  # [B, 2 * feature_dim]
+    rff = rff.unsqueeze(2)  # [B, 2 * feature_dim, 1]
 
-    cov = torch.zeros((2 * feature_dim, 2 * feature_dim), device=xs.device)
-    batch_num = (xs.shape[0] // batch_size) + 1
+    cov = torch.zeros((2 * n_features, 2 * n_features), device=xs.device)
+    n_batches = (xs.shape[0] // batch_size) + 1
 
-    for batch_idx in range(batch_num):
-        batched_rff_slice = batched_rff[
-            batch_idx * batch_size : min((batch_idx + 1) * batch_size, batched_rff.shape[0])
+    for batch_idx in range(n_batches):
+        rff_slice = rff[
+            batch_idx * batch_size : min((batch_idx + 1) * batch_size, rff.shape[0])
         ]  # [mini_B, 2 * feature_dim, 1]
-        cov += torch.bmm(batched_rff_slice, batched_rff_slice.transpose(1, 2)).sum(dim=0)
+        cov += torch.bmm(rff_slice, rff_slice.transpose(1, 2)).sum(dim=0)
 
     cov /= xs.shape[0]
 
-    assert cov.shape[0] == cov.shape[1] == feature_dim * 2
+    assert cov.shape[0] == cov.shape[1] == n_features * 2
     return cov
 
 
@@ -207,11 +207,11 @@ def calculate_vendi(
 
 
 def _normalized_gaussian_kernel(xs: torch.Tensor, ys: torch.Tensor, std: float, batch_size: int) -> torch.Tensor:
-    batch_num = (ys.shape[0] // batch_size) + 1
+    n_batches = (ys.shape[0] // batch_size) + 1
     assert xs.shape[1:] == ys.shape[1:]
 
     total_res = torch.zeros((xs.shape[0], 0), device=xs.device)
-    for batch_idx in range(batch_num):
+    for batch_idx in range(n_batches):
         y_slice = ys[batch_idx * batch_size : min((batch_idx + 1) * batch_size, ys.shape[0])]
 
         res = torch.norm(xs.unsqueeze(1) - y_slice, dim=2, p=2).pow(2)
