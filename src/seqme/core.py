@@ -1352,8 +1352,7 @@ def to_pickle(content: Any, path: str):
 
     Args:
        content: Pickable object.
-       path: Output filepath, e.g., "/path/seqs.fasta".
-       headers:
+       path: Output filepath, e.g., "/path/cache.pkl".
     """
     with open(path, "wb") as f:
         pickle.dump(content, f)
