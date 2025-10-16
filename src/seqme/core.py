@@ -1,4 +1,5 @@
 import abc
+import pickle
 import random
 from collections import Counter, defaultdict
 from collections.abc import Callable
@@ -1331,3 +1332,28 @@ def to_fasta(sequences: list[str], path: str, *, headers: list[str] | None = Non
 
             f.write(f"{header}\n")
             f.write(f"{seq}\n")
+
+
+def read_pickle(path: str) -> Any:
+    """Read content from pickle object.
+
+    Args:
+        path: Path to pickle file.
+
+    Returns:
+        Content.
+    """
+    with open(path, "rb") as f:
+        return pickle.load(f)
+
+
+def to_pickle(content: Any, path: str):
+    """Write content to a pickle file.
+
+    Args:
+       content: Pickable object.
+       path: Output filepath, e.g., "/path/seqs.fasta".
+       headers:
+    """
+    with open(path, "wb") as f:
+        pickle.dump(content, f)

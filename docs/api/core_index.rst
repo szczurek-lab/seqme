@@ -50,3 +50,13 @@ Sequences
     seqme.random_subset
     seqme.read_fasta
     seqme.to_fasta
+
+IO
+---
+.. autosummary::
+    :toctree:
+    :nosignatures:
+
+    seqme.to_pickle
+    seqme.read_pickle
+
