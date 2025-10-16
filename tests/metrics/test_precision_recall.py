@@ -12,11 +12,9 @@ def test_basic_precision():
         neighborhood_size=1,
         row_batch_size=1,
         col_batch_size=1,
-        embedder_name="MyEmbedder",
-        reference_name="MyReference",
     )
 
-    assert metric.name == "Precision@MyEmbedder (MyReference)"
+    assert metric.name == "Precision"
     assert metric.objective == "maximize"
 
     result = metric(["A" * 2, "A" * 16])
@@ -31,11 +29,9 @@ def test_basic_recall():
         neighborhood_size=1,
         row_batch_size=1,
         col_batch_size=1,
-        embedder_name="MyEmbedder",
-        reference_name="MyReference",
     )
 
-    assert metric.name == "Recall@MyEmbedder (MyReference)"
+    assert metric.name == "Recall"
     assert metric.objective == "maximize"
 
     result = metric(["A" * 2, "A" * 16])

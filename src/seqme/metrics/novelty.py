@@ -6,7 +6,7 @@ from seqme.core import Metric, MetricResult
 class Novelty(Metric):
     """Fraction of sequences not in the reference."""
 
-    def __init__(self, reference: list[str], *, reference_name: str | None = None):
+    def __init__(self, reference: list[str], *, name: str = "Novelty"):
         """
         Initialize the metric with a reference corpus.
 
@@ -14,9 +14,10 @@ class Novelty(Metric):
             reference: A list of reference sequences against which generated sequences will be compared.
                 Sequences found in this list are considered non-novel.
             reference_name: An optional label for the reference data. This name will be appended to the metric name for identification.
+            name: Metric name.
         """
         self.reference = set(reference)
-        self.data_name = reference_name
+        self._name = name
 
     def __call__(self, sequences: list[str]) -> MetricResult:
         """
@@ -40,7 +41,7 @@ class Novelty(Metric):
 
     @property
     def name(self) -> str:
-        return "Novelty" if self.data_name is None else f"Novelty ({self.data_name})"
+        return self._name
 
     @property
     def objective(self) -> Literal["minimize", "maximize"]:

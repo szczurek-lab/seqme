@@ -949,13 +949,15 @@ def plot_series(
     metric: str,
     *,
     show_deviation: bool = True,
-    figsize: tuple[int, int] = (4, 3),
+    linestyle: str | list[str] = "-",
+    color: list[str] | None = None,
     marker: str | None = "x",
     marker_size: float | None = None,
     xlabel: str = "Iteration",
     alpha: float = 0.4,
     show_arrow: bool = True,
     legend_loc: Literal["right margin"] | str | None = "right margin",
+    figsize: tuple[int, int] = (4, 3),
     ax: Axes | None = None,
 ):
     """Plot a series for a given metric across multiple iterations/steps with optional error bars.
@@ -964,13 +966,15 @@ def plot_series(
         df: A DataFrame with a MultiIndex column [metric, {"value", "deviation"}].
         metric: The name of the metric to plot.
         show_deviation: Whether to the plot deviation if available.
+        linestyle: Series linestyle.
+        color: Color for each series.
         marker: Marker type for serie values. If None, no marker is shown.
         marker_size: Size of marker. If None, auto-selects size.
         xlabel: Name of x-label.
         alpha: opacity level of deviation intervals.
-        figsize: Size of the figure.
         show_arrow: Whether to show an arrow indicating maximize/minimize.
         legend_loc: Legend location.
+        figsize: Size of the figure.
         ax: Optional matplotlib Axes to plot on.
     """
     if metric not in df.columns.get_level_values(0):
@@ -987,13 +991,22 @@ def plot_series(
                 f"with types ({type(model_name).__name__}, {type(iteration).__name__})."
             )
 
+    model_names = list(df.index.get_level_values(0).unique())
+    linestyle = [linestyle] * len(model_names) if isinstance(linestyle, str) else linestyle
+
+    if len(linestyle) != len(model_names):
+        f"Expected {len(model_names)} linestyles, got {len(linestyle)}. Provide a single linestyle or a list matching the number of entries."
+
+    if color:
+        if len(color) != len(model_names):
+            raise ValueError(f"Expected a color for each entry. Got {len(color)}, expected {len(model_names)}.")
+
     created_fig = False
     if ax is None:
         _, ax = plt.subplots(figsize=figsize)
         created_fig = True
 
-    model_names = list(df.index.get_level_values(0).unique())
-    for model_name in model_names:
+    for i, model_name in enumerate(model_names):
         df_model = df.loc[model_name]
         df_model = df_model.sort_index()
 
@@ -1001,10 +1014,19 @@ def plot_series(
         vs = df_model[metric]["value"]
         dev = df_model[metric]["deviation"]
 
-        if show_deviation:
-            ax.fill_between(xs, vs - dev, vs + dev, alpha=alpha)
+        lines = ax.plot(
+            xs,
+            vs,
+            marker=marker,
+            markersize=marker_size,
+            label=model_name,
+            color=color[i] if color else None,
+            linestyle=linestyle[i],
+        )
 
-        ax.plot(xs, vs, marker=marker, markersize=marker_size, label=model_name)
+        if show_deviation:
+            c = lines[0].get_color()
+            ax.fill_between(xs, vs - dev, vs + dev, alpha=alpha, color=c)
 
     objective = df.attrs["objective"][metric]
     arrows = {"maximize": "↑", "minimize": "↓"}
@@ -1013,6 +1035,13 @@ def plot_series(
     ax.set_ylabel(f"{metric}{arrows[objective]}" if show_arrow else metric)
 
     ax.grid(True, linestyle="--", alpha=0.4)
+
+    iterations = df.index.get_level_values(1)
+    if pd.api.types.is_integer_dtype(iterations.dtype):
+        from matplotlib.ticker import FuncFormatter, MaxNLocator
+
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        ax.xaxis.set_major_formatter(FuncFormatter(lambda x, _: f"{int(round(x))}"))
 
     if legend_loc == "right margin":
         ax.legend(

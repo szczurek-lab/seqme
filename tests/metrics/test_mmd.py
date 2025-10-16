@@ -15,11 +15,9 @@ def test_shifted():
     metric = MMD(
         reference=reference,
         embedder=embedder,
-        reference_name="Random",
-        embedder_name="embedder",
     )
 
-    assert metric.name == "MMD@embedder (Random)"
+    assert metric.name == "MMD"
     assert metric.objective == "minimize"
 
     result = metric(["KAAA", "KAAA"])

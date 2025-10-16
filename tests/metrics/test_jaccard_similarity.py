@@ -6,14 +6,14 @@ from seqme.metrics import NGramJaccardSimilarity
 def test_name_and_objective_default():
     reference = ["ABC"]
     metric = NGramJaccardSimilarity(reference=reference, n=3)
-    assert metric.name == "Jaccard-3"
+    assert metric.name == "Jaccard-similarity"
     assert metric.objective == "minimize"
 
 
 def test_name_with_reference_name_and_objective_override():
     reference = ["ABC"]
-    metric = NGramJaccardSimilarity(reference=reference, n=3, objective="maximize", reference_name="SampleRef")
-    assert metric.name == "Jaccard-3 (SampleRef)"
+    metric = NGramJaccardSimilarity(reference=reference, n=3, objective="maximize")
+    assert metric.name == "Jaccard-similarity"
     assert metric.objective == "maximize"
 
 

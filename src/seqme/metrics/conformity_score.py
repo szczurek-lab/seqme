@@ -24,8 +24,8 @@ class ConformityScore(Metric):
         *,
         n_splits: int = 5,
         kde_bandwidth: float | Literal["scott", "silverman"] = "silverman",
-        reference_name: str | None = None,
         seed: int | None = 0,
+        name: str = "Conformity score",
     ):
         """
         Initialize the conformity score metric.
@@ -37,13 +37,14 @@ class ConformityScore(Metric):
             kde_bandwidth: Bandwidth parameter for the Gaussian KDE.
             reference_name: Optional name for the reference dataset.
             seed: Seed for KFold shuffling.
+            name: Metric name.
         """
         if n_splits < 2:
             raise ValueError("Number of cross-validation folds for KDE (n_splits) must be at least 2.")
 
         self.reference = reference
         self.predictors = predictors
-        self.reference_name = reference_name
+        self._name = name
 
         reference_arr = self._sequences_to_descriptors(self.reference)  # (n_ref, n_descs)
 
@@ -99,7 +100,7 @@ class ConformityScore(Metric):
 
     @property
     def name(self) -> str:
-        return "Conformity score" if self.reference_name is None else f"Conformity score ({self.reference_name})"
+        return self._name
 
     @property
     def objective(self) -> Literal["minimize", "maximize"]:

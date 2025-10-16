@@ -3,11 +3,11 @@ import pytest
 from seqme.metrics import Novelty
 
 
-def test_compute_metric():
+def test_simple():
     reference = ["KRQS", "KKPRA", "KKKR"]
-    metric = Novelty(reference=reference, reference_name="Random")
+    metric = Novelty(reference=reference)
 
-    assert metric.name == "Novelty (Random)"
+    assert metric.name == "Novelty"
     assert metric.objective == "maximize"
 
     result = metric(["KRQS", "KA"])  # "KRQS" seen, "KA" novel → 1 novel out of 2
