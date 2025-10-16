@@ -13,7 +13,9 @@ class Diversity(Metric):
         self,
         reference: list[str] = None,
         k: int | None = None,
+        *,
         seed: int | None = 0,
+        name: str = "Diversity",
     ):
         """
         Initialize the metric.
@@ -22,10 +24,12 @@ class Diversity(Metric):
             reference: Reference sequences to compare against. If None, compare against other sequences within `sequences`.
             k: If not None randomly sample `k` other sequences to compute diversity against.
             seed: For reproducibility. Only used if k is not None.
+            name: Metric name.
         """
         self.reference = reference
         self.k = k
         self.seed = seed
+        self._name = name
 
         if self.k:
             if self.k < 1:
@@ -57,7 +61,7 @@ class Diversity(Metric):
 
     @property
     def name(self) -> str:
-        return f"Diversity ({self.k})" if self.k else "Diversity"
+        return self._name
 
     @property
     def objective(self) -> Literal["minimize", "maximize"]:

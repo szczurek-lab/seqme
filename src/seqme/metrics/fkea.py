@@ -35,12 +35,12 @@ class FourierBasedKernelEntropyApproximation(Metric):
         bandwidth: float,
         *,
         n_random_fourier_features: int = 256,
-        embedder_name: str | None = None,
         alpha: float | int = 2,
         batch_size: int = 256,
         device: str = "cpu",
         seed: int = 42,
         strict: bool = True,
+        name: str = "FKEA",
     ):
         """Initializes the FKEA metric with an embedding function.
 
@@ -54,9 +54,9 @@ class FourierBasedKernelEntropyApproximation(Metric):
             device: Compute device, e.g., "cpu" or "cuda".
             seed: Seed for reproducible sampling.
             strict: Enforce equal number of samples for computation.
+            name: Metric name.
         """
         self.embedder = embedder
-        self.embedder_name = embedder_name
         self.n_random_fourier_features = n_random_fourier_features
         self.alpha = alpha
         self.bandwidth = bandwidth
@@ -64,6 +64,7 @@ class FourierBasedKernelEntropyApproximation(Metric):
         self.device = device
         self.seed = seed
         self.strict = strict
+        self._name = name
 
         self._n_sequences: int | None = None
 
@@ -99,10 +100,7 @@ class FourierBasedKernelEntropyApproximation(Metric):
 
     @property
     def name(self) -> str:
-        name = "FKEA"
-        if self.embedder_name:
-            name += f"@{self.embedder_name}"
-        return name
+        return self._name
 
     @property
     def objective(self) -> Literal["minimize", "maximize"]:

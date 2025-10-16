@@ -17,8 +17,8 @@ class KLDivergence(Metric):
         *,
         n_draws: int = 10_000,
         kde_bandwidth: float | Literal["scott", "silverman"] = "silverman",
-        reference_name: str | None = None,
         seed: int | None = 0,
+        name: str = "KL-divergence",
     ):
         """
         Initialize the metric.
@@ -28,15 +28,15 @@ class KLDivergence(Metric):
             descriptor: Descriptor function which return a 1D NumPy array.
             n_draws: Number of Monte Carlo samples to draw from reference distribution.
             kde_bandwidth: Bandwidth parameter for the Gaussian KDE.
-            reference_name: Optional name for the reference dataset.
             seed: Seed for KL-divergence Monte-Carlo sampling.
+            name: Metric name.
         """
         self.reference = reference
         self.descriptor = descriptor
         self.n_draws = n_draws
         self.kde_bandwidth = kde_bandwidth
         self.seed = seed
-        self.reference_name = reference_name
+        self._name = name
 
         self.reference_descriptor = self.descriptor(self.reference)
 
@@ -62,7 +62,7 @@ class KLDivergence(Metric):
 
     @property
     def name(self) -> str:
-        return "KL-divergence" if self.reference_name is None else f"KL-divergence ({self.reference_name})"
+        return self._name
 
     @property
     def objective(self) -> Literal["minimize", "maximize"]:

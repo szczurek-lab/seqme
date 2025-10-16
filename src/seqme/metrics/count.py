@@ -12,6 +12,7 @@ class Count(Metric):
 
         Args:
             sequences: A list of sequences.
+            name: Metric name.
 
         Returns:
             MetricResult: value is the number of sequences. Deviation is None.

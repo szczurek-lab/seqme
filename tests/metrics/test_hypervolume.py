@@ -19,7 +19,7 @@ def test_hvi():
     )
 
     # Name and objective properties
-    assert metric.name == "HV-2"
+    assert metric.name == "Hypervolume"
     assert metric.objective == "maximize"
 
     result = metric(["KKKK", "RRR", "KKKKRRR"])
@@ -38,7 +38,7 @@ def test_convex_hull_hv():
     )
 
     # Name and objective properties
-    assert metric.name == "HV-2 (convex-hull)"
+    assert metric.name == "Hypervolume"
     assert metric.objective == "maximize"
 
     result = metric(["KKKK", "RRR"])
@@ -55,11 +55,10 @@ def test_hvi_with_ideal_hv():
         method="hvi",
         nadir=np.zeros(2),
         ideal=np.array([10, 10]),
-        include_count_in_name=False,
     )
 
     # Name and objective properties
-    assert metric.name == "HV"
+    assert metric.name == "Hypervolume"
     assert metric.objective == "maximize"
 
     result = metric(["RRR", "KKKK", "KKKKRRR"])
@@ -78,7 +77,7 @@ def test_strict():
     )
 
     # Name and objective properties
-    assert metric.name == "HV-2"
+    assert metric.name == "Hypervolume"
     assert metric.objective == "maximize"
 
     with pytest.raises(ValueError):
@@ -98,7 +97,7 @@ def test_not_strict():
     )
 
     # Name and objective properties
-    assert metric.name == "HV-2"
+    assert metric.name == "Hypervolume"
     assert metric.objective == "maximize"
 
     result = metric(["KKKK", "RRR", "KKKKRRR"])

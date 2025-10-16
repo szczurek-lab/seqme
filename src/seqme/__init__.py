@@ -10,12 +10,14 @@ from seqme.core import (
     plot_series,
     random_subset,
     read_fasta,
+    read_pickle,
     rename,
     show,
     shuffle_characters,
     sort,
     to_fasta,
     to_latex,
+    to_pickle,
     top_k,
 )
 
@@ -30,6 +32,7 @@ __all__ = [
     "plot_series",
     "random_subset",
     "read_fasta",
+    "read_pickle",
     "rename",
     "show",
     "shuffle_characters",
@@ -39,5 +42,6 @@ __all__ = [
     "utils",
     "to_fasta",
     "sort",
+    "to_pickle",
     "top_k",
 ]

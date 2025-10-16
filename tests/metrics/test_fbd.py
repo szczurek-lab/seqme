@@ -19,15 +19,10 @@ def shifted_embedder():
 
 def test_shifted_fbd(shifted_embedder):
     reference = ["KKAA", "KKAA"]
-    metric = FBD(
-        reference=reference,
-        embedder=shifted_embedder,
-        reference_name="ref",
-        embedder_name="seq",
-    )
+    metric = FBD(reference=reference, embedder=shifted_embedder)
 
     # Name and objective properties
-    assert metric.name == "FBD@seq (ref)"
+    assert metric.name == "FBD"
     assert metric.objective == "minimize"
 
     result = metric(["KAAA", "KAAA"])
