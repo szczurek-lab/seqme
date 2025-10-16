@@ -33,7 +33,7 @@ Run in a Jupyter notebook:
 
     metrics = [
         sm.metrics.Uniqueness(),
-        sm.metrics.Novelty(reference=sequences["UniProt"], reference_name="UniProt"),
+        sm.metrics.Novelty(reference=sequences["UniProt"]),
         sm.metrics.FBD(reference=sequences["Random"], embedder=cache.model("esm2")),
     ]
 
