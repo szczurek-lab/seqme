@@ -13,7 +13,7 @@ class KLDivergence(Metric):
     def __init__(
         self,
         reference: list[str],
-        descriptor: Callable[[list[str]], np.ndarray],
+        predictor: Callable[[list[str]], np.ndarray],
         *,
         n_draws: int = 10_000,
         kde_bandwidth: float | Literal["scott", "silverman"] = "silverman",
@@ -25,24 +25,24 @@ class KLDivergence(Metric):
 
         Args:
             reference: Reference sequences assumed to represent the target distribution.
-            descriptor: Descriptor function which return a 1D NumPy array.
+            predictor: Predictor function which return a 1D NumPy array.
             n_draws: Number of Monte Carlo samples to draw from reference distribution.
             kde_bandwidth: Bandwidth parameter for the Gaussian KDE.
             seed: Seed for KL-divergence Monte-Carlo sampling.
             name: Metric name.
         """
         self.reference = reference
-        self.descriptor = descriptor
+        self.predictor = predictor
         self.n_draws = n_draws
         self.kde_bandwidth = kde_bandwidth
         self.seed = seed
         self._name = name
 
-        self.reference_descriptor = self.descriptor(self.reference)
+        self.reference_predictor = self.predictor(self.reference)
 
     def __call__(self, sequences: list[str]) -> MetricResult:
         """
-        Compute the KL-divergence between reference and sequence descriptor.
+        Compute the KL-divergence between reference and sequence predictor.
 
         Args:
             sequences: List of generated sequences to evaluate.
@@ -50,10 +50,10 @@ class KLDivergence(Metric):
         Returns:
             MetricResult: KL-divergence and standard error.
         """
-        seqs_descriptor = self.descriptor(sequences)
+        seqs_predictor = self.predictor(sequences)
         kl_div, standard_error = continuous_kl_mc(
-            self.reference_descriptor,
-            seqs_descriptor,
+            self.reference_predictor,
+            seqs_predictor,
             kde_bandwidth=self.kde_bandwidth,
             n_draws=self.n_draws,
             seed=self.seed,

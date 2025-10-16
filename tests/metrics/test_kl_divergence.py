@@ -19,7 +19,7 @@ def test_same_sequences():
 
     metric = KLDivergence(
         reference=reference,
-        descriptor=Gravy(),
+        predictor=Gravy(),
         n_draws=1_000,
         kde_bandwidth=0.2,
     )
@@ -39,7 +39,7 @@ def test_different_sequences():
     reference = generate_sequences_from_aas(neg_kd, 1000)
     test = generate_sequences_from_aas(pos_kd, 100)
 
-    metric = KLDivergence(reference=reference, descriptor=Gravy())
+    metric = KLDivergence(reference=reference, predictor=Gravy())
 
     assert metric.name == "KL-divergence"
     assert metric.objective == "minimize"

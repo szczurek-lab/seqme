@@ -335,12 +335,9 @@ class ManifoldEstimator:
 
         Args:
             eval_features: Points to evaluate, shape [M, D].
-            return_realism: If True, also return realism scores per point.
-            return_neighbors: If True, also return nearest reference indices.
 
         Returns:
             inside: Boolean array [M, 1] indicating inclusion.
-            Optionally realism and/or nearest neighbor indices.
         """
         n_eval = eval_features.shape[0]
         n_ref = self.local_radii.shape[0]

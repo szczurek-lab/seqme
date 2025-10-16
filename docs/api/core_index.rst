@@ -26,7 +26,6 @@ Manipulation
     seqme.rename
 
 
-
 Visualization
 -------------
 .. autosummary::
@@ -48,8 +47,9 @@ Sequences
 
     seqme.shuffle_characters
     seqme.random_subset
-    seqme.read_fasta
     seqme.to_fasta
+    seqme.read_fasta
+
 
 IO
 ---
