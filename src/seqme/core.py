@@ -563,7 +563,7 @@ def show(
 
 def to_latex(
     df: pd.DataFrame,
-    fname: str | Path,
+    path: str | Path,
     *,
     n_decimals: int | list[int] = 2,
     color: str | None = None,
@@ -576,7 +576,7 @@ def to_latex(
 
     Args:
         df: DataFrame with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], attributed with 'objective'.
-        fname: Output filename, e.g., "./path/table.tex".
+        path: Output filename, e.g., "./path/table.tex".
         n_decimals: Decimal precision for formatting.
         color: Color (hex) for highlighting best scores. If None, no coloring.
         notation: Whether to use scientific notation (exponent) or fixed-point notation (decimals).
@@ -696,7 +696,7 @@ def to_latex(
 
     latex_code = table.dumps()
 
-    output_path = Path(fname)
+    output_path = Path(path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(latex_code)
 

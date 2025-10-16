@@ -32,7 +32,7 @@ class ConformityScore(Metric):
 
         Args:
             reference: Reference sequences assumed to represent the target distribution.
-            predictors: A list of descriptor functions. Each should take a list of sequences and return a 1D NumPy array of features.
+            predictors: A list of predictor functions. Each should take a list of sequences and return a 1D NumPy array of features.
             n_splits: Number of cross-validation folds for KDE.
             kde_bandwidth: Bandwidth parameter for the Gaussian KDE.
             reference_name: Optional name for the reference dataset.
@@ -46,7 +46,7 @@ class ConformityScore(Metric):
         self.predictors = predictors
         self._name = name
 
-        reference_arr = self._sequences_to_descriptors(self.reference)  # (n_ref, n_descs)
+        reference_arr = self._sequences_to_predictors(self.reference)  # (n_ref, n_descs)
 
         kf = KFold(n_splits=n_splits, shuffle=True, random_state=seed)
         self.ref_log_prob_per_split = [
@@ -67,14 +67,14 @@ class ConformityScore(Metric):
             MetricResult: Contains the mean and standard error of the conformity
                 scores across all folds.
         """
-        seqs_descriptors = self._sequences_to_descriptors(sequences)  # (n_gen, n_descs)
-        conformity_scores = self._compute_conformity_score(seqs_descriptors)
+        seqs_predictors = self._sequences_to_predictors(sequences)  # (n_gen, n_descs)
+        conformity_scores = self._compute_conformity_score(seqs_predictors)
         return MetricResult(
             float(np.mean(conformity_scores)),
             float(np.std(conformity_scores)) / (len(conformity_scores) ** 0.5),
         )
 
-    def _sequences_to_descriptors(self, sequences: list[str]) -> np.ndarray:
+    def _sequences_to_predictors(self, sequences: list[str]) -> np.ndarray:
         return np.stack([desc_func(sequences) for desc_func in self.predictors], axis=1)
 
     def _fit_and_score_reference(

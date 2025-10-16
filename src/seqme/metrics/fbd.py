@@ -20,9 +20,9 @@ class FrechetBiologicalDistance(Metric):
 
     def __init__(
         self,
-        *,
         reference: list[str],
         embedder: Callable[[list[str]], np.ndarray],
+        *,
         name: str = "FBD",
     ):
         """
