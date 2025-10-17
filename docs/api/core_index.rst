@@ -1,9 +1,14 @@
 Core
 ####
-Functionality to manipulate and visualize metric tables, add new metrics and manipulate sequences.
+Essential functionality for evaluating, manipulating, and visualizing metrics.
 
-Base
-----
+This module provides a high-level interface for working with metric tables, managing results, and performing common data manipulation and visualization tasks.
+
+
+Base Components
+---------------
+Core objects and classes that define the ``seqme`` evaluation and metric API.
+
 .. autosummary::
     :toctree:
     :nosignatures:
@@ -14,8 +19,10 @@ Base
     seqme.MetricResult
 
 
-Manipulation
-------------
+Data Manipulation
+-----------------
+Utility functions to combine, filter, and reorganize metric results and sequences.
+
 .. autosummary::
     :toctree:
     :nosignatures:
@@ -28,6 +35,8 @@ Manipulation
 
 Visualization
 -------------
+Functions for visual exploration and presentation of metrics.
+
 .. autosummary::
     :toctree:
     :nosignatures:
@@ -39,8 +48,10 @@ Visualization
     seqme.to_latex
 
 
-Sequences
----------
+Sequence Operations
+-------------------
+Helpers for generating, transforming, and exporting sequence data.
+
 .. autosummary::
     :toctree:
     :nosignatures:
@@ -51,12 +62,13 @@ Sequences
     seqme.read_fasta
 
 
-IO
----
+Input / Output
+--------------
+Functions for serializing and loading data and metric results.
+
 .. autosummary::
     :toctree:
     :nosignatures:
 
     seqme.to_pickle
     seqme.read_pickle
-
