@@ -1,6 +1,6 @@
 seqme
 =====
-**seqme** is a modular and highly extendable python library containing model-agnostic metrics for evaluating biological sequences.
+**seqme** is a modular and highly extendable python library containing model-agnostic metrics for evaluating biological sequence designs.
 
 
 Quick start
