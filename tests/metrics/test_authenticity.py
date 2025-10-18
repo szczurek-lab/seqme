@@ -14,7 +14,6 @@ def test_authenticity():
     metric = AuthPct(
         train_set=train_set,
         embedder=mock_embedder,
-        embedder_name="embedder",
     )
 
     result = metric(["A" * 15, "A" * 4, "A" * 13])

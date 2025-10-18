@@ -12,8 +12,8 @@ class RNA_FM:
     A language model trained on RNA sequences, which computes sequence-level embeddings by averaging token embeddings.
 
     Two checkpoints are available:
-        mRNA: Trained on 45 million mRNA coding sequences (CDS).
-        ncRNA: Trained on 23+ million non-coding RNA (ncRNA) sequences.
+        mRNA: 239M parameters, 12 layers, embedding dim 1280, trained on 45 million mRNA coding sequences (CDS). Must be codon aligned.
+        ncRNA: 99M parameters, 12 layers, embedding dim 640, trained on 23.7 million non-coding RNA (ncRNA) sequences.
 
     Installation: ``pip install seqme[RNA_FM]``
 
@@ -62,6 +62,7 @@ class RNA_FM:
     def __call__(self, sequences: list[str]) -> np.ndarray:
         return self.embed(sequences)
 
+    @torch.inference_mode()
     def embed(self, sequences: list[str], layer: int = 12) -> np.ndarray:
         """
         Compute embeddings for a list of sequences.
@@ -82,23 +83,19 @@ class RNA_FM:
                     raise ValueError(f"Found non-codon aligned sequence with {len(sequence)}) nucleotides.")
 
         embeddings = []
-        with torch.inference_mode():
-            for i in tqdm(
-                range(0, len(sequences), self.batch_size),
-                disable=not self.verbose,
-            ):
-                batch = sequences[i : i + self.batch_size]
+        for i in tqdm(range(0, len(sequences), self.batch_size), disable=not self.verbose):
+            batch = sequences[i : i + self.batch_size]
 
-                named_batch = [("", b) for b in batch]
-                tokens = self.batch_converter(named_batch)[2].to(self.device)
+            named_batch = [("", b) for b in batch]
+            tokens = self.batch_converter(named_batch)[2].to(self.device)
 
-                results = self.model(tokens, repr_layers=[layer])
-                hidden_state = results["representations"][layer]
+            results = self.model(tokens, repr_layers=[layer])
+            hidden_state = results["representations"][layer]
 
-                lengths = [len(s) // 3 if self.model_name == "mRNA" else len(s) for s in batch]
-                means = [hidden_state[i, :length].mean(dim=-2) for i, length in enumerate(lengths)]
-                embed = torch.stack(means, dim=0)
+            lengths = [len(s) // 3 if self.model_name == "mRNA" else len(s) for s in batch]
+            means = [hidden_state[i, :length].mean(dim=-2) for i, length in enumerate(lengths)]
+            embed = torch.stack(means, dim=0)
 
-                embeddings.append(embed.cpu().numpy())
+            embeddings.append(embed.cpu().numpy())
 
         return np.concatenate(embeddings)

@@ -33,9 +33,9 @@ def test_conformity_score_mismatch():
     reference = generate_sequences_from_aas(neg_kd, 1000)
     test = generate_sequences_from_aas(pos_kd, 100)
 
-    metric = ConformityScore(reference=reference, predictors=[Gravy()], reference_name="ref")
+    metric = ConformityScore(reference=reference, predictors=[Gravy()])
 
-    assert metric.name == "Conformity score (ref)"
+    assert metric.name == "Conformity score"
     assert metric.objective == "maximize"
 
     result = metric(test)

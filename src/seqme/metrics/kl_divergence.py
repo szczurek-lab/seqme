@@ -13,36 +13,36 @@ class KLDivergence(Metric):
     def __init__(
         self,
         reference: list[str],
-        descriptor: Callable[[list[str]], np.ndarray],
+        predictor: Callable[[list[str]], np.ndarray],
         *,
         n_draws: int = 10_000,
         kde_bandwidth: float | Literal["scott", "silverman"] = "silverman",
-        reference_name: str | None = None,
         seed: int | None = 0,
+        name: str = "KL-divergence",
     ):
         """
-        Initialize the KL-divergence.
+        Initialize the metric.
 
         Args:
             reference: Reference sequences assumed to represent the target distribution.
-            descriptor: Descriptor function which return a 1D NumPy array.
-            n_draws: Number of Monte Carlo samples to draw from distribution P.
+            predictor: Predictor function which return a 1D NumPy array.
+            n_draws: Number of Monte Carlo samples to draw from reference distribution.
             kde_bandwidth: Bandwidth parameter for the Gaussian KDE.
-            reference_name: Optional name for the reference dataset.
             seed: Seed for KL-divergence Monte-Carlo sampling.
+            name: Metric name.
         """
         self.reference = reference
-        self.descriptor = descriptor
+        self.predictor = predictor
         self.n_draws = n_draws
         self.kde_bandwidth = kde_bandwidth
         self.seed = seed
-        self.reference_name = reference_name
+        self._name = name
 
-        self.reference_descriptor = self.descriptor(self.reference)
+        self.reference_predictor = self.predictor(self.reference)
 
     def __call__(self, sequences: list[str]) -> MetricResult:
         """
-        Compute the KL-divergence between reference and sequence descriptor.
+        Compute the KL-divergence between reference and sequence predictor.
 
         Args:
             sequences: List of generated sequences to evaluate.
@@ -50,10 +50,10 @@ class KLDivergence(Metric):
         Returns:
             MetricResult: KL-divergence and standard error.
         """
-        seqs_descriptor = self.descriptor(sequences)
+        seqs_predictor = self.predictor(sequences)
         kl_div, standard_error = continuous_kl_mc(
-            self.reference_descriptor,
-            seqs_descriptor,
+            self.reference_predictor,
+            seqs_predictor,
             kde_bandwidth=self.kde_bandwidth,
             n_draws=self.n_draws,
             seed=self.seed,
@@ -62,7 +62,7 @@ class KLDivergence(Metric):
 
     @property
     def name(self) -> str:
-        return "KL-divergence" if self.reference_name is None else f"KL-divergence ({self.reference_name})"
+        return self._name
 
     @property
     def objective(self) -> Literal["minimize", "maximize"]:

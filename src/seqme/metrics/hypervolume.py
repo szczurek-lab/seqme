@@ -15,29 +15,33 @@ class Hypervolume(Metric):
         self,
         predictors: list[Callable[[list[str]], np.ndarray]],
         *,
-        method: Literal["standard", "convex-hull"] = "standard",
+        method: Literal["hvi", "convex-hull"] = "hvi",
         nadir: np.ndarray | None = None,
         ideal: np.ndarray | None = None,
         strict: bool = True,
-        include_objective_count_in_name: bool = True,
+        name: str = "Hypervolume",
     ):
         """
         Initialize the Hypervolume metric.
 
         Args:
             predictors: A list of functions. Each function maps a sequence to a numeric value aimed to be maximized.
-            method: Which Hypervolume computation method to use ("standard" or "convex-hull").
+            method: Which Hypervolume computation method to use
+
+                - ``hvi``: Hypervalue indicator
+                - ``convex-hull``: Volume of the convex-hull
+
             nadir: Worst acceptable value in each objective dimension.
             ideal: Best value in each objective dimension (used for normalizing points to [0;1]).
             strict: If true and values < nadir (or values > ideal) raise an exception.
-            include_objective_count_in_name: Whether to append the number of objectives to the metric's name.
+            name: Metric name.
         """
         self.predictors = predictors
         self.method = method
         self.nadir = nadir if nadir is not None else np.zeros(len(predictors))
         self.ideal = ideal
         self.strict = strict
-        self.include_objective_count_in_name = include_objective_count_in_name
+        self._name = name
 
         if self.nadir.shape[0] != len(predictors):
             raise ValueError(
@@ -52,12 +56,7 @@ class Hypervolume(Metric):
 
     @property
     def name(self) -> str:
-        name = "HV"
-        if self.include_objective_count_in_name:
-            name += f"-{len(self.predictors)}"
-        if self.method == "convex-hull":
-            name += " (convex-hull)"
-        return name
+        return self._name
 
     @property
     def objective(self) -> Literal["minimize", "maximize"]:
@@ -68,7 +67,7 @@ def calculate_hypervolume(
     points: np.ndarray,
     nadir: np.ndarray,
     ideal: np.ndarray | None = None,
-    method: Literal["standard", "convex-hull"] = "standard",
+    method: Literal["hvi", "convex-hull"] = "hvi",
     strict: bool = True,
 ) -> float:
     """
@@ -78,7 +77,7 @@ def calculate_hypervolume(
         points: Array of shape [N, D] with objective values.
         nadir: Reference point (worse than or equal to all actual points).
         ideal: Best value in each objective dimension (used for normalizing points to [0;1]).
-        method: Either hypervolume indicator ("standard") or "convex-hull".
+        method: Either hypervolume indicator ("hvi") or "convex-hull".
         strict: If true, if values < nadir (or values > ideal) raise an exception.
 
     Returns:
@@ -110,7 +109,7 @@ def calculate_hypervolume(
     if ideal is not None:
         points = points / (ideal - nadir)
 
-    if method == "standard":
+    if method == "hvi":
         hypervolume = moocore.hypervolume(points, ref=ref_point, maximise=True)
     elif method == "convex-hull":
         all_points = np.vstack((points, ref_point))

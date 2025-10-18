@@ -11,6 +11,8 @@ class ProstT5:
 
     Computes sequence-level embeddings by averaging token embeddings.
 
+    Checkpoint: 3B parameters, 24 layers, embedding dim 1024, trained on protein sequences and 3Di structures.
+
     Installation: ``pip install seqme[prostT5]``
 
     Reference:
@@ -23,6 +25,7 @@ class ProstT5:
         *,
         device: str | None = None,
         batch_size: int = 64,
+        cache_dir: str | None = None,
         verbose: bool = False,
     ):
         """
@@ -31,6 +34,7 @@ class ProstT5:
         Args:
             device: Device to run inference on, e.g., "cuda" or "cpu".
             batch_size: Number of sequences to process per batch.
+            cache_dir: Directory to cache the model.
             verbose: Whether to display a progress bar.
         """
         if device is None:
@@ -45,14 +49,20 @@ class ProstT5:
         except ModuleNotFoundError:
             raise OptionalDependencyError("prostT5") from None
 
-        self.tokenizer = T5Tokenizer.from_pretrained("Rostlab/ProstT5", do_lower_case=False, legacy=True)
-        self.model = T5EncoderModel.from_pretrained("Rostlab/ProstT5").to(device)
+        self.tokenizer = T5Tokenizer.from_pretrained(
+            "Rostlab/ProstT5",
+            do_lower_case=False,
+            legacy=True,
+            cache_dir=cache_dir,
+        )
+        self.model = T5EncoderModel.from_pretrained("Rostlab/ProstT5", cache_dir=cache_dir).to(device)
         self.model.float() if device == "cpu" else self.model.half()
         self.model.eval()
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
         return self.embed(sequences)
 
+    @torch.inference_mode()
     def embed(self, sequences: list[str]) -> np.ndarray:
         """
         Compute embeddings for a list of sequences.
@@ -67,29 +77,23 @@ class ProstT5:
             A NumPy array of shape (n_sequences, embedding_dim) containing the embeddings.
         """
         embeddings = []
-        with torch.inference_mode():
-            for i in tqdm(
-                range(0, len(sequences), self.batch_size),
-                disable=not self.verbose,
-            ):
-                batch = sequences[i : i + self.batch_size]
-                prefixed_batch = ["<AA2fold> " + " ".join(sequence) for sequence in batch]
+        for i in tqdm(range(0, len(sequences), self.batch_size), disable=not self.verbose):
+            batch = sequences[i : i + self.batch_size]
+            prefixed_batch = ["<AA2fold> " + " ".join(sequence) for sequence in batch]
 
-                tokens = self.tokenizer.batch_encode_plus(
-                    prefixed_batch,
-                    add_special_tokens=True,
-                    padding="longest",
-                    return_tensors="pt",
-                ).to(self.device)
+            tokens = self.tokenizer.batch_encode_plus(
+                prefixed_batch,
+                add_special_tokens=True,
+                padding="longest",
+                return_tensors="pt",
+            ).to(self.device)
 
-                hidden_state = self.model(
-                    tokens["input_ids"], attention_mask=tokens["attention_mask"]
-                ).last_hidden_state
+            hidden_state = self.model(tokens["input_ids"], attention_mask=tokens["attention_mask"]).last_hidden_state
 
-                lengths = [len(s) for s in batch]
-                means = [hidden_state[i, 1 : length + 1].mean(dim=-2) for i, length in enumerate(lengths)]
-                embed = torch.stack(means, dim=0)
+            lengths = [len(s) for s in batch]
+            means = [hidden_state[i, 1 : length + 1].mean(dim=-2) for i, length in enumerate(lengths)]
+            embed = torch.stack(means, dim=0)
 
-                embeddings.append(embed.cpu().numpy())
+            embeddings.append(embed.cpu().numpy())
 
         return np.concatenate(embeddings)

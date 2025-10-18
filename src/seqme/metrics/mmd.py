@@ -25,29 +25,25 @@ class MaximumMeanDiscrepancy(Metric):
         sigma: float = 10,
         scale: float = 1000,
         device: str = "cpu",
-        reference_name: str | None = None,
-        embedder_name: str | None = None,
+        name: str = "MMD",
     ):
         """
-        Initialize the MMD metric.
+        Initialize the metric.
 
         Args:
             reference: List of reference sequences representing real data.
-            embedder: Function that maps a list of sequences to their embeddings.
-                Should return a 2D array of shape (num_sequences, embedding_dim).
-            sigma: Bandwidth parameter for the Gaussian RBF kernel. Default is 10.
-            scale: Scaling factor for the MMD score. Default is 1000.
-            device: Device to run the computations on. Default is "cpu".
-            reference_name: Optional name for the reference dataset.
-            embedder_name: Optional name for the embedder used.
+            embedder: Function that maps a list of sequences to their embeddings. Should return a 2D array of shape (num_sequences, embedding_dim).
+            sigma: Bandwidth parameter for the Gaussian RBF kernel.
+            scale: Scaling factor for the MMD score.
+            device: Device to run the computations on.
+            name: Metric name,
         """
         self.reference = reference
         self.embedder = embedder
         self.device = device
         self.sigma = sigma
         self.scale = scale
-        self.reference_name = reference_name
-        self.embedder_name = embedder_name
+        self._name = name
 
         self.reference_embeddings = self.embedder(self.reference)
 
@@ -58,7 +54,7 @@ class MaximumMeanDiscrepancy(Metric):
         """Compute the MMD between embeddings of the input sequences and the reference.
 
         Args:
-            sequences: Generated sequences to evaluate.
+            sequences: Sequences to evaluate.
 
         Returns:
             MetricResult contains the MMD score, where lower values indicate better performance.
@@ -68,7 +64,7 @@ class MaximumMeanDiscrepancy(Metric):
 
         generated_embeddings = self.embedder(sequences)
 
-        mmd_score = mmd(
+        mmd_score = compute_mmd(
             x=generated_embeddings,
             y=self.reference_embeddings,
             sigma=self.sigma,
@@ -80,19 +76,14 @@ class MaximumMeanDiscrepancy(Metric):
 
     @property
     def name(self) -> str:
-        name = "MMD"
-        if self.embedder_name:
-            name += f"@{self.embedder_name}"
-        if self.reference_name:
-            name += f" ({self.reference_name})"
-        return name
+        return self._name
 
     @property
     def objective(self) -> Literal["minimize", "maximize"]:
         return "minimize"
 
 
-def mmd(
+def compute_mmd(
     x: np.ndarray,
     y: np.ndarray,
     sigma: float,

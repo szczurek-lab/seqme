@@ -8,18 +8,18 @@ def p_count_aa(sequences: list[str], aa: str) -> np.ndarray:
     return np.array([sequence.count(aa) for sequence in sequences])
 
 
-def test_standard_hv():
+def test_hvi():
     metric = Hypervolume(
         predictors=[
             lambda seqs: p_count_aa(seqs, aa="K"),
             lambda seqs: p_count_aa(seqs, aa="R"),
         ],
-        method="standard",
+        method="hvi",
         nadir=np.zeros(2),
     )
 
     # Name and objective properties
-    assert metric.name == "HV-2"
+    assert metric.name == "Hypervolume"
     assert metric.objective == "maximize"
 
     result = metric(["KKKK", "RRR", "KKKKRRR"])
@@ -38,7 +38,7 @@ def test_convex_hull_hv():
     )
 
     # Name and objective properties
-    assert metric.name == "HV-2 (convex-hull)"
+    assert metric.name == "Hypervolume"
     assert metric.objective == "maximize"
 
     result = metric(["KKKK", "RRR"])
@@ -46,20 +46,19 @@ def test_convex_hull_hv():
     assert result.deviation is None
 
 
-def test_standard_with_ideal_hv():
+def test_hvi_with_ideal_hv():
     metric = Hypervolume(
         predictors=[
             lambda seqs: p_count_aa(seqs, aa="K"),
             lambda seqs: p_count_aa(seqs, aa="R"),
         ],
-        method="standard",
+        method="hvi",
         nadir=np.zeros(2),
         ideal=np.array([10, 10]),
-        include_objective_count_in_name=False,
     )
 
     # Name and objective properties
-    assert metric.name == "HV"
+    assert metric.name == "Hypervolume"
     assert metric.objective == "maximize"
 
     result = metric(["RRR", "KKKK", "KKKKRRR"])
@@ -73,12 +72,12 @@ def test_strict():
             lambda seqs: p_count_aa(seqs, aa="K"),
             lambda seqs: p_count_aa(seqs, aa="R"),
         ],
-        method="standard",
+        method="hvi",
         nadir=np.ones(2),
     )
 
     # Name and objective properties
-    assert metric.name == "HV-2"
+    assert metric.name == "Hypervolume"
     assert metric.objective == "maximize"
 
     with pytest.raises(ValueError):
@@ -91,14 +90,14 @@ def test_not_strict():
             lambda seqs: p_count_aa(seqs, aa="K"),
             lambda seqs: p_count_aa(seqs, aa="R"),
         ],
-        method="standard",
+        method="hvi",
         nadir=np.zeros(2),
         ideal=np.ones(2) * 3,
         strict=False,
     )
 
     # Name and objective properties
-    assert metric.name == "HV-2"
+    assert metric.name == "Hypervolume"
     assert metric.objective == "maximize"
 
     result = metric(["KKKK", "RRR", "KKKKRRR"])

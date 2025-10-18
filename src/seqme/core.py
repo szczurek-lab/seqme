@@ -1,4 +1,6 @@
 import abc
+import pickle
+import random
 from collections import Counter, defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -18,14 +20,14 @@ from tqdm import tqdm
 
 @dataclass
 class MetricResult:
-    """Data structure to store metric result."""
+    """Data structure to store a metric result."""
 
     value: float | int
     deviation: float | None = None
 
 
 class Metric(abc.ABC):
-    """Abstract base for metrics evaluating lists of text sequences.
+    """Abstract base class for defining a metric.
 
     Subclasses implement a callable interface to compute a score and
     specify a name and optimization direction.
@@ -33,7 +35,7 @@ class Metric(abc.ABC):
 
     @abc.abstractmethod
     def __call__(self, sequences: list[str]) -> MetricResult:
-        """Calculate the metric over provided sequences.
+        """Calculate the metric for the provided sequences.
 
         Args:
             sequences: Text inputs to evaluate.
@@ -64,17 +66,17 @@ class Metric(abc.ABC):
         raise NotImplementedError()
 
 
-def compute_metrics(
+def evaluate(
     sequences: dict[str, list[str]] | dict[tuple[str, ...], list[str]],
     metrics: list[Metric],
     *,
     verbose: bool = True,
 ) -> pd.DataFrame:
-    """Compute a set of metrics on multiple sequence groups.
+    """Compute a set of metrics for multiple sequence groups.
 
     Args:
         sequences: A dict mapping group names to lists of sequences.
-        metrics: A list of Metric instances to apply.
+        metrics: A list of metrics to compute per sequence group.
         verbose: Whether to show a progress-bar.
 
     Returns:
@@ -108,7 +110,7 @@ def compute_metrics(
 
             nested[group_name] = group_results
 
-    # Create to a DataFrame with MultiIndex columns
+    # Create a DataFrame with MultiIndex columns
     df_parts = []
     for metric in metrics:
         data = {
@@ -127,15 +129,15 @@ def compute_metrics(
     return df
 
 
-def combine_metric_dataframes(
+def combine(
     dfs: list[pd.DataFrame],
     *,
     on_overlap: Literal["fail", "mean,std"] = "fail",
 ) -> pd.DataFrame:
-    """Combine multiple DataFrames with metrics results into a single DataFrame.
+    """Combine multiple DataFrames with metric results into a single DataFrame.
 
     Args:
-        dfs: list of DataFrames, each with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], and an 'objective' attribute.
+        dfs: List of DataFrames, each with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], and an 'objective' attribute.
         on_overlap: How to handle cells with multiple values.
 
             - "fail": raises an exception on overlap.
@@ -164,10 +166,15 @@ def combine_metric_dataframes(
     combined_objectives: dict[str, str] = {}
 
     for df in dfs:
-        for key, value in df.attrs["objective"].items():
-            if key in combined_objectives and combined_objectives[key] != value:
-                raise ValueError(f"Conflicting objective for metric '{key}': '{combined_objectives[key]}' vs '{value}'")
-            combined_objectives[key] = value
+        objectives = df.attrs["objective"]
+        metrics = pd.unique(df.columns.get_level_values(0)).tolist()
+        for metric in metrics:
+            objective = objectives[metric]
+            if metric in combined_objectives and combined_objectives[metric] != objective:
+                raise ValueError(
+                    f"Conflicting objective for metric '{metric}': '{combined_objectives[metric]}' vs '{objective}'"
+                )
+            combined_objectives[metric] = objective
 
         for idx in df.index:
             if idx not in seen_rows:
@@ -223,8 +230,40 @@ def combine_metric_dataframes(
     return combined_df
 
 
+def rename(df: pd.DataFrame, metrics: dict[str, str]) -> pd.DataFrame:
+    """Rename one or more metrics.
+
+    Args:
+        df: Metric Dataframe.
+        metrics: Metrics to rename. Format: {old: new, ...}.
+
+    Returns:
+        A copy of the original dataframe with the metrics (columns) renamed.
+
+    Raises:
+        ValueError: If an `old` metric name is not present in the `df`, or if a `new` name would create a duplicate objective key.
+    """
+    old_metrics = pd.unique(df.columns.get_level_values(0)).tolist()
+    old_objectives = {metric: df.attrs["objective"][metric] for metric in old_metrics}
+    new_objectives = {mt: obj for mt, obj in old_objectives.items() if mt not in metrics}
+
+    for old, new in metrics.items():
+        if old not in old_objectives:
+            raise ValueError(f"Metric '{old}' does not exist.")
+
+        if new in new_objectives:
+            raise ValueError(f"Duplicate metric name '{new}'.")
+
+        new_objectives[new] = old_objectives[old]
+
+    new_df = df.rename(columns=metrics)
+    new_df.attrs["objective"] = new_objectives
+
+    return new_df
+
+
 def sort(df: pd.DataFrame, metric: str, *, level: int = 0, order: Literal["best", "worst"] = "best") -> pd.DataFrame:
-    """Sort metric dataframe by metric value.
+    """Sort metric dataframe by a metrics values.
 
     Args:
         df: Metric Dataframe.
@@ -236,7 +275,7 @@ def sort(df: pd.DataFrame, metric: str, *, level: int = 0, order: Literal["best"
         Sorted metric dataframe.
     """
 
-    def sort_df(df: pd.DataFrame, metric: str) -> pd.DataFrame:
+    def sort_df(df: pd.DataFrame, metric: str, order: str) -> pd.DataFrame:
         ascending = df.attrs["objective"][metric] == "minimize"
         if order == "worst":
             ascending = not ascending
@@ -259,7 +298,7 @@ def sort(df: pd.DataFrame, metric: str, *, level: int = 0, order: Literal["best"
     dfs_sorted = []
     for group in groups.values():
         df_sub = df.loc[group]
-        df_sub_sorted = sort_df(df_sub, metric)
+        df_sub_sorted = sort_df(df_sub, metric, order)
         dfs_sorted.append(df_sub_sorted)
 
     return pd.concat(dfs_sorted)
@@ -320,20 +359,20 @@ def top_k(
     return df_combined.loc[ordered_index]
 
 
-def show_table(
+def show(
     df: pd.DataFrame,
     *,
     n_decimals: int | list[int] = 2,
     color: str | None = "#68d6bc",
     color_style: Literal["solid", "gradient", "bar"] = "solid",
     notation: Literal["decimals", "exponent"] | list[Literal["decimals", "exponent"]] = "decimals",
-    missing_value: str = "-",
+    na_value: str = "-",
     show_arrow: bool = True,
     level: int = 0,
     hline_level: int | None = None,
     caption: str | None = None,
 ) -> Styler:
-    """Visualize a table of a metric dataframe.
+    """Display a metric dataframe as a styled table.
 
     Render a styled DataFrame that:
         - Combines 'value' and 'deviation' into "value ± deviation".
@@ -345,10 +384,10 @@ def show_table(
     Args:
         df: DataFrame with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], attributed with 'objective'.
         n_decimals: Decimal precision for formatting.
-        color: Color (hex) for highlighting best scores.
+        color: Color (hex) for highlighting best scores. If None, no coloring.
         color_style: Style of the coloring. Ignored if color is None.
         notation: Whether to use scientific notation (exponent) or fixed-point notation (decimals).
-        missing_value: str to show for cells with no metric value, i.e., cells with NaN values.
+        na_value: str to show for cells with no metric value, i.e., cells with NaN values.
         show_arrow: Whether to include the objective arrow in the column names.
         level: The tuple index-names level to consider as a group.
         hline_level: When to add horizontal lines seperaing model names. If None, add horizontal lines at the first level if more than 1 level.
@@ -382,29 +421,17 @@ def show_table(
         t = (val - min_value) / (max_value - min_value)
         return 1 - t if objective == "minimize" else t
 
-    def decorate_solid(
-        idx: int,
-        metric: str,
-        df: pd.DataFrame,
-        best_indices: set[int],
-        second_best_indices: set[int],
-    ) -> str:
+    def decorate_solid(idx: int, metric: str, df: pd.DataFrame, is_best: bool, is_second_best: bool) -> str:
         fmts = []
-        if idx in best_indices:
+        if is_best:
             if color:
                 fmts += [f"background-color:{color}"]
             fmts += ["font-weight:bold"]
-        if idx in second_best_indices:
+        if is_second_best:
             fmts += ["text-decoration:underline"]
         return "; ".join(fmts)
 
-    def decorate_gradient(
-        idx: int,
-        metric: str,
-        df: pd.DataFrame,
-        best_indices: set[int],
-        second_best_indices: set[int],
-    ) -> str:
+    def decorate_gradient(idx: int, metric: str, df: pd.DataFrame, is_best: bool, is_second_best: bool) -> str:
         def gradient_lerp(hex_color1: str, hex_color2: str, t: float) -> str:
             cmap = mpl.colors.LinearSegmentedColormap.from_list(None, [hex_color1, hex_color2])
             return mpl.colors.to_hex(cmap(t), keep_alpha=True)
@@ -417,19 +444,13 @@ def show_table(
             gradient = gradient_lerp(f"{color}00", f"{color}ff", frac)
             fmts += [f"background-color:{gradient}"]
 
-        if idx in best_indices:
+        if is_best:
             fmts += ["font-weight:bold"]
-        if idx in second_best_indices:
+        if is_second_best:
             fmts += ["text-decoration:underline"]
         return "; ".join(fmts)
 
-    def decorate_bar(
-        idx: int,
-        metric: str,
-        df: pd.DataFrame,
-        best_indices: set[int],
-        second_best_indices: set[int],
-    ) -> str:
+    def decorate_bar(idx: int, metric: str, df: pd.DataFrame, is_best: bool, is_second_best: bool) -> str:
         fmts = []
         if color:
             objective = df.attrs["objective"][metric]
@@ -439,15 +460,15 @@ def show_table(
                 width = f"{frac * 100:.1f}%"
                 fmts += [f"background: linear-gradient(90deg, {color} {width}, transparent {width})"]
 
-        if idx in best_indices:
+        if is_best:
             fmts += ["font-weight:bold"]
-        if idx in second_best_indices:
+        if is_second_best:
             fmts += ["text-decoration:underline"]
         return "; ".join(fmts)
 
     def decorate_col(col_series: pd.Series, metric: str, fn: Callable, df: pd.DataFrame) -> list[str]:
         best_indices, second_best_indices = _get_top_indices(df, metric)
-        return [fn(idx, metric, df, best_indices, second_best_indices) for idx in col_series.index]
+        return [fn(idx, metric, df, idx in best_indices, idx in second_best_indices) for idx in col_series.index]
 
     def get_changing_rows_iloc(indices: pd.Index, hline_level: int) -> list[int]:
         level_names = [idx[:hline_level] for idx in indices]
@@ -488,8 +509,7 @@ def show_table(
         arrow = arrows[objectives[m]]
         col_name = f"{m}{arrow}" if show_arrow else m
         df_styled[col_name] = [
-            format_cell(val, dev, n_decimals[i], notation[i], missing_value)
-            for val, dev in zip(vals, devs, strict=True)
+            format_cell(val, dev, n_decimals[i], notation[i], na_value) for val, dev in zip(vals, devs, strict=True)
         ]
 
     decorators = {"solid": decorate_solid, "gradient": decorate_gradient, "bar": decorate_bar}
@@ -542,25 +562,25 @@ def show_table(
 
 
 def to_latex(
-    fname: str | Path,
     df: pd.DataFrame,
+    path: str | Path,
     *,
     n_decimals: int | list[int] = 2,
     color: str | None = None,
     notation: Literal["decimals", "exponent"] | list[Literal["decimals", "exponent"]] = "decimals",
-    missing_value: str = "-",
+    na_value: str = "-",
     show_arrow: bool = True,
     caption: str = None,
 ):
     """Convert a metric dataframe to a LaTeX table.
 
     Args:
-        fname: Output filename, e.g., "table.tex".
         df: DataFrame with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], attributed with 'objective'.
+        path: Output filename, e.g., "./path/table.tex".
         n_decimals: Decimal precision for formatting.
-        color: Color (hex) for highlighting best scores.
+        color: Color (hex) for highlighting best scores. If None, no coloring.
         notation: Whether to use scientific notation (exponent) or fixed-point notation (decimals).
-        missing_value: str to show for cells with no metric value, i.e., cells with NaN values.
+        na_value: str to show for cells with no metric value, i.e., cells with NaN values.
         show_arrow: Whether to include the objective arrow in the column names.
         caption: Bottom caption text.
     """
@@ -642,7 +662,7 @@ def to_latex(
         values = [row_name]
         for i, (col_name, val, dev) in enumerate(zip(col_names, row[::2], row[1::2], strict=True)):
             if pd.isna(val):
-                values.append(missing_value)
+                values.append(na_value)
                 continue
 
             best = row_name in best_indices[col_name]
@@ -676,7 +696,7 @@ def to_latex(
 
     latex_code = table.dumps()
 
-    output_path = Path(fname)
+    output_path = Path(path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(latex_code)
 
@@ -687,23 +707,23 @@ def barplot(
     *,
     show_deviation: bool = True,
     color: str = "#68d6bc",
-    x_ticks_label_rotation: float = 45,
+    x_ticks_rotation: float = 45,
     ylim: tuple[float, float] | None = None,
     figsize: tuple[int, int] = (4, 3),
     show_arrow: bool = True,
     ax: Axes | None = None,
 ):
-    """Plot a bar chart for a given metric, optionally with error bars.
+    """Plot a bar chart for a given metric with optional error bars.
 
     Args:
         df: A DataFrame with a MultiIndex column [metric, {"value", "deviation"}].
         metric: The name of the metric to plot.
         show_deviation: Whether to plot the deviation if available.
-        color: Bar color (optional, default is teal).
-        x_ticks_label_rotation: Rotation angle for x-axis tick labels.
-        ylim: Y-axis limits (optional).
+        color: Bar color. Default is teal.
+        x_ticks_rotation: Rotation angle for x-axis labels.
+        ylim: y-axis limits (optional).
         figsize: Size of the figure.
-        show_arrow: Whether to show an arrow indicating maximize/minimize (default is True).
+        show_arrow: Whether to show an arrow indicating maximize/minimize in the x-labels.
         ax: Optional matplotlib Axes to plot on.
     """
     if metric not in df.columns.get_level_values(0):
@@ -737,7 +757,7 @@ def barplot(
     arrow = arrows[df.attrs["objective"][metric]]
 
     ax.set_xticks(range(len(values)))
-    ax.set_xticklabels(bar_names, rotation=x_ticks_label_rotation, ha="center")
+    ax.set_xticklabels(bar_names, rotation=x_ticks_rotation, ha="center")
 
     ax.set_ylabel(f"{metric}{arrow}" if show_arrow else metric)
 
@@ -748,7 +768,180 @@ def barplot(
     ax.set_axisbelow(True)
 
     if created_fig:
-        plt.tight_layout()
+        plt.show()
+
+
+def parallel_coordinates(
+    df: pd.DataFrame,
+    *,
+    n_decimals: int | list[int] = 2,
+    figsize: tuple[int, int] = (5, 3),
+    legend_loc: Literal["right margin"] | str | None = "right margin",
+    x_ticks_fontsize: float | None = None,
+    x_ticks_rotation: float = 90,
+    y_ticks_fontsize: float = 8,
+    show_yticks: bool = True,
+    show_arrow: bool = True,
+    arrow_size: float | None = None,
+    zero_width: float | None = 0.25,
+    x_pad: float = 0.25,
+    ax: Axes | None = None,
+):
+    """Plot a parallel coordinates plot where each coordinate is a metric.
+
+    Args:
+        df: A DataFrame with a MultiIndex column [metric, {"value", "deviation"}].
+        n_decimals: Decimal precision for formatting.
+        figsize: Size of the figure.
+        legend_loc: Legend location.
+        x_ticks_fontsize: Font size of x-ticks. If None, selects default fontsize.
+        x_ticks_rotation: Rotation angle for x-axis tick labels.
+        y_ticks_fontsize: Font size of y-labels.
+        show_yticks: Whether to you show the minimum and maximum value on the y-axis for each metric.
+        show_arrow: Whether to show an arrow indicating maximize/minimize in the x-labels.
+        arrow_size: Size of arrows displayed in the plot. If None, do not show.
+        zero_width: Width of the zero value indicator. If None, do not show.
+        x_pad: Left and right padding of axes.
+        ax: Optional matplotlib Axes to plot on.
+    """
+    for idx in df.index:
+        vals = df.loc[idx, pd.IndexSlice[:, "value"]]  # type: ignore
+        if vals.isna().any():
+            raise ValueError(f"'{idx}' has NaN values.")
+
+    metric_names = list(df.columns.get_level_values(0).unique())
+    n_metrics = len(metric_names)
+    n_decimals = [n_decimals] * n_metrics if isinstance(n_decimals, int) else n_decimals
+
+    if len(n_decimals) != n_metrics:
+        raise ValueError(
+            f"Expected {n_metrics} decimals, got {len(n_decimals)}. Provide a single int or a list matching the number of metrics."
+        )
+
+    names = (
+        [" ".join(map(str, row_index)) for row_index in df.index.to_flat_index()]
+        if df.index.nlevels > 1
+        else list(df.index)
+    )
+
+    created_fig = False
+    if ax is None:
+        _, ax = plt.subplots(figsize=figsize)
+        created_fig = True
+
+    ax.set_xlim(0 - x_pad, n_metrics - 1 + x_pad)
+    ax.set_xticks(range(n_metrics))
+
+    ax.set_yticklabels([])
+
+    ax.grid(True, axis="x", linewidth=1.0, color="black", linestyle="-", alpha=0.3)
+    ax.grid(True, axis="y", linewidth=0.8, color="gray", linestyle="--", alpha=0.2)
+
+    # Normalize each metric separately
+    normalized = {}
+    ranges = {}
+    for m in metric_names:
+        vals = df[m]["value"].values
+        vmin, vmax = vals.min(), vals.max()
+        ranges[m] = (vmin, vmax)
+        normalized[m] = (vals - vmin) / (vmax - vmin) if vmax > vmin else np.zeros_like(vals)
+
+    for i, name in enumerate(names):
+        values = [normalized[m][i] for m in metric_names]
+        ax.plot(values, label=name)
+
+    if zero_width:
+        for i, m in enumerate(metric_names):
+            vmin, vmax = ranges[m]
+            if vmin <= 0 <= vmax:
+                ax.hlines(
+                    y=(0 - vmin) / (vmax - vmin),
+                    xmin=i - zero_width / 2,
+                    xmax=i + zero_width / 2,
+                    color="gray",
+                    linewidth=1.1,
+                    alpha=0.8,
+                )
+
+    for i, m in enumerate(metric_names):
+        vmin, vmax = ranges[m]
+        ax2 = ax.twinx()
+        ax2.set_ylim(0, 1)
+        ax2.yaxis.set_ticks_position("left")
+        ax2.set_yticks([])
+        ax2.spines["left"].set_position(("data", i))
+        ax2.spines["left"].set_visible(False)  # Hide duplicate spines
+
+    if legend_loc == "right margin":
+        ax.legend(
+            frameon=False,
+            loc="center left",
+            bbox_to_anchor=(1, 0.5),
+            ncol=(1 if len(names) <= 14 else 2 if len(names) <= 30 else 3),
+        )
+    else:
+        ax.legend(loc=legend_loc)
+
+    objectives = df.attrs["objective"]
+
+    arrows = {"maximize": "↑", "minimize": "↓"}
+    xlabels = [f"{m}{arrows[objectives[m]]}" if show_arrow else m for m in metric_names]
+    ax.set_xticklabels(xlabels, rotation=x_ticks_rotation, ha="center", va="top", fontsize=x_ticks_fontsize)
+
+    if arrow_size is not None:
+        for i, m in enumerate(metric_names):
+            vmin, vmax = ranges[m]
+            y_min, y_max = ax.get_ylim()
+
+            ax.text(
+                i,
+                1.0 if objectives[m] == "maximize" else 0.0,
+                f"{arrows[objectives[m]]}",
+                ha="center",
+                va="top" if objectives[m] == "maximize" else "bottom",
+                fontsize=arrow_size,
+                color="black",
+                clip_on=False,
+            )
+
+    if show_yticks:
+        y_min, y_max = ax.get_ylim()
+
+        y_offset_top = 0.05 * (y_max - y_min) / figsize[1]
+        y_offset_bottom = 0.1 * (y_max - y_min) / figsize[1]
+
+        x_label_y_pad = 0.5
+        auto_pad = y_ticks_fontsize + y_offset_bottom + x_label_y_pad
+        ax.tick_params(axis="x", pad=auto_pad)
+
+        for i, m in enumerate(metric_names):
+            vmin, vmax = ranges[m]
+
+            ax.text(
+                i,
+                y_max + y_offset_top,
+                f"{vmax:.{n_decimals[i]}f}",
+                ha="center",
+                va="bottom",
+                fontsize=y_ticks_fontsize,
+                color="black",
+                clip_on=False,
+                fontweight="bold" if objectives[m] == "maximize" else None,
+            )
+
+            ax.text(
+                i,
+                y_min - y_offset_bottom,
+                f"{vmin:.{n_decimals[i]}f}",
+                ha="center",
+                va="top",
+                fontsize=y_ticks_fontsize,
+                color="black",
+                clip_on=False,
+                fontweight="bold" if objectives[m] == "minimize" else None,
+            )
+
+    if created_fig:
         plt.show()
 
 
@@ -757,24 +950,32 @@ def plot_series(
     metric: str,
     *,
     show_deviation: bool = True,
-    figsize: tuple[int, int] = (4, 3),
+    linestyle: str | list[str] = "-",
+    color: list[str] | None = None,
     marker: str | None = "x",
+    marker_size: float | None = None,
     xlabel: str = "Iteration",
     alpha: float = 0.4,
     show_arrow: bool = True,
+    legend_loc: Literal["right margin"] | str | None = "right margin",
+    figsize: tuple[int, int] = (4, 3),
     ax: Axes | None = None,
 ):
-    """Plot a graph for a given metric across multiple iterations/steps, optionally with error bars.
+    """Plot a series for a given metric across multiple iterations/steps with optional error bars.
 
     Args:
         df: A DataFrame with a MultiIndex column [metric, {"value", "deviation"}].
         metric: The name of the metric to plot.
         show_deviation: Whether to the plot deviation if available.
-        marker: Marker type for graphs.
+        linestyle: Series linestyle.
+        color: Color for each series.
+        marker: Marker type for serie values. If None, no marker is shown.
+        marker_size: Size of marker. If None, auto-selects size.
         xlabel: Name of x-label.
         alpha: opacity level of deviation intervals.
+        show_arrow: Whether to show an arrow indicating maximize/minimize.
+        legend_loc: Legend location.
         figsize: Size of the figure.
-        show_arrow: Whether to show an arrow indicating maximize/minimize (default is True).
         ax: Optional matplotlib Axes to plot on.
     """
     if metric not in df.columns.get_level_values(0):
@@ -791,13 +992,22 @@ def plot_series(
                 f"with types ({type(model_name).__name__}, {type(iteration).__name__})."
             )
 
+    model_names = list(df.index.get_level_values(0).unique())
+    linestyle = [linestyle] * len(model_names) if isinstance(linestyle, str) else linestyle
+
+    if len(linestyle) != len(model_names):
+        f"Expected {len(model_names)} linestyles, got {len(linestyle)}. Provide a single linestyle or a list matching the number of entries."
+
+    if color:
+        if len(color) != len(model_names):
+            raise ValueError(f"Expected a color for each entry. Got {len(color)}, expected {len(model_names)}.")
+
     created_fig = False
     if ax is None:
         _, ax = plt.subplots(figsize=figsize)
         created_fig = True
 
-    model_names = list(df.index.get_level_values(0).unique())
-    for model_name in model_names:
+    for i, model_name in enumerate(model_names):
         df_model = df.loc[model_name]
         df_model = df_model.sort_index()
 
@@ -805,10 +1015,19 @@ def plot_series(
         vs = df_model[metric]["value"]
         dev = df_model[metric]["deviation"]
 
-        if show_deviation:
-            ax.fill_between(xs, vs - dev, vs + dev, alpha=alpha)
+        lines = ax.plot(
+            xs,
+            vs,
+            marker=marker,
+            markersize=marker_size,
+            label=model_name,
+            color=color[i] if color else None,
+            linestyle=linestyle[i],
+        )
 
-        ax.plot(xs, vs, marker=marker, label=model_name)
+        if show_deviation:
+            c = lines[0].get_color()
+            ax.fill_between(xs, vs - dev, vs + dev, alpha=alpha, color=c)
 
     objective = df.attrs["objective"][metric]
     arrows = {"maximize": "↑", "minimize": "↓"}
@@ -817,14 +1036,29 @@ def plot_series(
     ax.set_ylabel(f"{metric}{arrows[objective]}" if show_arrow else metric)
 
     ax.grid(True, linestyle="--", alpha=0.4)
-    ax.legend()
+
+    iterations = df.index.get_level_values(1)
+    if pd.api.types.is_integer_dtype(iterations.dtype):
+        from matplotlib.ticker import FuncFormatter, MaxNLocator
+
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        ax.xaxis.set_major_formatter(FuncFormatter(lambda x, _: f"{int(round(x))}"))
+
+    if legend_loc == "right margin":
+        ax.legend(
+            frameon=False,
+            loc="center left",
+            bbox_to_anchor=(1, 0.5),
+            ncol=(1 if len(model_names) <= 14 else 2 if len(model_names) <= 30 else 3),
+        )
+    else:
+        ax.legend(loc=legend_loc)
 
     if created_fig:
-        plt.tight_layout()
         plt.show()
 
 
-class ModelCache:
+class Cache:
     """Caches model-generated feature representations of sequences.
 
     Allows storing and retrieving embeddings per model to avoid
@@ -849,22 +1083,22 @@ class ModelCache:
             if name not in self.model_to_cache:
                 self.model_to_cache[name] = {}
 
-    def __call__(self, sequences: list[str], model_name: str, variable_length: bool) -> list[Any] | np.ndarray:
+    def __call__(self, sequences: list[str], model_name: str, stack: bool) -> list[Any] | np.ndarray:
         """Return embeddings for the given sequences using the specified model.
 
-        Uncached sequences are computed and stored automatically.
+        Uncached sequences are computed and stored.
 
         Args:
             sequences: List of input texts.
             model_name: Name of the model to use.
-            variable_length: Whether the embeddings are variable size. If true then return a list of embeddings else stack as a numpy array.
+            stack: Whether the embeddings should be stacked as a numpy array. If true then stack as a numpy array else return a list of embeddings.
 
         Returns:
-            Embeddings in the same order as input.
+            Embeddings in the same order as the input sequences.
         """
         sequence_to_rep = self.model_to_cache[model_name]
 
-        new_sequences = [seq for seq in sequences if seq not in sequence_to_rep]
+        new_sequences = [seq for seq in set(sequences) if seq not in sequence_to_rep]
         if len(new_sequences) > 0:
             model = self.model_to_callable.get(model_name)
             if model is None:
@@ -876,26 +1110,26 @@ class ModelCache:
                 sequence_to_rep[sequence] = rep
 
         reps = [sequence_to_rep[seq] for seq in sequences]
-        return reps if variable_length else np.stack(reps)
+        return np.stack(reps) if stack else reps
 
     def model(
         self,
         model_name: str,
         *,
-        variable_length: bool = False,
+        stack: bool = True,
     ) -> Callable[[list[str]], list[Any] | np.ndarray]:
         """Return a callable interface for a given model name.
 
         Args:
             model_name: Name of the model to use.
-            variable_length: Whether the embeddings are variable size. If true then return a list of embeddings else stack as a numpy array.
+            stack: Whether the embeddings should be stacked as a numpy array. If true then stack as a numpy array else return a list of embeddings.
 
         Raises:
             ValueError: If the model is unknown.
         """
         if model_name not in self.model_to_cache:
             raise ValueError(f"'{model_name}' is not callable nor has any pre-cached sequences.")
-        return lambda sequence: self(sequence, model_name, variable_length)
+        return lambda sequence: self(sequence, model_name, stack)
 
     def add(
         self,
@@ -974,7 +1208,7 @@ def _get_top_indices(df: pd.DataFrame, metric: str) -> tuple[set[int], set[int]]
         return set(indices1), set(indices2)
 
     if "objective" not in df.attrs:
-        raise ValueError("DataFrame must have an 'objective' attribute. Use compute_metrics to create the DataFrame.")
+        raise ValueError("DataFrame must have an 'objective' attribute. Use 'sm.evaluate' to create the DataFrame.")
 
     objective = df.attrs["objective"][metric]
     vals = df[(metric, "value")]
@@ -987,3 +1221,152 @@ def _get_top_indices(df: pd.DataFrame, metric: str) -> tuple[set[int], set[int]]
         raise ValueError(f"Unknown objective '{objective}' for metric '{metric}'.")
 
     return top_indices_helper(best_cells)
+
+
+def shuffle_characters(sequences: list[str], seed: int | None = 0) -> list[str]:
+    """
+    Randomly shuffle characters within each sequence.
+
+    Args:
+        sequences: List of input strings to shuffle.
+        seed: Local seed when sampling. If None, no fixed local seed is used.
+
+    Returns:
+        A new list where each sequences characters have been shuffled.
+    """
+    rng = random.Random(seed)
+    shuffled = []
+    for seq in sequences:
+        chars = list(seq)
+        rng.shuffle(chars)
+        shuffled.append("".join(chars))
+    return shuffled
+
+
+def random_subset(
+    sequences: list[str],
+    n_samples: int,
+    return_indices: bool = False,
+    seed: int | None = 0,
+) -> list[str] | tuple[list[str], np.ndarray]:
+    """
+    Sample a subset of the sequences with no replacement.
+
+    Args:
+        sequences: The list of sequences to sample from.
+        n_samples: The number of sequences to sample.
+        return_indices: If true, return a tuple of the sequence subset and indices else return only the sequence subset.
+        seed: Local seed when sampling. If None, no fixed local seed is used.
+
+    Returns:
+        A list of `n_samples` randomly chosen, unique sequences. Optionally, including the indices.
+
+    Raises:
+        ValueError: If `n_samples` exceeds the number of available sequences.
+    """
+    if n_samples > len(sequences):
+        raise ValueError(f"Cannot sample {n_samples} sequences from a list of length {len(sequences)}.")
+
+    rng = np.random.default_rng(seed)
+    indices = rng.choice(np.arange(len(sequences), dtype=int), size=n_samples, replace=False)
+    subset = [sequences[idx] for idx in indices]
+
+    if return_indices:
+        return subset, indices
+
+    return subset
+
+
+def read_fasta(path: str | Path) -> list[str]:
+    """Retrieve sequences from a FASTA file.
+
+    Args:
+        path: Path to FASTA file.
+
+    Returns:
+        The list of sequences.
+    """
+    path = Path(path)
+    if not path.is_file():
+        raise FileNotFoundError(f"File not found: {path}")
+
+    sequences: list[str] = []
+    current_seq: list[str] = []
+
+    with path.open() as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue  # skip empty lines
+            if line.startswith(">"):
+                if current_seq:
+                    sequence = "".join(current_seq)
+                    if sequence:
+                        sequences.append(sequence)
+                    current_seq = []
+            else:
+                current_seq.append(line)
+
+        # Add the last sequence if present
+        if current_seq:
+            sequence = "".join(current_seq)
+            if sequence:
+                sequences.append(sequence)
+
+    return sequences
+
+
+def to_fasta(sequences: list[str], path: str | Path, *, headers: list[str] | None = None):
+    """Write sequences to a FASTA file.
+
+    Args:
+       sequences: List of text sequences.
+       path: Output filepath, e.g., "/path/seqs.fasta".
+       headers: Optional sequence names.
+    """
+    if headers is not None and len(headers) != len(sequences):
+        raise ValueError("headers length must match sequences length")
+
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    with path.open("w") as f:
+        for i, seq in enumerate(sequences):
+            header = headers[i] if headers else f">seq_{i + 1}"
+
+            if not header.startswith(">"):
+                header = ">" + header
+
+            f.write(f"{header}\n")
+            f.write(f"{seq}\n")
+
+
+def read_pickle(path: str | Path) -> Any:
+    """Load and return an object from a pickle file.
+
+    Args:
+        path: Path to pickle file.
+
+    Returns:
+        The deserialized Python object.
+    """
+    path = Path(path)
+    if not path.is_file():
+        raise FileNotFoundError(f"File not found: {path}")
+
+    with path.open("rb") as f:
+        return pickle.load(f)
+
+
+def to_pickle(content: Any, path: str | Path):
+    """Serialize an object and write it to a pickle file.
+
+    Args:
+       content: Pickable object.
+       path: Output filepath, e.g., "/path/cache.pkl".
+    """
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    with path.open("wb") as f:
+        pickle.dump(content, f)

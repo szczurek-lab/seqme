@@ -13,7 +13,12 @@ authors = [
     { name = "Rasmus Møller-Larsen" },
     { name = "Adam Izdebski" },
     { name = "Jan Olszewski" },
+    { name = "Pankhil Gawade" },
+    { name = "Michal Kmicikiewicz" },
+    { name = "Wojciech Zarzecki" },
+    { name = "Ewa Szczurek" },
 ]
+
 maintainers = [{ name = "Rasmus Møller-Larsen" }]
 urls.Documentation = "https://seqme.readthedocs.io"
 urls.Source = "https://github.com/szczurek-lab/seqme"
@@ -77,9 +82,10 @@ hyformer = [
 RNA_FM = ["rna-fm"]
 
 # DNA
-DNABert2 = ["transformers", "einops"]
+gena_lm = ["transformers", "einops"]
 
 doc = [
+    "seaborn",
     "ipykernel",
     "ipywidgets",
     "sphinx",
@@ -99,6 +105,7 @@ dev = [
     "nbstripout",
     "pre-commit>=3.0.0",
     "pytest",
+    "pytest-cov",
     "ruff",
     "ipykernel",
     "ipywidgets",

@@ -1,10 +1,11 @@
 Metrics
 #######
+``seqme`` provides a unified framework for evaluating generated across **three metric spaces** — sequence, embedding, and property — along with a few general-purpose utilities.
 
-seqme contains three types of metrics. Those operating in sequence-, embedding-, and property-space.
 
-Sequence-based
---------------
+Sequence-based Metrics
+----------------------
+Metrics that operate directly on the raw sequence data.
 
 .. autosummary::
     :toctree:
@@ -15,8 +16,10 @@ Sequence-based
     seqme.metrics.Novelty
     seqme.metrics.NGramJaccardSimilarity
 
-Embedding-based
----------------
+
+Embedding-based Metrics
+-----------------------
+Metrics that compare or assess distributions in an embedding (vector) space.
 
 .. autosummary::
     :toctree:
@@ -29,8 +32,10 @@ Embedding-based
     seqme.metrics.AuthPct
     seqme.metrics.FKEA
 
-Property-based
---------------
+
+Property-based Metrics
+----------------------
+Metrics computed on derived physicochemical or predicted properties.
 
 .. autosummary::
     :toctree:
@@ -46,9 +51,12 @@ Property-based
 
 Miscellaneous
 -------------
+General or utility metrics that don't fit into the main categories.
+
 .. autosummary::
     :toctree:
     :nosignatures:
 
     seqme.metrics.Fold
     seqme.metrics.Count
+    seqme.metrics.Length

@@ -23,8 +23,7 @@ class FrechetBiologicalDistance(Metric):
         reference: list[str],
         embedder: Callable[[list[str]], np.ndarray],
         *,
-        reference_name: str | None = None,
-        embedder_name: str | None = None,
+        name: str = "FBD",
     ):
         """
         Initializes the FBD metric with a reference dataset and an embedding function.
@@ -32,16 +31,14 @@ class FrechetBiologicalDistance(Metric):
         Args:
             reference: A list of reference sequences (e.g., real data).
             embedder: A function that maps a list of sequences to a 2D NumPy array of embeddings.
-            reference_name: Optional name for the reference dataset.
-            embedder_name: Optional name for the embedder used.
+            name: Metric name.
 
         Raises:
             ValueError: If fewer than 2 reference embeddings are provided.
         """
         self.reference = reference
         self.embedder = embedder
-        self.reference_name = reference_name
-        self.embedder_name = embedder_name
+        self._name = name
 
         self.reference_embeddings = self.embedder(self.reference)
 
@@ -64,12 +61,7 @@ class FrechetBiologicalDistance(Metric):
 
     @property
     def name(self) -> str:
-        name = "FBD"
-        if self.embedder_name:
-            name += f"@{self.embedder_name}"
-        if self.reference_name:
-            name += f" ({self.reference_name})"
-        return name
+        return self._name
 
     @property
     def objective(self) -> Literal["minimize", "maximize"]:
@@ -109,7 +101,7 @@ def wasserstein_distance(e1: np.ndarray, e2: np.ndarray, eps: float = 1e-6) -> f
     # Handle numerical issues with imaginary components
     if np.iscomplexobj(covmean):
         if not np.allclose(np.diagonal(covmean).imag, 0, atol=1e-3):
-            raise ValueError("Imaginary component")
+            return float("nan")
         covmean = covmean.real
 
     diff = mu1 - mu2

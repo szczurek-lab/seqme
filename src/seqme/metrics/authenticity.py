@@ -12,7 +12,7 @@ class Authenticity(Metric):
     Proportion of authentic generated samples.
 
     Reference:
-        Alaa et al., "How Faithful is your Synthetic Data? Sample-level Metrics for Evaluating and Auditing Generative Models." (2022). (https://arxiv.org/pdf/1910.14137)
+        Alaa et al., "How Faithful is your Synthetic Data? Sample-level Metrics for Evaluating and Auditing Generative Models." (2022). (https://arxiv.org/abs/2102.08921)
     """
 
     def __init__(
@@ -20,19 +20,19 @@ class Authenticity(Metric):
         train_set: list[str],
         embedder: Callable[[list[str]], np.ndarray],
         *,
-        embedder_name: str | None = None,
+        name: str = "Authenticity",
     ):
         """
         Initialize the Authenticity metric.
 
         Args:
             train_set: List of sequences used to train the generative model.
-            embedder: A function that maps a list of sequences to a 2D NumPy array of embeddings.
-            embedder_name: Optional name for the embedder used.
+            embedder: A function mapping a list of sequences to a 2D NumPy array of embeddings.
+            name: Metric name.
         """
         self.train_set = train_set
         self.embedder = embedder
-        self.embedder_name = embedder_name
+        self._name = name
 
         self.train_set_embeddings = self.embedder(self.train_set)
 
@@ -63,10 +63,7 @@ class Authenticity(Metric):
 
     @property
     def name(self) -> str:
-        name = "Authenticity"
-        if self.embedder_name:
-            name += f"@{self.embedder_name}"
-        return name
+        return self._name
 
     @property
     def objective(self) -> Literal["minimize", "maximize"]:
@@ -101,7 +98,7 @@ class AuthPct(Authenticity):
     Proportion of authentic generated samples.
 
     Reference:
-        Alaa et al., "How Faithful is your Synthetic Data? Sample-level Metrics for Evaluating and Auditing Generative Models." (2022). (https://arxiv.org/pdf/1910.14137)
+        Alaa et al., "How Faithful is your Synthetic Data? Sample-level Metrics for Evaluating and Auditing Generative Models." (2022). (https://arxiv.org/abs/2102.08921)
     """
 
     pass

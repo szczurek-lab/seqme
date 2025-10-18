@@ -17,19 +17,22 @@ class NGramJaccardSimilarity(Metric):
         *,
         objective: Literal["minimize", "maximize"] = "minimize",
         reference_name: str | None = None,
+        name: str = "Jaccard-similarity",
     ):
-        """Initialize the NGramJaccardSimilarity metric.
+        """Initialize the metric.
 
         Args:
             reference: list of strings to build the reference n-gram set.
             n: size of the n-grams.
             objective: "minimize" to reward novelty, "maximize" to reward overlap.
             reference_name: optional label; appended to the metric name.
+            name: Metric name.
         """
         self.n = n
         self._objective = objective
         self.data_name = reference_name
         self.reference_ngrams = self._make_ngram_set(reference)
+        self._name = name
 
     def _make_ngram_set(self, corpus: list[str]) -> set[str]:
         all_ngrams: set[str] = set()
@@ -44,7 +47,7 @@ class NGramJaccardSimilarity(Metric):
         return {seq[i : i + self.n] for i in range(L - self.n + 1)}
 
     def __call__(self, sequences: list[str]) -> MetricResult:
-        """Computes the average Jaccard similarity between each generated sequence and a reference corpus, based on n-grams of size `n`.
+        """Compute the average Jaccard similarity between each generated sequence and a reference corpus, based on n-grams of size `n`.
 
         Args:
             sequences: A list of generated sequences to evaluate.
@@ -72,8 +75,7 @@ class NGramJaccardSimilarity(Metric):
 
     @property
     def name(self) -> str:
-        base = f"Jaccard-{self.n}"
-        return base if self.data_name is None else f"{base} ({self.data_name})"
+        return self._name
 
     @property
     def objective(self) -> Literal["minimize", "maximize"]:

@@ -1,4 +1,3 @@
-import numpy as np
 import pytest
 
 from seqme.models import EsmFold
@@ -12,14 +11,13 @@ def esm_fold():
 
 
 def test_esm_fold_shape_and_means(esm_fold):
-    data = [
+    sequences = [
         "RVKRVWPLVIRTVIAGYNLYRAIKKK",
         "RKRIHIGPGRAFYTT",
-        "DSHAKRHHGYKRKFHEKHHSHRGY",
     ]
-    embeddings = esm_fold.fold(data, convention="atom14")
+    embeddings = esm_fold(sequences)
 
-    assert len(embeddings) == 3
+    assert len(embeddings) == 2
 
-    for i, sequence in enumerate(data):
-        assert embeddings[i].shape == (len(sequence), 14, 3)
+    for i, sequence in enumerate(sequences):
+        assert embeddings[i].shape == (len(sequence), 3)

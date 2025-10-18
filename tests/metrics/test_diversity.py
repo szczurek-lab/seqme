@@ -1,5 +1,3 @@
-import pytest
-
 from seqme.metrics import Diversity
 
 
@@ -22,7 +20,7 @@ def test_reference():
     metric = Diversity(reference=["AB", "BA", "CCCC"], k=2, seed=42)
 
     # Name and objective
-    assert metric.name == "Diversity (2)"
+    assert metric.name == "Diversity"
     assert metric.objective == "maximize"
 
     # Compute on a sample set

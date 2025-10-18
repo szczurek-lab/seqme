@@ -20,11 +20,10 @@ def test_fkea_overlap(shifted_embedder):
         embedder=shifted_embedder,
         bandwidth=2.0,
         n_random_fourier_features=256,
-        embedder_name="seq",
         alpha=2.0,
     )
 
-    assert metric.name == "FKEA@seq"
+    assert metric.name == "FKEA"
     assert metric.objective == "maximize"
 
     result = metric(["KAAA"] * 10)
@@ -39,7 +38,7 @@ def test_fkea_two_modes(shifted_embedder):
     assert metric.objective == "maximize"
 
     result = metric(["KAAA", "RRRRRRRRRR", "RRRRRRRRRRR"])
-    assert pytest.approx(result.value) == 1.0863327
+    assert result.value == pytest.approx(1.0863, abs=1e-4)
     assert result.deviation is None
 
     with pytest.raises(ValueError, match=r"^Computed the metric using different number of sequences.$"):
@@ -51,11 +50,10 @@ def test_fkea_different_lengths(shifted_embedder):
         embedder=shifted_embedder,
         bandwidth=10.0,
         n_random_fourier_features=256,
-        embedder_name="seq",
         alpha=2.0,
     )
 
-    assert metric.name == "FKEA@seq"
+    assert metric.name == "FKEA"
     assert metric.objective == "maximize"
 
     result = metric(["KAAA", "RRRRRRRRRR", "RRRRRRRRRRR"])
@@ -65,13 +63,7 @@ def test_fkea_different_lengths(shifted_embedder):
 
 def test_invalid_alpha(shifted_embedder):
     with pytest.raises(ValueError, match=r"^Expected alpha >= 1.$"):
-        FKEA(
-            embedder=shifted_embedder,
-            bandwidth=2.0,
-            n_random_fourier_features=32,
-            embedder_name="seq",
-            alpha=0.0,
-        )
+        FKEA(embedder=shifted_embedder, bandwidth=2.0, n_random_fourier_features=32, alpha=0.0)
 
 
 @pytest.fixture
@@ -96,11 +88,10 @@ def test_fkea_many(two_mode_embedder):
         embedder=two_mode_embedder,
         bandwidth=2.0,
         n_random_fourier_features=256,
-        embedder_name="seq",
         alpha=2.0,
     )
 
-    assert metric.name == "FKEA@seq"
+    assert metric.name == "FKEA"
     assert metric.objective == "maximize"
 
     result = metric(["K"] * 200 + ["A"] * 200)

@@ -1,19 +1,74 @@
 Core
 ####
-Functionality to manipulate and visualize metric tables, and add new metrics.
+Essential functionality for evaluating, manipulating, and visualizing metrics.
+
+This module provides a high-level interface for working with metric tables, managing results, and performing common data manipulation and visualization tasks.
+
+
+Base Components
+---------------
+Core objects and classes that define the ``seqme`` evaluation and metric API.
 
 .. autosummary::
     :toctree:
     :nosignatures:
 
+    seqme.evaluate
+    seqme.Cache
     seqme.Metric
     seqme.MetricResult
-    seqme.compute_metrics
-    seqme.combine_metric_dataframes
-    seqme.show_table
-    seqme.to_latex
-    seqme.ModelCache
-    seqme.barplot
-    seqme.plot_series
+
+
+Data Manipulation
+-----------------
+Utility functions to combine, filter, and reorganize metric results and sequences.
+
+.. autosummary::
+    :toctree:
+    :nosignatures:
+
+    seqme.combine
     seqme.top_k
     seqme.sort
+    seqme.rename
+
+
+Visualization
+-------------
+Functions for visual exploration and presentation of metrics.
+
+.. autosummary::
+    :toctree:
+    :nosignatures:
+
+    seqme.show
+    seqme.barplot
+    seqme.parallel_coordinates
+    seqme.plot_series
+    seqme.to_latex
+
+
+Sequence Operations
+-------------------
+Helpers for generating, transforming, and exporting sequence data.
+
+.. autosummary::
+    :toctree:
+    :nosignatures:
+
+    seqme.shuffle_characters
+    seqme.random_subset
+    seqme.to_fasta
+    seqme.read_fasta
+
+
+Input / Output
+--------------
+Functions for serializing and loading data and metric results.
+
+.. autosummary::
+    :toctree:
+    :nosignatures:
+
+    seqme.to_pickle
+    seqme.read_pickle

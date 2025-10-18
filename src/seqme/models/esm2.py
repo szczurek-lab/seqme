@@ -9,6 +9,20 @@ from .exceptions import OptionalDependencyError
 
 
 class Esm2Checkpoint(str, Enum):
+    """
+    ESM-2 checkpoints.
+
+    Available checkpoints:
+        t6_8M: 8M parameters, 6 layers, embedding dim 320 - compact variant for quick prototyping and resource-constrained inference.
+        t12_35M: 35M parameters, 12 layers, embedding dim 480 - mid-size variant balancing compute and performance.
+        t30_150M: 150M parameters, 30 layers, embedding dim 1024 - larger variant that improves representation power for downstream tasks.
+        t33_650M: 650M parameters, 33 layers, embedding dim 1280, commonly used medium-large model that performs well on structure and property prediction tasks.
+        t36_3B: 3B parameters, 36 layers, embedding dim 2560 - large model for more accurate representations and structure inference.
+        t48_15B: 15B parameters, 48 layers, embedding dim 5120 - the largest public ESM-2 variant; offers the highest capacity and best single-sequence structure representational power.
+
+        shukla_group_peptide_650M: 650M parameters, 33 layers, embedding dim 1280, trained on peptide sequences.
+    """
+
     # protein checkpoints
     t6_8M = "facebook/esm2_t6_8M_UR50D"
     t12_35M = "facebook/esm2_t12_35M_UR50D"
@@ -42,6 +56,7 @@ class Esm2:
         device: str | None = None,
         batch_size: int = 256,
         verbose: bool = False,
+        cache_dir: str | None = None,
     ):
         """
         Initialize the ESM2 model.
@@ -51,6 +66,7 @@ class Esm2:
             device: Device to run inference on, e.g., "cuda" or "cpu".
             batch_size: Number of sequences to process per batch.
             verbose: Whether to display a progress bar.
+            cache_dir: Directory to cache the model.
         """
         if isinstance(model_name, Esm2Checkpoint):
             model_name = model_name.value
@@ -67,8 +83,8 @@ class Esm2:
         except ModuleNotFoundError:
             raise OptionalDependencyError("esm2") from None
 
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self.model = AutoModelForMaskedLM.from_pretrained(model_name)
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name, cache_dir=cache_dir)
+        self.model = AutoModelForMaskedLM.from_pretrained(model_name, cache_dir=cache_dir)
 
         self.model.to(device)
         self.model.eval()
@@ -76,6 +92,7 @@ class Esm2:
     def __call__(self, sequences: list[str]) -> np.ndarray:
         return self.embed(sequences)
 
+    @torch.inference_mode()
     def embed(self, sequences: list[str], layer: int = -1) -> np.ndarray:
         """
         Compute embeddings for a list of sequences.
@@ -91,24 +108,21 @@ class Esm2:
             A NumPy array of shape (n_sequences, embedding_dim) containing the embeddings.
         """
         embeddings = []
-        with torch.inference_mode():
-            for i in tqdm(
-                range(0, len(sequences), self.batch_size),
-                disable=not self.verbose,
-            ):
-                batch = sequences[i : i + self.batch_size]
-                tokens = self.tokenizer(batch, return_tensors="pt", padding=True, truncation=False)
-                tokens = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in tokens.items()}
-                hidden_state = self.model(**tokens, output_hidden_states=True).hidden_states[layer]
+        for i in tqdm(range(0, len(sequences), self.batch_size), disable=not self.verbose):
+            batch = sequences[i : i + self.batch_size]
+            tokens = self.tokenizer(batch, return_tensors="pt", padding=True, truncation=False)
+            tokens = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in tokens.items()}
+            hidden_state = self.model(**tokens, output_hidden_states=True).hidden_states[layer]
 
-                lengths = [len(s) for s in batch]
-                means = [hidden_state[i, 1 : length + 1].mean(dim=-2) for i, length in enumerate(lengths)]
-                embed = torch.stack(means, dim=0)
+            lengths = [len(s) for s in batch]
+            means = [hidden_state[i, 1 : length + 1].mean(dim=-2) for i, length in enumerate(lengths)]
+            embed = torch.stack(means, dim=0)
 
-                embeddings.append(embed.cpu().numpy())
+            embeddings.append(embed.cpu().numpy())
 
         return np.concatenate(embeddings)
 
+    @torch.inference_mode()
     def compute_pseudo_perplexity(self, sequences: list[str], mask_size: int = 1) -> np.ndarray:
         """
         Compute pseudo-perplexity for a list of sequences, masking `mask_size` positions per pass.
@@ -147,9 +161,8 @@ class Esm2:
                 real = attention_mask[:, pos] == 1
                 masked_in[real, pos] = self.tokenizer.mask_token_id
 
-            with torch.no_grad():
-                logits = self.model(masked_in, attention_mask=attention_mask.to(self.device)).logits
-                log_probs = torch.log_softmax(logits, dim=-1)
+            logits = self.model(masked_in, attention_mask=attention_mask.to(self.device)).logits
+            log_probs = torch.log_softmax(logits, dim=-1)
 
             for pos in pos_chunk:
                 real = attention_mask[:, pos] == 1

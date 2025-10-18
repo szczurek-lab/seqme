@@ -8,13 +8,14 @@ class Count(Metric):
 
     def __call__(self, sequences: list[str]) -> MetricResult:
         """
-        Compute the count of input sequences.
+        Count the number of input sequences.
 
         Args:
-            sequences: A list of sequences to count.
+            sequences: A list of sequences.
+            name: Metric name.
 
         Returns:
-            MetricResult: value is the count of sequences; deviation is None.
+            MetricResult: value is the number of sequences. Deviation is None.
         """
         return MetricResult(value=len(sequences))
 

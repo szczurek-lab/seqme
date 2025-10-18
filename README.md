@@ -7,7 +7,7 @@
 [![License](https://img.shields.io/github/license/szczurek-lab/seqme?v=2)](https://opensource.org/license/bsd-3-clause)
 [![Read the Docs](https://img.shields.io/readthedocs/seqme)](https://seqme.readthedocs.io/)
 
-**seqme** is a modular and highly extendable python library containing model-agnostic metrics for evaluating biological sequences.
+**seqme** is a modular and highly extendable python library containing model-agnostic metrics for evaluating biological sequence designs.
 
 ## Installation
 
@@ -39,7 +39,7 @@ sequences = {
     "HydrAMP": ["MMRK", "RKSPL", "RRLSK", "RRLSK"],
 }
 
-cache = sm.ModelCache(
+cache = sm.Cache(
     models={"esm2": sm.models.Esm2(
         model_name="facebook/esm2_t6_8M_UR50D", batch_size=256, device="cpu")
     }
@@ -47,12 +47,12 @@ cache = sm.ModelCache(
 
 metrics = [
     sm.metrics.Uniqueness(),
-    sm.metrics.Novelty(reference=sequences["UniProt"], reference_name="UniProt"),
+    sm.metrics.Novelty(reference=sequences["UniProt"]),
     sm.metrics.FBD(reference=sequences["Random"], embedder=cache.model("esm2")),
 ]
 
-df = sm.compute_metrics(sequences, metrics)
-sm.show_table(df) # Note: Will only display the table in a notebook.
+df = sm.evaluate(sequences, metrics)
+sm.show(df) # Note: Will only display the table in a notebook.
 ```
 
 Read the [docs](https://seqme.readthedocs.io/en/stable/tutorials/index.html) for more tutorials and examples.

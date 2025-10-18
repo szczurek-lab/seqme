@@ -23,41 +23,37 @@ class Precision(Metric):
         reference: list[str],
         embedder: Callable[[list[str]], np.ndarray],
         *,
-        embedder_name: str | None = None,
-        reference_name: str | None = None,
         reference_quantile: float | None = None,
         row_batch_size: int = 10_000,
         col_batch_size: int = 10_000,
         device: str = "cpu",
         strict: bool = True,
+        name: str = "Precision",
     ):
         """
         Initialize the metric.
 
         Args:
-            metric: Which metric to compute, either "precision" or "recall".
             neighborhood_size: Number of nearest neighbors (k) for k-NN graph.
             reference: List of reference sequences to build the reference manifold.
             embedder: Function that maps sequences to embeddings.
-            embedder_name: Optional name for the embedder used.
-            reference_name: Optional label appended to the metric name.
             reference_quantile: Quantile cutoff for reference radii (defaults to using all).
             row_batch_size: Number of samples per batch when computing distances by rows.
             col_batch_size: Number of samples per batch when computing distances by columns.
             device: Compute device, e.g., "cpu" or "cuda".
             strict: Enforce equal number of eval and reference samples if True.
+            name: Metric name
         """
         self.neighborhood_size = neighborhood_size
         self.embedder = embedder
         self.reference = reference
 
-        self.embedder_name = embedder_name
-        self.reference_name = reference_name
         self.reference_quantile = reference_quantile
         self.row_batch_size = row_batch_size
         self.col_batch_size = col_batch_size
         self.device = device
         self.strict = strict
+        self._name = name
 
         if reference_quantile is not None:
             if reference_quantile < 0 or reference_quantile > 1:
@@ -100,12 +96,7 @@ class Precision(Metric):
 
     @property
     def name(self) -> str:
-        name = "Precision"
-        if self.embedder_name:
-            name += f"@{self.embedder_name}"
-        if self.reference_name:
-            name += f" ({self.reference_name})"
-        return name
+        return self._name
 
     @property
     def objective(self) -> Literal["minimize", "maximize"]:
@@ -128,35 +119,31 @@ class Recall(Metric):
         reference: list[str],
         embedder: Callable[[list[str]], np.ndarray],
         *,
-        embedder_name: str | None = None,
-        reference_name: str | None = None,
         reference_quantile: float | None = None,
         row_batch_size: int = 10_000,
         col_batch_size: int = 10_000,
         device: str = "cpu",
         strict: bool = True,
+        name: str = "Recall",
     ):
         """Initialize the metric.
 
         Args:
-            metric: Which metric to compute, either "precision" or "recall".
             neighborhood_size: Number of nearest neighbors (k) for k-NN graph.
             reference: List of reference sequences to build the reference manifold.
             embedder: Function that maps sequences to embeddings.
-            embedder_name: Optional name for the embedder used.
-            reference_name: Optional label appended to the metric name.
             reference_quantile: Quantile cutoff for reference radii (defaults to using all).
             row_batch_size: Number of samples per batch when computing distances by rows.
             col_batch_size: Number of samples per batch when computing distances by columns.
             device: Compute device, e.g., "cpu" or "cuda".
             strict: Enforce equal number of eval and reference samples if True.
+            name: Metric name.
         """
         self.neighborhood_size = neighborhood_size
         self.embedder = embedder
         self.reference = reference
+        self._name = name
 
-        self.embedder_name = embedder_name
-        self.reference_name = reference_name
         self.reference_quantile = reference_quantile
         self.row_batch_size = row_batch_size
         self.col_batch_size = col_batch_size
@@ -203,12 +190,7 @@ class Recall(Metric):
 
     @property
     def name(self) -> str:
-        name = "Recall"
-        if self.embedder_name:
-            name += f"@{self.embedder_name}"
-        if self.reference_name:
-            name += f" ({self.reference_name})"
-        return name
+        return self._name
 
     @property
     def objective(self) -> Literal["minimize", "maximize"]:
@@ -347,31 +329,21 @@ class ManifoldEstimator:
             max_dist = np.quantile(self.local_radii, clamp_to_quantile)
             self.local_radii = np.where(self.local_radii <= max_dist, self.local_radii, 0)
 
-    def evaluate(
-        self,
-        eval_features: np.ndarray,
-        return_realism: bool = False,
-        return_neighbors: bool = False,
-    ):
+    def evaluate(self, eval_features: np.ndarray):
         """
         Determine which evaluation points lie within the manifold.
 
         Args:
             eval_features: Points to evaluate, shape [M, D].
-            return_realism: If True, also return realism scores per point.
-            return_neighbors: If True, also return nearest reference indices.
 
         Returns:
             inside: Boolean array [M, 1] indicating inclusion.
-            Optionally realism and/or nearest neighbor indices.
         """
         n_eval = eval_features.shape[0]
         n_ref = self.local_radii.shape[0]
 
         on_manifold = np.zeros((n_eval, 1), dtype=bool)
         distances = np.zeros((self.row_batch_size, n_ref), dtype=np.float32)
-        realism_scores = np.zeros(n_eval, dtype=np.float32)
-        neighbor_indices = np.zeros(n_eval, dtype=np.int32)
 
         for row_start in range(0, n_eval, self.row_batch_size):
             row_end = min(row_start + self.row_batch_size, n_eval)
@@ -391,28 +363,9 @@ class ManifoldEstimator:
                 distances[: row_end - row_start, :, None] <= self.local_radii,
                 axis=1,
             )
-            realism_scores[row_start:row_end] = np.max(
-                self.local_radii[:, 0] / (distances[: row_end - row_start] + self.eps),
-                axis=1,
-            )
-            neighbor_indices[row_start:row_end] = np.argmin(distances[: row_end - row_start], axis=1)
 
-        results = [on_manifold]
-        if return_realism:
-            results.append(realism_scores)
-        if return_neighbors:
-            results.append(neighbor_indices)
-
-        return tuple(results) if len(results) > 1 else on_manifold
+        return on_manifold
 
 
-def pairwise_euclidean_distances(
-    x1: torch.Tensor,
-    x2: torch.Tensor,
-) -> np.ndarray:
-    """
-    Compute pairwise Euclidean distances between two sets of vectors.
-
-    Returns numpy array of shape [x1.size(0), x2.size(0)].
-    """
+def pairwise_euclidean_distances(x1: torch.Tensor, x2: torch.Tensor) -> np.ndarray:
     return torch.cdist(x1, x2).cpu().numpy()
