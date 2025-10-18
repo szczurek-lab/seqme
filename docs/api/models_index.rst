@@ -21,7 +21,7 @@ Models
     seqme.models.EsmFold
     seqme.models.ProstT5
     seqme.models.RNA_FM
-    seqme.models.DNABert2
+    seqme.models.GenaLM
     seqme.models.KmerFrequencyEmbedding
 
     seqme.models.AliphaticIndex
@@ -61,7 +61,7 @@ Supported sequence types
 ------------------------
 **At-a-glance matrix of all models and supported sequence types.**
 
-|ok| — supported |no| — not supported
+|ok| — supported, |no| — not supported
 
 .. list-table::
    :header-rows: 1
@@ -98,7 +98,7 @@ Supported sequence types
      - |ok|
      - |no|
      - |no|
-   * - :py:class:`seqme.models.DNABert2`
+   * - :py:class:`seqme.models.GenaLM`
      - |no|
      - |no|
      - |no|
