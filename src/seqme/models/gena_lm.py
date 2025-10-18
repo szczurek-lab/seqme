@@ -25,10 +25,10 @@ class GenaLMCheckpoint(Enum):
         bert_base_t2t_promoters: 110M parameters, 12 layers, task sequence length: 300bp.
             Binary classification: determining the presence or absence of a promoter within a given region.
 
-        bert_large_t2t_promoters: 336M parameters, 24 layers, task sequence length: 300bp. Predicts promoter activity.
+        bert_large_t2t_promoters: 336M parameters, 24 layers, task sequence length: 300bp.
             Binary classification: determining the presence or absence of a promoter within a given region.
 
-        bert_large_t2t_promoters2: 336M parameters, 24 layers, task sequence length: 2000bp. Predicts promoter activity.
+        bert_large_t2t_promoters2: 336M parameters, 24 layers, task sequence length: 2000bp.
             Binary classification: determining the presence or absence of a promoter within a given region.
 
         bert_base_t2t_splice_site: 110M parameters, 12 layers, task sequence length: 15000bp. Identifies splicing sites.
@@ -133,7 +133,7 @@ class GenaLM:
         return self.embed(sequences) if self.task == Task.EMBEDDING else self.classify(sequences)
 
     @torch.inference_mode()
-    def embed(self, sequences: list[str], layer: int = 12) -> np.ndarray:
+    def embed(self, sequences: list[str], layer: int = -1) -> np.ndarray:
         """
         Compute embeddings for a list of sequences.
 
