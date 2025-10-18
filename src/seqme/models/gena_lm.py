@@ -32,7 +32,10 @@ class GenaLMCheckpoint(Enum):
             Binary classification: determining the presence or absence of a promoter within a given region.
 
         bert_base_t2t_splice_site: 110M parameters, 12 layers, task sequence length: 15000bp. Identifies splicing sites.
+            Classification: determing the splice donor, splice acceptor and none
+
         bert_large_t2t_splice_site: 336M parameters, 24 layers, task sequence length: 15000bp. Identifies splicing sites.
+            Classification: determing the splice donor, splice acceptor and none
     """
 
     # Embedding
@@ -47,7 +50,7 @@ class GenaLMCheckpoint(Enum):
     bert_large_t2t_promoters = ("AIRI-Institute/gena-lm-bert-large-t2t", "promoters_300_run_1")
     bert_large_t2t_promoters2 = ("AIRI-Institute/gena-lm-bert-large-t2t", "promoters_2000_run_1")
 
-    bert_base_t2t_splice_site = ("AIRI-Institute/gena-lm-bert-large-t2t", "spliceai_run_1")
+    bert_base_t2t_splice_site = ("AIRI-Institute/gena-lm-bert-base-t2t", "spliceai_run_1")
     bert_large_t2t_splice_site = ("AIRI-Institute/gena-lm-bert-large-t2t", "spliceai_run_1")
 
 
@@ -56,7 +59,7 @@ class Task(Enum):
     CLASSIFICATION = "classification"
 
 
-_CHECKPOINT_TASK = {
+_TASK = {
     GenaLMCheckpoint.bert_base_t2t: Task.EMBEDDING,
     GenaLMCheckpoint.bert_base_t2t_lastln_t2t: Task.EMBEDDING,
     GenaLMCheckpoint.bert_base_t2t_multi: Task.EMBEDDING,
@@ -64,6 +67,9 @@ _CHECKPOINT_TASK = {
     GenaLMCheckpoint.bigbird_base_t2t: Task.EMBEDDING,
     GenaLMCheckpoint.bert_base_t2t_promoters: Task.CLASSIFICATION,
     GenaLMCheckpoint.bert_large_t2t_promoters: Task.CLASSIFICATION,
+    GenaLMCheckpoint.bert_large_t2t_promoters2: Task.CLASSIFICATION,
+    GenaLMCheckpoint.bert_base_t2t_splice_site: Task.CLASSIFICATION,
+    GenaLMCheckpoint.bert_large_t2t_splice_site: Task.CLASSIFICATION,
 }
 
 
@@ -112,7 +118,7 @@ class GenaLM:
         except ModuleNotFoundError:
             raise OptionalDependencyError("gena_lm") from None
 
-        self.task = _CHECKPOINT_TASK[model_name]
+        self.task = _TASK[model_name]
 
         ckpt_name, branch_name = model_name.value
         self.tokenizer = AutoTokenizer.from_pretrained(ckpt_name)
@@ -176,7 +182,7 @@ class GenaLM:
             sequences: List of DNA sequences.
 
         Returns:
-            A NumPy array.
+            A NumPy array of size (n_sequences, 2) for promoter prediction and (n_sequences, 3) for splice-site prediction.
         """
         if self.task != Task.CLASSIFICATION:
             raise ValueError(f"Expected classification model got {self.task} model.")
@@ -188,10 +194,8 @@ class GenaLM:
             tokens = self.tokenizer(batch, return_tensors="pt", padding=True, truncation=False, add_special_tokens=True)
             tokens = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in tokens.items()}
 
-            output = self.model(**tokens)
-            logits = output[""]  # @TODO
-
-            batch_prob = torch.stack(logits, dim=0)
+            logits = self.model(**tokens)["logits"]
+            batch_prob = torch.softmax(logits, dim=-1)
 
             probs.append(batch_prob.cpu().numpy())
 
