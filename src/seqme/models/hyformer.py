@@ -46,7 +46,7 @@ class Hyformer:
 
     Computes sequence-level embeddings by extracting the [CLS] token embedding.
 
-    Installation: ``pip install seqme[hyformer]``
+    Installation: for molecules: ``pip install seqme[hyformer_molecules]`` for peptides: ``pip install seqme[hyformer]``.
 
     Reference:
         Izdebski et al., "Synergistic Benefits of Joint Molecule Generation and Property Prediction"
@@ -112,6 +112,20 @@ class Hyformer:
     def generate(
         self, num_samples: int, temperature: float = 1.0, top_k: int | None = None, seed: int = 1337
     ) -> list[str]:
+        """Generate sequences de novo.
+
+        Delegates to the legacy generation path for Hyformer versions prior to
+        2.0, otherwise uses the newer generation API.
+
+        Args:
+            num_samples: Number of sequences to produce.
+            temperature: Sampling temperature passed to the decoder.
+            top_k: Optional top-k sampling parameter.
+            seed: Random seed forwarded to the underlying generator.
+
+        Returns:
+            A list of generated sequences, truncated to ``num_samples`` items.
+        """
         if self._version < Version("2.0.0"):
             return self._generate_legacy(num_samples, temperature, top_k, seed)
         else:
@@ -170,7 +184,6 @@ class Hyformer:
         Returns:
             A NumPy array of shape (n_sequences, num_prediction_tasks) containing the predictions.
         """
-        _CLS_TOKEN_IDX = 0
         _TASKS = {self._predictive_task_key: 1.0}
 
         _dataloader = self._create_dataloader_fn(
