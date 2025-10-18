@@ -2,6 +2,7 @@ from seqme.models.ensemble import Ensemble
 from seqme.models.esm2 import Esm2, Esm2Checkpoint
 from seqme.models.esm_fold import EsmFold
 from seqme.models.gena_lm import GenaLM, GenaLMCheckpoint
+from seqme.models.hyformer import Hyformer, HyformerCheckpoint
 from seqme.models.kmers import KmerFrequencyEmbedding
 from seqme.models.pca import PCA
 from seqme.models.physicochemical import (
@@ -38,6 +39,8 @@ __all__ = [
     "EsmFold",
     "GenaLM",
     "GenaLMCheckpoint",
+    "Hyformer",
+    "HyformerCheckpoint",
     "KmerFrequencyEmbedding",
     "PCA",
     "ProstT5",

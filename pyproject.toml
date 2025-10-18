@@ -64,10 +64,22 @@ dependencies = [
 esm2 = ["transformers"]
 prostT5 = ["transformers", "sentencepiece"]
 aaDescriptors = ["modlamp"]
+hyformer_molecules = [
+    "deepchem",
+    "torchvision",
+    "transformers",
+    "hyformer @ git+https://github.com/szczurek-lab/hyformer.git@main"
+    ]
+
+hyformer = [
+    "transformers",
+    "torchvision",
+    "einops>=0.7",
+    "hyformer @ git+https://github.com/szczurek-lab/hyformer.git@v2.0"
+]
 
 # RNA
 RNA_FM = ["rna-fm"]
-
 
 # DNA
 gena_lm = ["transformers", "einops"]
@@ -167,6 +179,8 @@ exclude = ["docs", "docs/**"]
 [tool.hatch.build.targets.wheel]
 exclude = ["docs", "docs/**"]
 
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [tool.coverage.run]
 branch = true
