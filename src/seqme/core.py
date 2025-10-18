@@ -1277,7 +1277,7 @@ def random_subset(
     return subset
 
 
-def read_fasta(path: str) -> list[str]:
+def read_fasta(path: str | Path) -> list[str]:
     """Retrieve sequences from a FASTA file.
 
     Args:
@@ -1286,11 +1286,15 @@ def read_fasta(path: str) -> list[str]:
     Returns:
         The list of sequences.
     """
+    path = Path(path)
+    if not path.is_file():
+        raise FileNotFoundError(f"File not found: {path}")
+
     sequences: list[str] = []
     current_seq: list[str] = []
 
-    with open(path) as file:
-        for line in file:
+    with path.open() as f:
+        for line in f:
             line = line.strip()
             if not line:
                 continue  # skip empty lines
@@ -1312,7 +1316,7 @@ def read_fasta(path: str) -> list[str]:
     return sequences
 
 
-def to_fasta(sequences: list[str], path: str, *, headers: list[str] | None = None):
+def to_fasta(sequences: list[str], path: str | Path, *, headers: list[str] | None = None):
     """Write sequences to a FASTA file.
 
     Args:
@@ -1323,7 +1327,10 @@ def to_fasta(sequences: list[str], path: str, *, headers: list[str] | None = Non
     if headers is not None and len(headers) != len(sequences):
         raise ValueError("headers length must match sequences length")
 
-    with open(path, "w") as f:
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    with path.open("w") as f:
         for i, seq in enumerate(sequences):
             header = headers[i] if headers else f">seq_{i + 1}"
 
@@ -1334,25 +1341,32 @@ def to_fasta(sequences: list[str], path: str, *, headers: list[str] | None = Non
             f.write(f"{seq}\n")
 
 
-def read_pickle(path: str) -> Any:
-    """Read content from pickle object.
+def read_pickle(path: str | Path) -> Any:
+    """Load and return an object from a pickle file.
 
     Args:
         path: Path to pickle file.
 
     Returns:
-        Content.
+        The deserialized Python object.
     """
-    with open(path, "rb") as f:
+    path = Path(path)
+    if not path.is_file():
+        raise FileNotFoundError(f"File not found: {path}")
+
+    with path.open("rb") as f:
         return pickle.load(f)
 
 
-def to_pickle(content: Any, path: str):
-    """Write content to a pickle file.
+def to_pickle(content: Any, path: str | Path):
+    """Serialize an object and write it to a pickle file.
 
     Args:
        content: Pickable object.
        path: Output filepath, e.g., "/path/cache.pkl".
     """
-    with open(path, "wb") as f:
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    with path.open("wb") as f:
         pickle.dump(content, f)

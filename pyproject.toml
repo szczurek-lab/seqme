@@ -70,7 +70,7 @@ RNA_FM = ["rna-fm"]
 
 
 # DNA
-DNABert2 = ["transformers", "einops"]
+gena_lm = ["transformers", "einops"]
 
 doc = [
     "seaborn",

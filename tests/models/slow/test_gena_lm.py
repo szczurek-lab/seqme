@@ -8,23 +8,23 @@ pytest.importorskip("einops")
 
 
 @pytest.fixture(scope="module")
-def dna_bert2():
-    return sm.models.DNABert2()
+def gena_lm():
+    return sm.models.GenaLM(sm.models.GenaLMCheckpoint.bert_base_t2t)
 
 
-def test_dna_bert2_shape_and_means(dna_bert2):
+def test_shape_and_means(gena_lm):
     data = [
-        "RVKRVWPLVIRTVIAGYNLYRAIKKK",
-        "RKRIHIGPGRAFYTT",
+        "ATGGG",
+        "ATGAA",
     ]
-    embeddings = dna_bert2(data)
+    embeddings = gena_lm(data)
 
     assert embeddings.shape == (2, 768)
 
     expected_means = np.array(
         [
-            0.00355302356,
-            0.00452740350,
+            2.38051128387,
+            2.67395281791,
         ]
     )
     actual_means = embeddings.mean(axis=-1)
