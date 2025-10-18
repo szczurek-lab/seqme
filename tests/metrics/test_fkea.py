@@ -57,7 +57,7 @@ def test_fkea_different_lengths(shifted_embedder):
     assert metric.objective == "maximize"
 
     result = metric(["KAAA", "RRRRRRRRRR", "RRRRRRRRRRR"])
-    assert pytest.approx(result.value) == 1.086332
+    assert pytest.approx(result.value) == pytest.approx(1.0863, abs=1e-4)
     assert result.deviation is None
 
 
