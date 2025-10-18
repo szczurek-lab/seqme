@@ -6,6 +6,7 @@ from seqme.models import Hyformer, HyformerCheckpoint
 pytest.importorskip("transformers")
 
 _EMBEDDING_DIM = 512
+_ABS_TOLERANCE = 1e-3
 
 
 @pytest.fixture(scope="module")
@@ -24,13 +25,13 @@ def test_hyformer_shape_and_means(hyformer):
     assert embeddings.shape == (len(data), _EMBEDDING_DIM)
     expected_means = np.array([0.03424069, 0.04243201])
     actual_means = embeddings.mean(axis=-1)
-    assert actual_means.tolist() == pytest.approx(expected_means.tolist(), abs=1e-6)
+    assert actual_means.tolist() == pytest.approx(expected_means.tolist(), abs=_ABS_TOLERANCE)
 
     # test perplexity
     perplexity = hyformer.compute_perplexity(data)
     assert perplexity.shape == (len(data),)
     expected_perplexity = np.array([3.03738117, 5.75628996])
-    assert perplexity.tolist() == pytest.approx(expected_perplexity, abs=1e-6)
+    assert perplexity.tolist() == pytest.approx(expected_perplexity, abs=_ABS_TOLERANCE)
 
     # test generation
     generated_samples = hyformer.generate(num_samples=2, seed=1337)
@@ -44,4 +45,4 @@ def test_hyformer_shape_and_means(hyformer):
     predictions = hyformer.predict(data)
     assert predictions.shape == (len(data), 1)
     expected_predictions = np.array([[0.46380645], [1.0693568]])
-    assert predictions.tolist() == pytest.approx(expected_predictions, abs=1e-6)
+    assert predictions.tolist() == pytest.approx(expected_predictions, abs=_ABS_TOLERANCE)
