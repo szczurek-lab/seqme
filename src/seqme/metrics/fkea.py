@@ -35,7 +35,7 @@ class FourierBasedKernelEntropyApproximation(Metric):
         bandwidth: float,
         *,
         alpha: float | int = 2,
-        n_random_fourier_features: int | None = 512,
+        n_random_fourier_features: int | None = 2048,
         batch_size: int = 256,
         device: str = "cpu",
         seed: int = 42,
@@ -49,7 +49,7 @@ class FourierBasedKernelEntropyApproximation(Metric):
             bandwidth: Bandwidth parameter for the Gaussian kernel.
             alpha: alpha-norm of the normalized kernels eigenvalues. If `alpha=2` then it corresponds to the RKE-score otherwise VENDI-alpha.
             n_random_fourier_features: Number of random Fourier features per sequence. Used to approximate the kernel function. Consider increasing this to get a better approximation. If None, use the full kernel.
-            batch_size: Number of samples per batch when compute the kernel.
+            batch_size: Number of samples per batch when computing the kernel approximation.
             device: Compute device, e.g., "cpu" or "cuda".
             seed: Seed for reproducible sampling.
             strict: Enforce equal number of samples for computation.
@@ -88,7 +88,7 @@ class FourierBasedKernelEntropyApproximation(Metric):
 
         seq_embeddings = torch.from_numpy(self.embedder(sequences)).to(device=self.device)
 
-        if (self.n_random_fourier_features is None) or seq_embeddings.shape[0] <= self.n_random_fourier_features:
+        if (self.n_random_fourier_features is None) or (seq_embeddings.shape[0] <= self.n_random_fourier_features):
             score = calculate_vendi(seq_embeddings, self.bandwidth, self.batch_size, self.alpha)
         else:
             score = calculate_fourier_vendi(
@@ -122,8 +122,8 @@ class FKEA(FourierBasedKernelEntropyApproximation):
     - If alpha≠2, this corresponds to the VENDI-α score.
 
     Reference:
-        Ospanov, Zhang, Jalali et al., "Towards a Scalable Reference-Free Evaluation of Generative Models"
-        (https://arxiv.org/pdf/2407.02961)
+        Friedman et al., The Vendi Score: A Diversity Evaluation Metric for Machine Learning (https://arxiv.org/abs/2210.02410)
+        Ospanov, Zhang, Jalali et al., "Towards a Scalable Reference-Free Evaluation of Generative Models" (https://arxiv.org/pdf/2407.02961)
     """
 
 
@@ -161,7 +161,13 @@ def _calculate_renyi_entropy(eigenvalues: torch.Tensor, alpha: float | int = 2, 
     return score.item()
 
 
-def _cov_random_fourier_features(xs: torch.Tensor, n_features: int, std: float, batch_size: int, seed: int):
+def _cov_random_fourier_features(
+    xs: torch.Tensor,
+    n_features: int,
+    std: float,
+    batch_size: int,
+    seed: int,
+) -> torch.Tensor:
     assert len(xs.shape) == 2  # [B, dim]
 
     generator = torch.Generator(device=xs.device).manual_seed(seed)
@@ -189,12 +195,7 @@ def _cov_random_fourier_features(xs: torch.Tensor, n_features: int, std: float, 
     return cov
 
 
-def calculate_vendi(
-    xs: torch.Tensor,
-    bandwidth: float,
-    batch_size: int,
-    alpha: float | int = 2,
-):
+def calculate_vendi(xs: torch.Tensor, bandwidth: float, batch_size: int, alpha: float | int = 2) -> float:
     std = math.sqrt(bandwidth / 2.0)
     K = _normalized_gaussian_kernel(xs, xs, std, batch_size)
     eigenvalues, _ = torch.linalg.eigh(K)

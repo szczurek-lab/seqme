@@ -245,7 +245,7 @@ def rename(df: pd.DataFrame, metrics: dict[str, str]) -> pd.DataFrame:
     """
     old_metrics = pd.unique(df.columns.get_level_values(0)).tolist()
     old_objectives = {metric: df.attrs["objective"][metric] for metric in old_metrics}
-    new_objectives = {mt: obj for mt, obj in old_objectives.items() if mt not in metrics}
+    new_objectives = {metric: obj for metric, obj in old_objectives.items() if metric not in metrics}
 
     for old, new in metrics.items():
         if old not in old_objectives:
