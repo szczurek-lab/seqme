@@ -61,6 +61,22 @@ def test_fkea_different_lengths(shifted_embedder):
     assert result.deviation is None
 
 
+def test_vendi_different_lengths(shifted_embedder):
+    metric = FKEA(
+        embedder=shifted_embedder,
+        bandwidth=10.0,
+        n_random_fourier_features=None,
+        alpha=2.0,
+    )
+
+    assert metric.name == "FKEA"
+    assert metric.objective == "maximize"
+
+    result = metric(["KAAA", "RRRRRRRRRR", "RRRRRRRRRRR"])
+    assert pytest.approx(result.value) == pytest.approx(1.0876, abs=1e-4)
+    assert result.deviation is None
+
+
 def test_invalid_alpha(shifted_embedder):
     with pytest.raises(ValueError, match=r"^Expected alpha >= 1.$"):
         FKEA(embedder=shifted_embedder, bandwidth=2.0, n_random_fourier_features=32, alpha=0.0)
