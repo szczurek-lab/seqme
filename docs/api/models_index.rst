@@ -87,6 +87,12 @@ Supported sequence types
      - |no|
      - |no|
      - |no|
+   * - :py:class:`seqme.models.Hyformer`
+     - |no|
+     - |ok|
+     - |no|
+     - |no|
+     - |ok|
    * - :py:class:`seqme.models.ProstT5`
      - |ok|
      - |ok|

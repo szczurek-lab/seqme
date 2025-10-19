@@ -16,6 +16,7 @@ class Fold(Metric):
         metric: Metric,
         *,
         deviation: Literal["se", "std", "var"] = "se",
+        estimate: Literal["biased", "unbiased"] = "unbiased",
         n_splits: int | None = None,
         split_size: int | None = None,
         drop_last: bool = False,
@@ -34,6 +35,7 @@ class Fold(Metric):
                 - ``std``: Standard deviation
                 - ``var``: Variance
 
+            estimate: How to estimate the deviation.
             n_splits: Number of folds to create (exclusive with split_size).
             split_size: Fixed size for each fold (exclusive with n_splits).
             drop_last: Drop final fold if smaller than split_size.
@@ -43,6 +45,7 @@ class Fold(Metric):
         """
         self.metric = metric
         self.deviation = deviation
+        self.estimate = estimate
         self.n_splits = n_splits
         self.split_size = split_size
         self.drop_last = drop_last
@@ -60,7 +63,7 @@ class Fold(Metric):
         Call the wrapped metric on each fold of `sequences` and aggregate the results.
 
         Args:
-            sequences: Input sequences to split into folds.
+            sequences: Sequences to split into folds.
 
         Returns:
             Aggregated mean value and standard error, standard error or variance across folds.
@@ -100,14 +103,21 @@ class Fold(Metric):
         values = np.array([result.value for result in results], float)
 
         if len(results) > 1:
-            if self.deviation == "std":
-                deviation = float(values.std(ddof=0))
-            elif self.deviation == "var":
-                deviation = float(values.var(ddof=0))
-            elif self.deviation == "se":
-                deviation = float(values.std(ddof=0)) / (len(values) ** 0.5)
+            if self.estimate == "biased":
+                ddof = 0
+            elif self.estimate == "unbiased":
+                ddof = 1
             else:
-                raise ValueError(f"invalid deviation: {self.deviation}")
+                raise ValueError(f"Invalid estimate: {self.estimate}")
+
+            if self.deviation == "std":
+                deviation = float(values.std(ddof=ddof))
+            elif self.deviation == "var":
+                deviation = float(values.var(ddof=ddof))
+            elif self.deviation == "se":
+                deviation = float(values.std(ddof=ddof)) / (len(values) ** 0.5)
+            else:
+                raise ValueError(f"Invalid deviation: {self.deviation}")
         else:
             assert len(results) == 1
             deviation = results[0].deviation

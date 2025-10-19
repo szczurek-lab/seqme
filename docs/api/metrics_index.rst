@@ -27,6 +27,7 @@ Metrics that compare or assess distributions in an embedding (vector) space.
 
     seqme.metrics.FBD
     seqme.metrics.MMD
+    seqme.metrics.KID
     seqme.metrics.Precision
     seqme.metrics.Recall
     seqme.metrics.AuthPct

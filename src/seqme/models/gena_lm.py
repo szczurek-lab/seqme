@@ -12,7 +12,6 @@ class GenaLMCheckpoint(Enum):
     GENA-LM checkpoints.
 
     Embedding checkpoints:
-        bert_base: 110M parameters, 12 layers, embedding dim: 768, max sequence length: 512bp - Trained on T2T split v1.
         bert_base_t2t: 110M parameters, 12 layers, embedding dim: 768, max sequence length: 512bp - Trained on T2T+1000G SNPs.
         bert_base_t2t_lastln_t2t: 110M parameters, 12 layers, embedding dim: 768, max sequence length: 512 bps - Trained on T2T+1000G SNPs.
         bert_base_t2t_multi: 110M parameters, 12 layers, embedding dim: 768, max sequence length: 512bp - Trained on T2T+1000G SNPs+Multispecies.
@@ -82,7 +81,7 @@ class GenaLM:
     Installation: ``pip install seqme[gena_lm]``
 
     Reference:
-        Fishman et al., "GENA-LM: a family of open-source foundational DNA language models for long sequences "
+        Fishman et al., "GENA-LM: a family of open-source foundational DNA language models for long sequences"
         (https://academic.oup.com/nar/article/53/2/gkae1310/7954523)
 
     """
@@ -100,7 +99,7 @@ class GenaLM:
         Initialize model.
 
         Args:
-            model_name: Model checkpoint name or enum.
+            model_name: Model checkpoint name.
             device: Device to run inference on, e.g., "cuda" or "cpu".
             batch_size: Number of sequences to process per batch.
             cache_dir: Directory to cache the model.
