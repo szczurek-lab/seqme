@@ -155,29 +155,29 @@ class KID(Metric):
 
 def compute_mmd(
     k_xx: torch.Tensor,
-    k_xy: torch.Tensor,
     k_yy: torch.Tensor,
+    k_xy: torch.Tensor,
     estimate: Literal["biased", "unbiased"] = "unbiased",
 ) -> float:
     m = k_xx.shape[0]
     n = k_yy.shape[0]
 
     if estimate == "biased":
-        k_xx_sum = k_xx.sum()
-        k_yy_sum = k_yy.sum()
-        k_xx_norm = m * m
-        k_yy_norm = n * n
+        k_xx_sum = k_xx.sum() / (m * m)
+        k_yy_sum = k_yy.sum() / (n * n)
     elif estimate == "unbiased":
-        k_xx_sum = k_xx.sum() - k_xx.trace()
-        k_yy_sum = k_yy.sum() - k_yy.trace()
-        k_xx_norm = m * (m - 1)
-        k_yy_norm = n * (n - 1)
+        k_xx_sum = (k_xx.sum() - k_xx.trace()) / (m * (m - 1))
+        k_yy_sum = (k_yy.sum() - k_yy.trace()) / (n * (n - 1))
     else:
         raise ValueError(f"Unsupported estimate: {estimate}")
 
-    k_xy_sum = k_xy.sum()
+    k_xy_sum = k_xy.sum() / (m * n)
 
-    mmd = k_xx_sum / k_xx_norm + k_yy_sum / k_yy_norm - 2 * k_xy_sum / (m * n)
+    mmd = k_xx_sum + k_yy_sum - 2 * k_xy_sum
+    # mmd = torch.clamp(mmd, min=0.0)
+
+    print(k_xx_sum, k_yy_sum, k_xy_sum)
+
     return mmd.cpu().item()
 
 
@@ -201,7 +201,7 @@ def compute_gaussian_mmd(
         The MMD distance between x and y embedding sets.
     """
     k_xx, k_yy, k_xy = gaussian_kernels(x, y, sigma)
-    return scale * compute_mmd(k_xx, k_xy, k_yy, estimate)
+    return scale * compute_mmd(k_xx, k_yy, k_xy, estimate)
 
 
 def gaussian_kernels(x: torch.Tensor, y: torch.Tensor, sigma: float) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
@@ -241,7 +241,7 @@ def compute_polynomial_mmd(
         The MMD distance between x and y embedding sets.
     """
     k_xx, k_yy, k_xy = polynomial_kernels(x, y, degree, coef0)
-    return compute_mmd(k_xx, k_xy, k_yy, estimate)
+    return compute_mmd(k_xx, k_yy, k_xy, estimate)
 
 
 def polynomial_kernels(
