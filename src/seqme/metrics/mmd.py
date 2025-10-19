@@ -22,7 +22,7 @@ class MMD(Metric):
         reference: list[str],
         embedder: Callable[[list[str]], np.ndarray],
         *,
-        estimate: Literal["biased", "unbiased"] = "unbiased",
+        estimate: Literal["biased", "unbiased"] = "biased",
         sigma: float = 10,
         scale: float = 1000,
         device: str = "cpu",
@@ -66,7 +66,9 @@ class MMD(Metric):
             raise ValueError("Sequences must contain at least one sample.")
 
         gen_embeddings = torch.from_numpy(self.embedder(sequences)).to(self.device)
-        mmd = compute_gaussian_mmd(x=gen_embeddings, y=self.reference_embeddings, sigma=self.sigma, scale=self.scale)
+        mmd = compute_gaussian_mmd(
+            x=gen_embeddings, y=self.reference_embeddings, estimate=self.estimate, sigma=self.sigma, scale=self.scale
+        )
         return MetricResult(value=mmd)
 
     @property
@@ -90,7 +92,7 @@ class KID(Metric):
         self,
         reference: list[str],
         embedder: Callable[[list[str]], np.ndarray],
-        estimate: Literal["biased", "unbiased"] = "unbiased",
+        estimate: Literal["biased", "unbiased"] = "biased",
         *,
         degree: int = 3,
         coef0: float = 1.0,
@@ -157,27 +159,22 @@ def compute_mmd(
     k_xx: torch.Tensor,
     k_yy: torch.Tensor,
     k_xy: torch.Tensor,
-    estimate: Literal["biased", "unbiased"] = "unbiased",
+    estimate: Literal["biased", "unbiased"] = "biased",
 ) -> float:
-    m = k_xx.shape[0]
-    n = k_yy.shape[0]
-
     if estimate == "biased":
-        k_xx_sum = k_xx.sum() / (m * m)
-        k_yy_sum = k_yy.sum() / (n * n)
+        k_xx_avg = k_xx.mean()
+        k_yy_avg = k_yy.mean()
     elif estimate == "unbiased":
-        k_xx_sum = (k_xx.sum() - k_xx.trace()) / (m * (m - 1))
-        k_yy_sum = (k_yy.sum() - k_yy.trace()) / (n * (n - 1))
+        m = k_xx.shape[0]
+        n = k_yy.shape[0]
+        k_xx_avg = (k_xx.sum() - k_xx.trace()) / (m * (m - 1))
+        k_yy_avg = (k_yy.sum() - k_yy.trace()) / (n * (n - 1))
     else:
         raise ValueError(f"Unsupported estimate: {estimate}")
 
-    k_xy_sum = k_xy.sum() / (m * n)
+    k_xy_avg = k_xy.mean()
 
-    mmd = k_xx_sum + k_yy_sum - 2 * k_xy_sum
-    # mmd = torch.clamp(mmd, min=0.0)
-
-    print(k_xx_sum, k_yy_sum, k_xy_sum)
-
+    mmd = k_xx_avg + k_yy_avg - 2 * k_xy_avg
     return mmd.cpu().item()
 
 

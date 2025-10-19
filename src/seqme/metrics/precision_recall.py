@@ -297,6 +297,6 @@ class Manifold:
             threshold = self.manifold[None]  # threshold: [1, N] broadcast to [b, N]
             # check if any manifold point is closer than threshold for each x in batch
             is_in = (pairwise <= threshold).any(dim=1)
-            total_in_manifold += int(is_in.sum().item())
+            total_in_manifold += int(is_in.sum().cpu().item())
 
         return total_in_manifold / float(xs.shape[0])
