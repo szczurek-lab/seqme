@@ -4,7 +4,7 @@ from seqme.metrics import Count, Fold
 
 
 def test_k_fold():
-    metric = Fold(metric=Count(), n_splits=2, deviation="se")
+    metric = Fold(metric=Count(), n_splits=2, deviation="se", estimate="biased")
     assert metric.name == "Count"
     assert metric.objective == "maximize"
 
@@ -15,7 +15,7 @@ def test_k_fold():
 
 
 def test_std():
-    metric = Fold(metric=Count(), n_splits=2, deviation="std")
+    metric = Fold(metric=Count(), n_splits=2, deviation="std", estimate="biased")
     assert metric.name == "Count"
     assert metric.objective == "maximize"
 
@@ -26,7 +26,7 @@ def test_std():
 
 
 def test_variance():
-    metric = Fold(metric=Count(), n_splits=2, deviation="var")
+    metric = Fold(metric=Count(), n_splits=2, deviation="var", estimate="biased")
     assert metric.name == "Count"
     assert metric.objective == "maximize"
 
@@ -37,7 +37,7 @@ def test_variance():
 
 
 def test_one_fold():
-    metric = Fold(metric=Count(), n_splits=1)
+    metric = Fold(metric=Count(), n_splits=1, estimate="biased")
     assert metric.name == "Count"
     assert metric.objective == "maximize"
 
@@ -48,7 +48,7 @@ def test_one_fold():
 
 
 def test_k_larger_than_sequence_count():
-    metric = Fold(metric=Count(), n_splits=20)
+    metric = Fold(metric=Count(), n_splits=20, estimate="biased")
     assert metric.name == "Count"
     assert metric.objective == "maximize"
 
@@ -58,7 +58,7 @@ def test_k_larger_than_sequence_count():
 
 
 def test_split_size():
-    metric = Fold(metric=Count(), split_size=2, deviation="se")
+    metric = Fold(metric=Count(), split_size=2, deviation="se", estimate="biased")
     assert metric.name == "Count"
     assert metric.objective == "maximize"
 

@@ -1,3 +1,4 @@
+import math
 from collections.abc import Callable
 from typing import Literal
 
@@ -19,13 +20,11 @@ class Precision(Metric):
 
     def __init__(
         self,
-        neighborhood_size: int,
+        n_neighbors: int,
         reference: list[str],
         embedder: Callable[[list[str]], np.ndarray],
         *,
-        reference_quantile: float | None = None,
-        row_batch_size: int = 10_000,
-        col_batch_size: int = 10_000,
+        batch_size: int = 10_000,
         device: str = "cpu",
         strict: bool = True,
         name: str = "Precision",
@@ -34,35 +33,28 @@ class Precision(Metric):
         Initialize the metric.
 
         Args:
-            neighborhood_size: Number of nearest neighbors (k) for k-NN graph.
+            n_neighbors: Number of nearest neighbors (k) for k-NN graph.
             reference: List of reference sequences to build the reference manifold.
             embedder: Function that maps sequences to embeddings.
-            reference_quantile: Quantile cutoff for reference radii (defaults to using all).
-            row_batch_size: Number of samples per batch when computing distances by rows.
-            col_batch_size: Number of samples per batch when computing distances by columns.
+            batch_size: Number of samples per batch when computing distances by rows.
             device: Compute device, e.g., "cpu" or "cuda".
             strict: Enforce equal number of eval and reference samples if True.
             name: Metric name
         """
-        self.neighborhood_size = neighborhood_size
+        self.n_neighbors = n_neighbors
         self.embedder = embedder
         self.reference = reference
 
-        self.reference_quantile = reference_quantile
-        self.row_batch_size = row_batch_size
-        self.col_batch_size = col_batch_size
+        self.batch_size = batch_size
         self.device = device
         self.strict = strict
         self._name = name
 
-        if reference_quantile is not None:
-            if reference_quantile < 0 or reference_quantile > 1:
-                raise ValueError("reference_quantile must be between 0 and 1.")
-
-        if self.neighborhood_size < 1:
+        if self.n_neighbors < 1:
             raise ValueError("neighborhood_size must be greater than 0.")
 
-        self.reference_embeddings = self.embedder(self.reference)
+        self.reference_embeddings = torch.from_numpy(self.embedder(self.reference))
+
         if self.reference_embeddings.shape[0] < 1:
             raise ValueError("Reference embeddings must contain at least one samples.")
 
@@ -76,7 +68,7 @@ class Precision(Metric):
         Returns:
             MetricResult containing the computed score.
         """
-        seq_embeddings = self.embedder(sequences)
+        seq_embeddings = torch.from_numpy(self.embedder(sequences))
 
         if self.strict and seq_embeddings.shape[0] != self.reference_embeddings.shape[0]:
             raise ValueError(
@@ -86,11 +78,9 @@ class Precision(Metric):
         value = compute_precision(
             real_embeddings=self.reference_embeddings,
             generated_embeddings=seq_embeddings,
-            neighborhood_size=self.neighborhood_size,
-            row_batch_size=self.row_batch_size,
-            col_batch_size=self.col_batch_size,
+            n_neighbors=self.n_neighbors,
+            batch_size=self.batch_size,
             device=self.device,
-            clamp_to_quantile=self.reference_quantile,
         )
         return MetricResult(value)
 
@@ -115,13 +105,11 @@ class Recall(Metric):
 
     def __init__(
         self,
-        neighborhood_size: int,
+        n_neighbors: int,
         reference: list[str],
         embedder: Callable[[list[str]], np.ndarray],
         *,
-        reference_quantile: float | None = None,
-        row_batch_size: int = 10_000,
-        col_batch_size: int = 10_000,
+        batch_size: int = 10_000,
         device: str = "cpu",
         strict: bool = True,
         name: str = "Recall",
@@ -129,35 +117,28 @@ class Recall(Metric):
         """Initialize the metric.
 
         Args:
-            neighborhood_size: Number of nearest neighbors (k) for k-NN graph.
+            n_neighbors: Number of nearest neighbors (k) for k-NN graph.
             reference: List of reference sequences to build the reference manifold.
             embedder: Function that maps sequences to embeddings.
-            reference_quantile: Quantile cutoff for reference radii (defaults to using all).
-            row_batch_size: Number of samples per batch when computing distances by rows.
-            col_batch_size: Number of samples per batch when computing distances by columns.
+            batch_size: Number of samples per batch when computing distances by rows.
             device: Compute device, e.g., "cpu" or "cuda".
             strict: Enforce equal number of eval and reference samples if True.
             name: Metric name.
         """
-        self.neighborhood_size = neighborhood_size
+        self.n_neighbors = n_neighbors
         self.embedder = embedder
         self.reference = reference
         self._name = name
 
-        self.reference_quantile = reference_quantile
-        self.row_batch_size = row_batch_size
-        self.col_batch_size = col_batch_size
+        self.batch_size = batch_size
         self.device = device
         self.strict = strict
 
-        if reference_quantile is not None:
-            if reference_quantile < 0 or reference_quantile > 1:
-                raise ValueError("reference_quantile must be between 0 and 1.")
-
-        if self.neighborhood_size < 1:
+        if self.n_neighbors < 1:
             raise ValueError("neighborhood_size must be greater than 0.")
 
-        self.reference_embeddings = self.embedder(self.reference)
+        self.reference_embeddings = torch.from_numpy(self.embedder(self.reference))
+
         if self.reference_embeddings.shape[0] < 1:
             raise ValueError("Reference embeddings must contain at least one samples.")
 
@@ -170,7 +151,7 @@ class Recall(Metric):
         Returns:
             MetricResult containing the computed score.
         """
-        seq_embeddings = self.embedder(sequences)
+        seq_embeddings = torch.from_numpy(self.embedder(sequences))
 
         if self.strict and seq_embeddings.shape[0] != self.reference_embeddings.shape[0]:
             raise ValueError(
@@ -180,11 +161,9 @@ class Recall(Metric):
         value = compute_recall(
             real_embeddings=self.reference_embeddings,
             generated_embeddings=seq_embeddings,
-            neighborhood_size=self.neighborhood_size,
-            row_batch_size=self.row_batch_size,
-            col_batch_size=self.col_batch_size,
+            n_neighbors=self.n_neighbors,
+            batch_size=self.batch_size,
             device=self.device,
-            clamp_to_quantile=self.reference_quantile,
         )
         return MetricResult(value)
 
@@ -198,174 +177,126 @@ class Recall(Metric):
 
 
 def compute_recall(
-    real_embeddings: np.ndarray,
-    generated_embeddings: np.ndarray,
-    neighborhood_size: int,
-    row_batch_size: int,
-    col_batch_size: int,
+    real_embeddings: torch.Tensor,
+    generated_embeddings: torch.Tensor,
+    n_neighbors: int,
+    batch_size: int,
     device: str,
-    clamp_to_quantile: float | None = None,
 ) -> float:
     """Evaluate recall: fraction of reference manifold covered by eval embeddings.
 
     Args:
         real_embeddings: Embeddings of the real data. Array of shape [N_real, D].
         generated_embeddings: Embeddings of the generated data. Array of shape [N_gen, D].
-        neighborhood_size: Number of neighbors (k) in k-NN.
-        row_batch_size: Batch size for eval points when computing distances.
-        col_batch_size: Batch size for reference points when computing distances.
+        n_neighbors: Number of neighbors (k) in k-NN.
+        batch_size: Batch size for reference points when computing distances.
         device: Compute device, e.g., "cpu" or "cuda".
-        clamp_to_quantile: Quantile cutoff for local radii in reference manifold.
 
     Returns:
         Recall value (float).
     """
-    generated_manifold = ManifoldEstimator(
-        generated_embeddings,
-        neighborhood_size=neighborhood_size,
-        clamp_to_quantile=clamp_to_quantile,
-        row_batch_size=row_batch_size,
-        col_batch_size=col_batch_size,
-        device=device,
-    )
-    return generated_manifold.evaluate(real_embeddings).mean().item()
+    generated_manifold = Manifold(generated_embeddings, n_neighbors=n_neighbors, batch_size=batch_size, device=device)
+    return generated_manifold.compute_proportion_on_manifold(real_embeddings)
 
 
 def compute_precision(
-    real_embeddings: np.ndarray,
-    generated_embeddings: np.ndarray,
-    neighborhood_size: int,
-    row_batch_size: int,
-    col_batch_size: int,
+    real_embeddings: torch.Tensor,
+    generated_embeddings: torch.Tensor,
+    n_neighbors: int,
+    batch_size: int,
     device: str,
-    clamp_to_quantile: float | None = None,
 ) -> float:
     """Evaluate precision: fraction of eval points lying in reference manifold.
 
     Args:
         real_embeddings: Embeddings of the real data. Array of shape [N_real, D].
         generated_embeddings: Embeddings of the generated data. Array of shape [N_gen, D].
-        neighborhood_size: Number of neighbors (k) in k-NN.
-        row_batch_size: Batch size for reference points when computing distances.
-        col_batch_size: Batch size for eval points when computing distances.
+        n_neighbors: Number of neighbors (k) in k-NN.
+        batch_size: Batch size for eval points when computing distances.
         device: Compute device, e.g., "cpu" or "cuda".
-        clamp_to_quantile: Quantile cutoff for local radii in reference manifold.
 
     Returns:
         Precision value (float).
     """
-    real_manifold = ManifoldEstimator(
-        real_embeddings,
-        neighborhood_size=neighborhood_size,
-        clamp_to_quantile=clamp_to_quantile,
-        row_batch_size=row_batch_size,
-        col_batch_size=col_batch_size,
-        device=device,
-    )
-    return real_manifold.evaluate(generated_embeddings).mean().item()
+    real_manifold = Manifold(real_embeddings, n_neighbors=n_neighbors, batch_size=batch_size, device=device)
+    return real_manifold.compute_proportion_on_manifold(generated_embeddings)
 
 
-class ManifoldEstimator:
-    """Estimates local manifold radii and evaluates sample inclusion via k-NN distances."""
-
+class Manifold:
     def __init__(
         self,
-        features: np.ndarray,
-        neighborhood_size: int,
-        clamp_to_quantile: float | None = None,
-        row_batch_size: int = 10_000,
-        col_batch_size: int = 10_000,
-        eps: float = 1e-5,
+        xs_manifold: torch.Tensor,
+        n_neighbors: int,
+        batch_size: int,
         device: str = "cpu",
     ):
         """
         Estimates the local manifold.
 
         Args:
-            features: Data points to build the manifold, shape [N, D].
-            neighborhood_size: k in k-NN.
-            clamp_to_quantile: Quantile cutoff for radii.
-            row_batch_size: Batch size for rows in distance calc.
-            col_batch_size: Batch size for cols in distance calc.
-            eps: Small constant to avoid division by zero in realism.
-            device: Compute device, e.g., "cpu" or "cuda".
+            xs_manifold: Data points to build the manifold, shape [N, D].
+            n_neighbors: k in k-NN (number of neighbors to consider).
+            batch_size: Batch size for distance calculations.
+            device: Device to compute on (string or torch.device).
         """
-        self.neighborhood_size = neighborhood_size
-        self.eps = eps
-        self.row_batch_size = row_batch_size
-        self.col_batch_size = col_batch_size
-        self.features = features
         self.device = device
+        self.xs_manifold = xs_manifold.to(self.device)
+        self.n_neighbors = n_neighbors
+        self.batch_size = batch_size
 
-        self._compute_local_radii(clamp_to_quantile)
+        if self.xs_manifold.dim() != 2:
+            raise ValueError("xs_manifold must be a 2D tensor of shape [N, D].")
 
-    def _compute_local_radii(self, clamp_to_quantile: float | None = None):
-        num_points = self.features.shape[0]
-        self.local_radii = np.zeros((num_points, 1), dtype=np.float32)
+        if self.xs_manifold.shape[0] == 0:
+            raise ValueError("xs_manifold must contain at least one point (N > 0).")
 
-        distance_batch = np.zeros((self.row_batch_size, num_points), dtype=np.float32)
-        k_idx = self.neighborhood_size
+        self.manifold = self._get_manifold()
 
-        for row_start in range(0, num_points, self.row_batch_size):
-            row_end = min(row_start + self.row_batch_size, num_points)
-            row_batch = self.features[row_start:row_end]
+    def _get_manifold(self) -> torch.Tensor:
+        N = self.xs_manifold.shape[0]
 
-            for col_start in range(0, num_points, self.col_batch_size):
-                col_end = min(col_start + self.col_batch_size, num_points)
-                col_batch = self.features[col_start:col_end]
+        k = min(self.n_neighbors + 1, N)
+        dists = torch.empty(N, device=self.device, dtype=self.xs_manifold.dtype)
 
-                dist = pairwise_euclidean_distances(
-                    torch.from_numpy(row_batch).to(self.device, dtype=torch.float),
-                    torch.from_numpy(col_batch).to(self.device, dtype=torch.float),
-                )
-                distance_batch[: row_end - row_start, col_start:col_end] = dist
+        n_batches = math.ceil(N / self.batch_size)
+        for i in range(n_batches):
+            start = i * self.batch_size
+            end = min((i + 1) * self.batch_size, N)
 
-            # k-th neighbor distance per point
-            self.local_radii[row_start:row_end] = np.partition(distance_batch[: row_end - row_start], k_idx, axis=1)[
-                :, [k_idx]
-            ]
+            pairwise = torch.cdist(self.xs_manifold[start:end], self.xs_manifold)
+            smallest = pairwise.topk(k, dim=1, largest=False).values
+            dists[start:end] = smallest[:, -1]
 
-        if clamp_to_quantile is not None:
-            max_dist = np.quantile(self.local_radii, clamp_to_quantile)
-            self.local_radii = np.where(self.local_radii <= max_dist, self.local_radii, 0)
+        return dists
 
-    def evaluate(self, eval_features: np.ndarray):
+    def compute_proportion_on_manifold(self, xs: torch.Tensor) -> float:
         """
         Determine which evaluation points lie within the manifold.
 
+        A point x is considered "on the manifold" if there exists at least one manifold
+        point whose distance to x is <= that manifold point's k-th neighbor distance.
+
         Args:
-            eval_features: Points to evaluate, shape [M, D].
+            xs: Points to evaluate, shape [M, D].
 
         Returns:
-            inside: Boolean array [M, 1] indicating inclusion.
+            Fraction of xs that are on the manifold (float in [0,1]).
         """
-        n_eval = eval_features.shape[0]
-        n_ref = self.local_radii.shape[0]
+        if xs.dim() != 2:
+            raise ValueError("xs must be a 2D tensor of shape [M, D].")
 
-        on_manifold = np.zeros((n_eval, 1), dtype=bool)
-        distances = np.zeros((self.row_batch_size, n_ref), dtype=np.float32)
+        xs = xs.to(self.device)
 
-        for row_start in range(0, n_eval, self.row_batch_size):
-            row_end = min(row_start + self.row_batch_size, n_eval)
-            eval_batch = eval_features[row_start:row_end]
+        total_in_manifold = 0
+        n_batches = math.ceil(xs.shape[0] / self.batch_size)
+        for i in range(n_batches):
+            start = i * self.batch_size
+            end = min((i + 1) * self.batch_size, xs.shape[0])
 
-            for col_start in range(0, n_ref, self.col_batch_size):
-                col_end = min(col_start + self.col_batch_size, n_ref)
-                ref = self.features[col_start:col_end]
+            pairwise = torch.cdist(xs[start:end], self.xs_manifold)  # [b, N]
+            threshold = self.manifold[None]  # threshold: [1, N] broadcast to [b, N]
+            # check if any manifold point is closer than threshold for each x in batch
+            is_in = (pairwise <= threshold).any(dim=1)
+            total_in_manifold += int(is_in.sum().cpu().item())
 
-                dist = pairwise_euclidean_distances(
-                    torch.from_numpy(eval_batch).to(device=self.device, dtype=torch.float),
-                    torch.from_numpy(ref).to(device=self.device, dtype=torch.float),
-                )
-                distances[: row_end - row_start, col_start:col_end] = dist
-
-            on_manifold[row_start:row_end] = np.any(
-                distances[: row_end - row_start, :, None] <= self.local_radii,
-                axis=1,
-            )
-
-        return on_manifold
-
-
-def pairwise_euclidean_distances(x1: torch.Tensor, x2: torch.Tensor) -> np.ndarray:
-    return torch.cdist(x1, x2).cpu().numpy()
+        return total_in_manifold / float(xs.shape[0])

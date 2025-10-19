@@ -9,9 +9,8 @@ def test_basic_precision():
     metric = Precision(
         reference=reference,
         embedder=length_mock_embedder,
-        neighborhood_size=1,
-        row_batch_size=1,
-        col_batch_size=1,
+        n_neighbors=1,
+        batch_size=1,
     )
 
     assert metric.name == "Precision"
@@ -26,9 +25,8 @@ def test_basic_recall():
     metric = Recall(
         reference=reference,
         embedder=length_mock_embedder,
-        neighborhood_size=1,
-        row_batch_size=1,
-        col_batch_size=1,
+        n_neighbors=1,
+        batch_size=1,
     )
 
     assert metric.name == "Recall"
@@ -38,34 +36,13 @@ def test_basic_recall():
     assert result.value == 1.0
 
 
-def test_precision_with_percentile():
-    reference = ["A" * 15, "A" * 17, "A" * 1]
-    metric = Precision(
-        reference=reference,
-        embedder=length_mock_embedder,
-        neighborhood_size=1,
-        row_batch_size=1,
-        col_batch_size=1,
-        reference_quantile=0.6,
-        strict=False,
-    )
-
-    assert metric.name == "Precision"
-    assert metric.objective == "maximize"
-
-    result = metric(["A" * 2, "A" * 16])
-    assert result.value == 0.5
-
-
 def test_precision_with_larger_neighborhood():
     reference = ["A" * 15, "A" * 17, "A" * 1]
     metric = Precision(
         reference=reference,
         embedder=length_mock_embedder,
-        neighborhood_size=2,
-        row_batch_size=1,
-        col_batch_size=1,
-        reference_quantile=None,
+        n_neighbors=2,
+        batch_size=1,
         strict=False,
     )
 
@@ -79,7 +56,7 @@ def test_precision_with_larger_neighborhood():
 def test_identical_sequences_precision():
     reference = ["KKAA", "KKAA", "KKKA", "KKAK"]
     metric = Precision(
-        neighborhood_size=3,
+        n_neighbors=3,
         reference=reference,
         embedder=mock_embedder,
     )
@@ -91,7 +68,7 @@ def test_identical_sequences_precision():
 def test_identical_sequences_recall():
     reference = ["KKAA", "KKAA", "KKKA", "KKAK"]
     metric = Recall(
-        neighborhood_size=3,
+        n_neighbors=3,
         reference=reference,
         embedder=mock_embedder,
     )
@@ -104,7 +81,7 @@ def test_empty_reference():
     reference = []
     with pytest.raises(ValueError):
         metric = Precision(
-            neighborhood_size=1,
+            n_neighbors=1,
             reference=reference,
             embedder=mock_embedder,
         )
@@ -114,7 +91,7 @@ def test_empty_reference():
 def test_empty_sequences():
     reference = ["KKAA", "KKAA"]
     metric = Precision(
-        neighborhood_size=1,
+        n_neighbors=1,
         reference=reference,
         embedder=mock_embedder,
     )
@@ -151,13 +128,13 @@ def test_precision_recall():
     metric_precision = Precision(
         reference=reference,
         embedder=aa_embedder,
-        neighborhood_size=1,
+        n_neighbors=1,
     )
 
     metric_recall = Recall(
         reference=reference,
         embedder=aa_embedder,
-        neighborhood_size=1,
+        n_neighbors=1,
     )
 
     precision = metric_precision(sequences=sequences)
@@ -172,13 +149,13 @@ def test_precision_recall():
 
 def length_mock_embedder(sequences: list[str]) -> np.ndarray:
     lengths = [len(sequence) for sequence in sequences]
-    return np.array(lengths).reshape(-1, 1)
+    return np.array(lengths).reshape(-1, 1).astype(np.float64)
 
 
 def mock_embedder(seqs: list[str]) -> np.ndarray:
     n_ks = [seq.count("K") for seq in seqs]
     zeros = [0] * len(seqs)
-    return np.array(list(zip(n_ks, zeros, strict=True)))
+    return np.array(list(zip(n_ks, zeros, strict=True))).astype(np.float64)
 
 
 def aa_embedder(seqs: list[str]) -> np.ndarray:
@@ -213,4 +190,4 @@ def aa_embedder(seqs: list[str]) -> np.ndarray:
     for i, seq in enumerate(seqs):
         for j, aa in enumerate(seq):
             arr[i, j] = aa_to_int.get(aa.upper(), aa_to_int["X"])
-    return arr
+    return arr.astype(np.float64)
