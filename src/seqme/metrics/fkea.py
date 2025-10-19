@@ -25,8 +25,8 @@ class FourierBasedKernelEntropyApproximation(Metric):
     - If alpha≠2, this corresponds to the VENDI-α score.
 
     Reference:
-        Ospanov, Zhang, Jalali et al., "Towards a Scalable Reference-Free Evaluation of Generative Models"
-        (https://arxiv.org/pdf/2407.02961)
+        Friedman et al., The Vendi Score: A Diversity Evaluation Metric for Machine Learning (https://arxiv.org/abs/2210.02410)
+        Ospanov, Zhang, Jalali et al., "Towards a Scalable Reference-Free Evaluation of Generative Models" (https://arxiv.org/pdf/2407.02961)
     """
 
     def __init__(
@@ -34,8 +34,8 @@ class FourierBasedKernelEntropyApproximation(Metric):
         embedder: Callable[[list[str]], np.ndarray],
         bandwidth: float,
         *,
-        n_random_fourier_features: int = 256,
         alpha: float | int = 2,
+        n_random_fourier_features: int | None = 128,
         batch_size: int = 256,
         device: str = "cpu",
         seed: int = 42,
@@ -47,9 +47,8 @@ class FourierBasedKernelEntropyApproximation(Metric):
         Args:
             embedder: A function that maps a list of sequences to a 2D NumPy array of embeddings.
             bandwidth: Bandwidth parameter for the Gaussian kernel.
-            n_random_fourier_features: Number of random Fourier features per sequence. Used to approximate the kernel function. Consider increasing this to get a better approximation.
-            embedder_name: Optional name for the embedder used.
             alpha: alpha-norm of the normalized kernels eigenvalues. If `alpha=2` then it corresponds to the RKE-score otherwise VENDI-alpha.
+            n_random_fourier_features: Number of random Fourier features per sequence. Used to approximate the kernel function. Consider increasing this to get a better approximation. If None, use the full kernel.
             batch_size: Number of samples per batch when compute the kernel.
             device: Compute device, e.g., "cpu" or "cuda".
             seed: Seed for reproducible sampling.
@@ -87,15 +86,14 @@ class FourierBasedKernelEntropyApproximation(Metric):
             if self._n_sequences != len(sequences):
                 raise ValueError("Computed the metric using different number of sequences.")
 
-        seq_embeddings = self.embedder(sequences)
-        score = calculate_fourier_vendi(
-            torch.from_numpy(seq_embeddings).to(device=self.device),
-            random_fourier_feature_dim=self.n_random_fourier_features,
-            bandwidth=self.bandwidth,
-            batch_size=self.batch_size,
-            alpha=self.alpha,
-            seed=self.seed,
-        )
+        seq_embeddings = torch.from_numpy(self.embedder(sequences)).to(device=self.device)
+
+        if self.n_random_fourier_features is None:
+            score = calculate_vendi(seq_embeddings, self.bandwidth, self.batch_size, self.alpha)
+        else:
+            score = calculate_fourier_vendi(
+                seq_embeddings, self.n_random_fourier_features, self.bandwidth, self.batch_size, self.alpha, self.seed
+            )
         return MetricResult(score)
 
     @property
