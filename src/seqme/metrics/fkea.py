@@ -35,7 +35,7 @@ class FourierBasedKernelEntropyApproximation(Metric):
         bandwidth: float,
         *,
         alpha: float | int = 2,
-        n_random_fourier_features: int | None = 128,
+        n_random_fourier_features: int | None = 512,
         batch_size: int = 256,
         device: str = "cpu",
         seed: int = 42,
@@ -88,7 +88,7 @@ class FourierBasedKernelEntropyApproximation(Metric):
 
         seq_embeddings = torch.from_numpy(self.embedder(sequences)).to(device=self.device)
 
-        if self.n_random_fourier_features is None:
+        if (self.n_random_fourier_features is None) or seq_embeddings.shape[0] <= self.n_random_fourier_features:
             score = calculate_vendi(seq_embeddings, self.bandwidth, self.batch_size, self.alpha)
         else:
             score = calculate_fourier_vendi(

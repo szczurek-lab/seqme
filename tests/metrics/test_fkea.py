@@ -32,13 +32,13 @@ def test_fkea_overlap(shifted_embedder):
 
 
 def test_fkea_two_modes(shifted_embedder):
-    metric = FKEA(embedder=shifted_embedder, bandwidth=10.0, n_random_fourier_features=256, alpha=2.0)
+    metric = FKEA(embedder=shifted_embedder, bandwidth=10.0, n_random_fourier_features=2, alpha=2.0)
 
     assert metric.name == "FKEA"
     assert metric.objective == "maximize"
 
     result = metric(["KAAA", "RRRRRRRRRR", "RRRRRRRRRRR"])
-    assert result.value == pytest.approx(1.0863, abs=1e-4)
+    assert result.value == pytest.approx(1.0057, abs=1e-4)
     assert result.deviation is None
 
     with pytest.raises(ValueError, match=r"^Computed the metric using different number of sequences.$"):
@@ -49,7 +49,7 @@ def test_fkea_different_lengths(shifted_embedder):
     metric = FKEA(
         embedder=shifted_embedder,
         bandwidth=10.0,
-        n_random_fourier_features=256,
+        n_random_fourier_features=2,
         alpha=2.0,
     )
 
@@ -57,7 +57,7 @@ def test_fkea_different_lengths(shifted_embedder):
     assert metric.objective == "maximize"
 
     result = metric(["KAAA", "RRRRRRRRRR", "RRRRRRRRRRR"])
-    assert pytest.approx(result.value) == pytest.approx(1.0863, abs=1e-4)
+    assert pytest.approx(result.value) == pytest.approx(1.0057, abs=1e-4)
     assert result.deviation is None
 
 
