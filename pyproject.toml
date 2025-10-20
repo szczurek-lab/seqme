@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "seqme"
-version = "0.1.1"
-description = "Metrics for evaluating biological sequence generation models."
+version = "0.2.0"
+description = "Metrics for evaluating biological sequence design."
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.10"
