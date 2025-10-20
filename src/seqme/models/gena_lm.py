@@ -78,7 +78,7 @@ class GenaLM:
 
     Computes sequence-level embeddings by averaging token embeddings.
 
-    Installation: ``pip install seqme[gena_lm]``
+    Installation: ``pip install 'seqme[gena_lm]'``
 
     Reference:
         Fishman et al., "GENA-LM: a family of open-source foundational DNA language models for long sequences"
@@ -115,7 +115,7 @@ class GenaLM:
         try:
             from transformers import AutoModel, AutoTokenizer, BertForSequenceClassification
         except ModuleNotFoundError:
-            raise OptionalDependencyError("gena_lm") from None
+            raise OptionalDependencyError("GENA_LM") from None
 
         self.task = _TASK[model_name]
 

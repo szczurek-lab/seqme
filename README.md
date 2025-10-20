@@ -25,7 +25,7 @@ Read the [docs](https://seqme.readthedocs.io/en/stable/api/models_index.html) fo
 Install seqme and the protein language model, ESM-2.
 
 ```bash
-$ pip install seqme[esm2]
+$ pip install 'seqme[esm2]'
 ```
 
 Run in a Jupyter notebook:

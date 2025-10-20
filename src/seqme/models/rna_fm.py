@@ -15,7 +15,7 @@ class RNA_FM:
         mRNA: 239M parameters, 12 layers, embedding dim 1280, trained on 45 million mRNA coding sequences (CDS). Must be codon aligned.
         ncRNA: 99M parameters, 12 layers, embedding dim 640, trained on 23.7 million non-coding RNA (ncRNA) sequences.
 
-    Installation: ``pip install seqme[RNA_FM]``
+    Installation: ``pip install 'seqme[RNA_FM]'``
 
     Reference:
         Chen et al., "Interpretable RNA Foundation Model from Unannotated Data for Highly Accurate RNA Structure and Function Predictions"

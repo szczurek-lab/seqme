@@ -46,7 +46,9 @@ class Hyformer:
 
     Computes sequence-level embeddings by extracting the [CLS] token embedding.
 
-    Installation: for molecules: ``pip install seqme[hyformer_molecules]`` for peptides: ``pip install seqme[hyformer]``.
+    Installation: for molecules: ``pip install 'seqme[hyformer_molecules]' 'hyformer @ git+https://github.com/szczurek-lab/hyformer.git@main'``
+
+    Installation for peptides: ``pip install 'seqme[hyformer]' 'hyformer @ git+https://github.com/szczurek-lab/hyformer.git@v2.0'``.
 
     Reference:
         Izdebski et al., "Synergistic Benefits of Joint Molecule Generation and Property Prediction"
