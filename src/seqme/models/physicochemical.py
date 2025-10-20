@@ -8,7 +8,7 @@ from .exceptions import OptionalDependencyError
 class AliphaticIndex:
     """Aliphatic index of peptide sequences.
 
-    Installation: ``pip install seqme[aaDescriptors]``
+    Installation: ``pip install 'seqme[aaDescriptors]'``
     """
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
@@ -33,7 +33,7 @@ class AliphaticIndex:
 class Aromaticity:
     """Aromaticity of peptide sequences.
 
-    Installation: ``pip install seqme[aaDescriptors]``
+    Installation: ``pip install 'seqme[aaDescriptors]'``
     """
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
@@ -58,7 +58,7 @@ class Aromaticity:
 class BomanIndex:
     """Boman index, estimating binding potential to proteins.
 
-    Installation: ``pip install seqme[aaDescriptors]``
+    Installation: ``pip install 'seqme[aaDescriptors]'``
     """
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
@@ -83,7 +83,7 @@ class BomanIndex:
 class Charge:
     """Net charge of peptides at a given pH.
 
-    Installation: ``pip install seqme[aaDescriptors]``
+    Installation: ``pip install 'seqme[aaDescriptors]'``
     """
 
     def __init__(self, ph: float = 7.0):
@@ -116,7 +116,7 @@ class Charge:
 class Gravy:
     """GRAVY (hydropathy) score for peptide sequences.
 
-    Installation: ``pip install seqme[aaDescriptors]``
+    Installation: ``pip install 'seqme[aaDescriptors]'``
     """
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
@@ -142,7 +142,7 @@ class Gravy:
 class Hydrophobicity:
     """Hydrophobicity using a selected scale.
 
-    Installation: ``pip install seqme[aaDescriptors]``
+    Installation: ``pip install 'seqme[aaDescriptors]'``
     """
 
     def __init__(self, scale: Literal["eisenberg", "hopp-woods", "janin", "kytedoolittle"] = "eisenberg"):
@@ -177,7 +177,7 @@ class Hydrophobicity:
 class HydrophobicMoment:
     """Hydrophobic moment (i.e., amphiphilicity) for one or more peptide sequences using a sliding-window approach.
 
-    Installation: ``pip install seqme[aaDescriptors]``
+    Installation: ``pip install 'seqme[aaDescriptors]'``
     """
 
     def __init__(
@@ -223,7 +223,7 @@ class HydrophobicMoment:
 class InstabilityIndex:
     """Instability index, predicting in vitro protein stability.
 
-    Installation: ``pip install seqme[aaDescriptors]``
+    Installation: ``pip install 'seqme[aaDescriptors]'``
     """
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
@@ -248,7 +248,7 @@ class InstabilityIndex:
 class IsoelectricPoint:
     """Isoelectric point of peptide sequences.
 
-    Installation: ``pip install seqme[aaDescriptors]``
+    Installation: ``pip install 'seqme[aaDescriptors]'``
     """
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
@@ -273,7 +273,7 @@ class IsoelectricPoint:
 class ProteinWeight:
     """Molecular weight of protein/peptide sequences.
 
-    Installation: ``pip install seqme[aaDescriptors]``
+    Installation: ``pip install 'seqme[aaDescriptors]'``
     """
 
     def __call__(self, sequences: list[str]) -> np.ndarray:

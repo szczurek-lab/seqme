@@ -10,7 +10,7 @@ Install seqme and the protein language model, ESM-2.
 
 .. code-block:: bash
 
-    pip install seqme[esm2]
+    pip install 'seqme[esm2]'
 
 
 Run in a Jupyter notebook:

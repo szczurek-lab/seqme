@@ -13,7 +13,7 @@ class ProstT5:
 
     Checkpoint: 3B parameters, 24 layers, embedding dim 1024, trained on protein sequences and 3Di structures.
 
-    Installation: ``pip install seqme[prostT5]``
+    Installation: ``pip install 'seqme[prostT5]'``
 
     Reference:
         Heinzinger et al., "ProstT5: Bilingual Language Model for Protein Sequence and Structure"
