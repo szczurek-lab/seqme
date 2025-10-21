@@ -7,7 +7,15 @@
 [![License](https://img.shields.io/github/license/szczurek-lab/seqme?v=2)](https://opensource.org/license/bsd-3-clause)
 [![Read the Docs](https://img.shields.io/readthedocs/seqme)](https://seqme.readthedocs.io/)
 
-**seqme** is a modular and highly extendable python library containing model-agnostic metrics for evaluating biological sequence designs.
+**seqme** is a modular and extendable python library containing model-agnostic metrics for evaluating biological sequence designs. It enables benchmarking and comparison of generative models for small molecules, DNA, RNA, peptides, and proteins.
+
+**Key features**:
+
+- **[Metrics](https://seqme.readthedocs.io/en/stable/api/metrics_index.html)**: A collection of sequence-, embedding-, and property-based metrics for evaluating generative models designs.
+- **[Models](https://seqme.readthedocs.io/en/stable/api/models_index.html)**: Out-of-the-box, pre-trained property and embedding models for small molecules, DNA, RNA, peptides, and proteins.
+- **[Visualizations](https://seqme.readthedocs.io/en/stable/api/core_index.html#visualization)**: Functionality to display metric results from single-shot and iterative optimization methods as tables and plots.
+
+*Is a metric or model missing?* seqme's modular metric and third-party model interfaces make adding your own easy.
 
 ## Installation
 
@@ -17,8 +25,8 @@ You need to have Python 3.10 or newer installed on your system. To install the b
 $ pip install seqme
 ```
 
-To also install domain-specific models, add extras specifiers.
-Read the [docs](https://seqme.readthedocs.io/en/stable/api/models_index.html) for more information on the supported models.
+To install sequence-specific models as well, include the appropriate extras specifiers. 
+Check the individual model [docs](https://seqme.readthedocs.io/en/stable/api/models_index.html) for installation instructions.
 
 ## Quick start
 
@@ -55,7 +63,7 @@ df = sm.evaluate(sequences, metrics)
 sm.show(df) # Note: Will only display the table in a notebook.
 ```
 
-Read the [docs](https://seqme.readthedocs.io/en/stable/tutorials/index.html) for more tutorials and examples.
+Check out the [docs](https://seqme.readthedocs.io/en/stable/tutorials/index.html) for in-depth tutorials and examples.
 
 ## Citation
 

@@ -1,6 +1,14 @@
 seqme
 =====
-**seqme** is a modular and highly extendable python library containing model-agnostic metrics for evaluating biological sequence designs.
+**seqme** is a modular and extendable python library containing model-agnostic metrics for evaluating biological sequence designs. It enables benchmarking and comparison of generative models for small molecules, DNA, RNA, peptides, and proteins.
+
+**Key features**:
+
+- **Metrics**: A collection of sequence-, embedding-, and property-based metrics for evaluating generative models designs.
+- **Models**: Out-of-the-box, pre-trained property and embedding models for small molecules, DNA, RNA, peptides, and proteins.
+- **Visualizations**: Functionality to display metric results from single-shot and iterative optimization methods as tables and plots.
+
+*Is a metric or model missing?* seqme's modular metric and third-party model interfaces make adding your own easy.
 
 
 Quick start
