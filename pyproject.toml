@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "seqme"
-version = "0.2.2"
+version = "0.2.3"
 description = "Metrics for evaluating biological sequence design."
 readme = "README.md"
 license = { file = "LICENSE" }
