@@ -7,7 +7,7 @@ from tqdm import tqdm
 from .exceptions import OptionalDependencyError
 
 
-class RNA_FM:
+class RNAFM:
     """
     A language model trained on RNA sequences, which computes sequence-level embeddings by averaging token embeddings.
 
@@ -15,7 +15,7 @@ class RNA_FM:
         mRNA: 239M parameters, 12 layers, embedding dim 1280, trained on 45 million mRNA coding sequences (CDS). Must be codon aligned.
         ncRNA: 99M parameters, 12 layers, embedding dim 640, trained on 23.7 million non-coding RNA (ncRNA) sequences.
 
-    Installation: ``pip install 'seqme[RNA_FM]'``
+    Installation: ``pip install 'seqme[rnafm]'``
 
     Reference:
         Chen et al., "Interpretable RNA Foundation Model from Unannotated Data for Highly Accurate RNA Structure and Function Predictions"
@@ -51,7 +51,7 @@ class RNA_FM:
         try:
             import fm
         except ModuleNotFoundError:
-            raise OptionalDependencyError("RNA_FM") from None
+            raise OptionalDependencyError("rnafm") from None
 
         model, alphabet = fm.pretrained.rna_fm_t12() if self.model_name == "ncRNA" else fm.pretrained.mrna_fm_t12()
         batch_converter = alphabet.get_batch_converter()

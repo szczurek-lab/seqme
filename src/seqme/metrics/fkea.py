@@ -48,7 +48,7 @@ class FourierBasedKernelEntropyApproximation(Metric):
             embedder: A function that maps a list of sequences to a 2D NumPy array of embeddings.
             bandwidth: Bandwidth parameter for the Gaussian kernel.
             alpha: alpha-norm of the normalized kernels eigenvalues. If `alpha=2` then it corresponds to the RKE-score otherwise VENDI-alpha.
-            n_random_fourier_features: Number of random Fourier features per sequence. Used to approximate the kernel function. Consider increasing this to get a better approximation. If None, use the full kernel.
+            n_random_fourier_features: Number of random Fourier features per sequence. Used to approximate the kernel function. Consider increasing this to get a better approximation. If None, use the exact kernel covariance matrix.
             batch_size: Number of samples per batch when computing the kernel approximation.
             device: Compute device, e.g., "cpu" or "cuda".
             seed: Seed for reproducible sampling.
@@ -88,7 +88,7 @@ class FourierBasedKernelEntropyApproximation(Metric):
 
         seq_embeddings = torch.from_numpy(self.embedder(sequences)).to(device=self.device)
 
-        if (self.n_random_fourier_features is None) or (seq_embeddings.shape[0] <= self.n_random_fourier_features):
+        if self.n_random_fourier_features is None:
             score = calculate_vendi(seq_embeddings, self.bandwidth, self.batch_size, self.alpha)
         else:
             score = calculate_fourier_vendi(

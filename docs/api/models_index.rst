@@ -17,12 +17,12 @@ Models
     :toctree:
     :nosignatures:
 
-    seqme.models.Esm2
-    seqme.models.EsmFold
+    seqme.models.ESM2
+    seqme.models.ESMFold
     seqme.models.Hyformer
     seqme.models.ProstT5
-    seqme.models.RNA_FM
-    seqme.models.GenaLM
+    seqme.models.RNAFM
+    seqme.models.GENALM
     seqme.models.KmerFrequencyEmbedding
 
     seqme.models.AliphaticIndex
@@ -75,13 +75,13 @@ Supported sequence types
      - **RNA**
      - **DNA**
      - **Small Molecule**
-   * - :py:class:`seqme.models.Esm2`
+   * - :py:class:`seqme.models.ESM2`
      - |ok|
      - |ok|
      - |no|
      - |no|
      - |no|
-   * - :py:class:`seqme.models.EsmFold`
+   * - :py:class:`seqme.models.ESMFold`
      - |ok|
      - |no|
      - |no|
@@ -99,13 +99,13 @@ Supported sequence types
      - |no|
      - |no|
      - |no|
-   * - :py:class:`seqme.models.RNA_FM`
+   * - :py:class:`seqme.models.RNAFM`
      - |no|
      - |no|
      - |ok|
      - |no|
      - |no|
-   * - :py:class:`seqme.models.GenaLM`
+   * - :py:class:`seqme.models.GENALM`
      - |no|
      - |no|
      - |no|

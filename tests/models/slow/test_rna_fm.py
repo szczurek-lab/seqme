@@ -8,7 +8,7 @@ pytest.importorskip("fm")
 
 @pytest.fixture(scope="module")
 def rna_fm():
-    return sm.models.RNA_FM()
+    return sm.models.RNAFM()
 
 
 def test_rna_fm_shape_and_means(rna_fm):

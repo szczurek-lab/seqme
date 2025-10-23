@@ -1,14 +1,14 @@
 import numpy as np
 import pytest
 
-from seqme.models import Esm2, Esm2Checkpoint
+from seqme.models import ESM2, ESM2Checkpoint
 
 pytest.importorskip("transformers")
 
 
 @pytest.fixture(scope="module")
 def esm():
-    return Esm2(model_name=Esm2Checkpoint.t6_8M, batch_size=32, device="cpu")
+    return ESM2(model_name=ESM2Checkpoint.t6_8M, batch_size=32, device="cpu")
 
 
 def test_esm2_shape_and_means(esm):

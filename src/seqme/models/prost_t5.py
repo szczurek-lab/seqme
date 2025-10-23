@@ -13,7 +13,7 @@ class ProstT5:
 
     Checkpoint: 3B parameters, 24 layers, embedding dim 1024, trained on protein sequences and 3Di structures.
 
-    Installation: ``pip install 'seqme[prostT5]'``
+    Installation: ``pip install 'seqme[prostt5]'``
 
     Reference:
         Heinzinger et al., "ProstT5: Bilingual Language Model for Protein Sequence and Structure"
@@ -47,7 +47,7 @@ class ProstT5:
         try:
             from transformers import T5EncoderModel, T5Tokenizer
         except ModuleNotFoundError:
-            raise OptionalDependencyError("prostT5") from None
+            raise OptionalDependencyError("prostt5") from None
 
         self.tokenizer = T5Tokenizer.from_pretrained(
             "Rostlab/ProstT5",

@@ -3,7 +3,7 @@ import pytest
 
 from seqme.models import Hyformer, HyformerCheckpoint
 
-pytest.importorskip("transformers")
+pytest.importorskip("hyformer")
 
 _EMBEDDING_DIM = 512
 _ABS_TOLERANCE = 1e-3

@@ -8,7 +8,7 @@ from tqdm import tqdm
 from .exceptions import OptionalDependencyError
 
 
-class Esm2Checkpoint(str, Enum):
+class ESM2Checkpoint(str, Enum):
     """
     ESM-2 checkpoints.
 
@@ -35,7 +35,7 @@ class Esm2Checkpoint(str, Enum):
     shukla_group_peptide_650M = "ShuklaGroupIllinois/PeptideESM2_650M"
 
 
-class Esm2:
+class ESM2:
     """
     Wrapper for the ESM2 protein/peptide embedding model from HuggingFace.
 
@@ -51,7 +51,7 @@ class Esm2:
 
     def __init__(
         self,
-        model_name: Esm2Checkpoint | str,
+        model_name: ESM2Checkpoint | str,
         *,
         device: str | None = None,
         batch_size: int = 256,
@@ -68,7 +68,7 @@ class Esm2:
             verbose: Whether to display a progress bar.
             cache_dir: Directory to cache the model.
         """
-        if isinstance(model_name, Esm2Checkpoint):
+        if isinstance(model_name, ESM2Checkpoint):
             model_name = model_name.value
 
         if device is None:

@@ -8,13 +8,13 @@ from tqdm import tqdm
 from .exceptions import OptionalDependencyError
 
 
-class EsmFold:
+class ESMFold:
     """
     ESMFold protein language model.
 
     The model predicts the 3D-structure (fold) of a protein sequence.
 
-    Installation: ``pip install 'seqme[esm2]'``
+    Installation: ``pip install 'seqme[esmfold]'``
 
     Reference:
         Lin et al., "Language models of protein sequences at the scale of evolution enable accurate structure prediction"
@@ -48,7 +48,7 @@ class EsmFold:
         try:
             from transformers import AutoTokenizer, EsmForProteinFolding
         except ModuleNotFoundError:
-            raise OptionalDependencyError("esm2") from None
+            raise OptionalDependencyError("esmfold") from None
 
         self.tokenizer = AutoTokenizer.from_pretrained("facebook/esmfold_v1", cache_dir=cache_dir)
         self.model = EsmForProteinFolding.from_pretrained("facebook/esmfold_v1", cache_dir=cache_dir)
@@ -69,7 +69,7 @@ class EsmFold:
         return_type: Literal["dict", "list"] = "list",
     ) -> dict[str, list] | list[dict]:
         """
-        Predict protein sequences TM-score and 3D-structure, i.e., atom coordinates.
+        Predict protein sequences TM-score, pLDDT and 3D-structure, i.e., atom coordinates.
 
         The atoms positions/coordinates is encoded as 'atom14':
 
@@ -113,6 +113,7 @@ class EsmFold:
 
                     - "atom14": sequence_length x 14 x 3
                     - "ca": sequence_length x 3
+                "plddt": Numpy arrays of shape: sequence_length (pLDDT for carbon alpha atom)
                 "ptm": predicted TM-scores if `compute_ptm` is true.
         """
         batch_size = 1 if compute_ptm else self.batch_size
@@ -136,6 +137,7 @@ class EsmFold:
                 raise ValueError(f"Unsupported convention: '{convention}'.")
 
             folds["positions"] += positions
+            folds["plddt"] += [outputs["plddt"][i, :length, 1].cpu().numpy() for i, length in enumerate(lengths)]
 
             if compute_ptm:
                 folds["ptm"] += [outputs["ptm"].cpu().item()]
