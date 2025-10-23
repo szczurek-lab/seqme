@@ -48,7 +48,7 @@ sequences = {
 }
 
 cache = sm.Cache(
-    models={"esm2": sm.models.Esm2(
+    models={"esm2": sm.models.ESM2(
         model_name="facebook/esm2_t6_8M_UR50D", batch_size=256, device="cpu")
     }
 )

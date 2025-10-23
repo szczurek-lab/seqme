@@ -1,13 +1,13 @@
 import pytest
 
-from seqme.models import EsmFold
+from seqme.models import ESMFold
 
 pytest.importorskip("transformers")
 
 
 @pytest.fixture(scope="module")
 def esm_fold():
-    return EsmFold(batch_size=32, device="cpu")
+    return ESMFold(batch_size=32, device="cpu")
 
 
 def test_esm_fold_shape_and_means(esm_fold):

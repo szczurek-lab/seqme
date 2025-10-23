@@ -7,7 +7,7 @@ from tqdm import tqdm
 from .exceptions import OptionalDependencyError
 
 
-class GenaLMCheckpoint(Enum):
+class GENALMCheckpoint(Enum):
     """
     GENA-LM checkpoints.
 
@@ -59,26 +59,26 @@ class Task(Enum):
 
 
 _TASK = {
-    GenaLMCheckpoint.bert_base_t2t: Task.EMBEDDING,
-    GenaLMCheckpoint.bert_base_t2t_lastln_t2t: Task.EMBEDDING,
-    GenaLMCheckpoint.bert_base_t2t_multi: Task.EMBEDDING,
-    GenaLMCheckpoint.bert_large_t2t: Task.EMBEDDING,
-    GenaLMCheckpoint.bigbird_base_t2t: Task.EMBEDDING,
-    GenaLMCheckpoint.bert_base_t2t_promoters: Task.CLASSIFICATION,
-    GenaLMCheckpoint.bert_large_t2t_promoters: Task.CLASSIFICATION,
-    GenaLMCheckpoint.bert_large_t2t_promoters2: Task.CLASSIFICATION,
-    GenaLMCheckpoint.bert_base_t2t_splice_site: Task.CLASSIFICATION,
-    GenaLMCheckpoint.bert_large_t2t_splice_site: Task.CLASSIFICATION,
+    GENALMCheckpoint.bert_base_t2t: Task.EMBEDDING,
+    GENALMCheckpoint.bert_base_t2t_lastln_t2t: Task.EMBEDDING,
+    GENALMCheckpoint.bert_base_t2t_multi: Task.EMBEDDING,
+    GENALMCheckpoint.bert_large_t2t: Task.EMBEDDING,
+    GENALMCheckpoint.bigbird_base_t2t: Task.EMBEDDING,
+    GENALMCheckpoint.bert_base_t2t_promoters: Task.CLASSIFICATION,
+    GENALMCheckpoint.bert_large_t2t_promoters: Task.CLASSIFICATION,
+    GENALMCheckpoint.bert_large_t2t_promoters2: Task.CLASSIFICATION,
+    GENALMCheckpoint.bert_base_t2t_splice_site: Task.CLASSIFICATION,
+    GENALMCheckpoint.bert_large_t2t_splice_site: Task.CLASSIFICATION,
 }
 
 
-class GenaLM:
+class GENALM:
     """
     GENA-LM is a family of Open-Source Foundational Models for Long DNA Sequences trained on human DNA sequence.
 
     Computes sequence-level embeddings by averaging token embeddings.
 
-    Installation: ``pip install 'seqme[gena_lm]'``
+    Installation: ``pip install 'seqme[genalm]'``
 
     Reference:
         Fishman et al., "GENA-LM: a family of open-source foundational DNA language models for long sequences"
@@ -88,7 +88,7 @@ class GenaLM:
 
     def __init__(
         self,
-        model_name: GenaLMCheckpoint,
+        model_name: GENALMCheckpoint,
         *,
         device: str | None = None,
         batch_size: int = 256,
@@ -115,7 +115,7 @@ class GenaLM:
         try:
             from transformers import AutoModel, AutoTokenizer, BertForSequenceClassification
         except ModuleNotFoundError:
-            raise OptionalDependencyError("GENA_LM") from None
+            raise OptionalDependencyError("genalm") from None
 
         self.task = _TASK[model_name]
 
@@ -175,7 +175,7 @@ class GenaLM:
     @torch.inference_mode()
     def classify(self, sequences: list[str]) -> np.ndarray:
         """
-        Classifify a list of sequences.
+        Classify a list of sequences.
 
         Args:
             sequences: List of DNA sequences.

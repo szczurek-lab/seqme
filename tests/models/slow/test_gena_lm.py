@@ -9,17 +9,17 @@ pytest.importorskip("einops")
 
 @pytest.fixture(scope="module")
 def gena_lm_embedder():
-    return sm.models.GenaLM(sm.models.GenaLMCheckpoint.bert_base_t2t)
+    return sm.models.GENALM(sm.models.GENALMCheckpoint.bert_base_t2t)
 
 
 @pytest.fixture(scope="module")
 def gena_lm_promoter():
-    return sm.models.GenaLM(sm.models.GenaLMCheckpoint.bert_base_t2t_promoters)
+    return sm.models.GENALM(sm.models.GENALMCheckpoint.bert_base_t2t_promoters)
 
 
 @pytest.fixture(scope="module")
 def gena_lm_splicing():
-    return sm.models.GenaLM(sm.models.GenaLMCheckpoint.bert_base_t2t_splice_site)
+    return sm.models.GENALM(sm.models.GENALMCheckpoint.bert_base_t2t_splice_site)
 
 
 def test_embedder_shape_and_means(gena_lm_embedder):
