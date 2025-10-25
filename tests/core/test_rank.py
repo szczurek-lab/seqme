@@ -43,3 +43,33 @@ def test_mean_rank():
     assert df.attrs["objective"]["Rank (mean-rank)"] == "minimize"
 
     assert np.all(df["Rank (mean-rank)"]["value"] == np.array([4, 3, 2, 1]))
+
+
+def test_mean_rank_tie():
+    sequences = {
+        "model1": ["AA", "BB", "CC"],
+        "model2": ["A"],
+        "model3": ["AA", "BB", "CC", "DDD"],
+        "model4": ["AA", "BB", "CC"],
+    }
+    metrics = [
+        sm.metrics.Count(),
+        sm.metrics.Length(objective="maximize"),
+    ]
+
+    df = sm.evaluate(sequences, metrics)
+
+    df2 = sm.rank(df, tiebreak="mean-rank", name="Rank (mean-rank)", ties="min")
+    assert np.all(df2["Rank (mean-rank)"]["value"] == np.array([2, 4, 1, 2]))
+
+    df2 = sm.rank(df, tiebreak="mean-rank", name="Rank (mean-rank)", ties="max")
+    assert np.all(df2["Rank (mean-rank)"]["value"] == np.array([3, 4, 1, 3]))
+
+    df2 = sm.rank(df, tiebreak="mean-rank", name="Rank (mean-rank)", ties="mean")
+    assert np.all(df2["Rank (mean-rank)"]["value"] == np.array([2.5, 4, 1, 2.5]))
+
+    df2 = sm.rank(df, tiebreak="mean-rank", name="Rank (mean-rank)", ties="dense")
+    assert np.all(df2["Rank (mean-rank)"]["value"] == np.array([2, 3, 1, 2]))
+
+    df2 = sm.rank(df, tiebreak="mean-rank", name="Rank (mean-rank)", ties="auto")
+    assert np.all(df2["Rank (mean-rank)"]["value"] == np.array([2, 4, 1, 2]))

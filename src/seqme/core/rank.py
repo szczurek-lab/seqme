@@ -10,11 +10,12 @@ def rank(
     metrics: list[str] | None = None,
     *,
     tiebreak: Literal["crowding-distance", "mean-rank"] | None = None,
+    ties: Literal["min", "max", "mean", "dense", "auto"] = "auto",
     name: str = "Rank",
 ) -> pd.DataFrame:
     """Calculate the non-dominated rank of each entry using one or more metrics.
 
-    Overrides the column if it already exists.
+    If the column already exists, then don't use it to compute the rank unless explicitly selected in ``metrics``. Rank overrides the column ``name``if it already exists.
 
     Reference:
         - David Come and Joshua Knowles, *Techniques for Highly Multiobjective Optimisation: Some Nondominated Points are Better than Others* (https://arxiv.org/pdf/0908.3025.pdf)
@@ -25,11 +26,19 @@ def rank(
 
     Args:
         df: Metric dataframe.
-        metrics: Metrics for dominance-based comparison. If None, use all metrics in dataframe.
+        metrics: Metrics for dominance-based comparison. If None, use all metrics in dataframe (except the column with the same name if it exists).
         tiebreak: How to break ties when rows have same rank. If None, ranks correspond to each "peeled" Pareto set.
 
             - ``crowding-distance``: Crowding distance.
             - ``mean-rank``: Mean rank.
+
+        ties: How to do rank numbering when there are ties.
+
+            - ``min``: ``[1, 2, 2, 4]``-ranking
+            - ``max``: ``[1, 3, 3, 4]``-ranking
+            - ``mean``: ``[1, 2.5, 2.5, 4]``-ranking
+            - ``dense``: ``[1, 2, 2, 3]``-ranking
+            - ``auto``: ``dense`` if ``tiebreak`` is ``None`` else ``min``
 
         name: Name of metric.
 
@@ -41,6 +50,9 @@ def rank(
 
     if metrics is None:
         metrics = df.columns.get_level_values(0).unique().tolist()
+
+        if name in metrics:
+            metrics.remove(name)
 
     for metric in metrics:
         if metric not in df.columns.get_level_values(0):
@@ -56,7 +68,7 @@ def rank(
     signs = {"maximize": -1, "minimize": 1}
     costs = np.column_stack([df[metric]["value"] * signs[objs[metric]] for metric in metrics])
 
-    ranks = non_dominated_rank(costs, tie_break=tiebreak)
+    ranks = non_dominated_rank(costs, tie_break=tiebreak, ties=ties)
 
     df[(name, "value")] = pd.Series(ranks, index=df.index)
     df[(name, "deviation")] = float("nan")
@@ -73,6 +85,7 @@ def rank(
 def non_dominated_rank(
     costs: np.ndarray,
     tie_break: Literal["crowding-distance", "mean-rank"] | None = None,
+    ties: Literal["min", "max", "mean", "dense", "auto"] = "auto",
 ) -> np.ndarray:
     """
     Calculate the non-dominated rank of each observation.
@@ -80,14 +93,14 @@ def non_dominated_rank(
     Args:
         costs: An array of costs (or objectives). The shape is (n_observations, n_objectives).
         tie_break: Whether we apply tie-break or not.
+        ties: How to do rank numbering when there are ties.
 
     Returns:
         ranks:
             If not tie_break:
-                The non-dominated rank of each observation. The shape is (n_observations, ). The rank starts from zero and lower rank is better.
+                The non-dominated rank of each observation. The shape is (n_observations, ). The rank starts from one and lower rank is better.
             else:
-                The each non-dominated rank will be tie-broken
-                so that we can sort identically.
+                The each non-dominated rank will be tie-broken so that we can sort identically.
                 The shape is (n_observations, ) and the array is a permutation of zero to n_observations - 1.
     """
     unique_costs, order_inv = np.unique(costs, axis=0, return_inverse=True)
@@ -101,6 +114,19 @@ def non_dominated_rank(
         ranks = _mean_rank_tie_break(costs, ranks)
     else:
         raise ValueError(f"Unsupported tie-break: {tie_break}.")
+
+    if ties == "auto":
+        ranks = _dense_tied_ranks(ranks) if tie_break is None else _min_tied_ranks(ranks)
+    elif ties == "min":
+        ranks = _min_tied_ranks(ranks)
+    elif ties == "max":
+        ranks = _max_tied_ranks(ranks)
+    elif ties == "mean":
+        ranks = _mean_tied_ranks(ranks)
+    elif ties == "dense":
+        ranks = _dense_tied_ranks(ranks)
+    else:
+        raise ValueError(f"Invalid ties: {ties}.")
 
     return ranks + 1
 
@@ -233,3 +259,34 @@ def _compute_rank_based_crowding_distance(ranks: np.ndarray) -> np.ndarray:
         )
         dists += crowding_dists[order_inv]
     return scipy.stats.rankdata(-dists, method="min").astype(int)
+
+
+def _min_tied_ranks(ranks: np.ndarray) -> np.ndarray:
+    """Rank [0, 1, 2, 3]."""
+    return np.searchsorted(np.sort(ranks), ranks, side="left")
+
+
+def _max_tied_ranks(ranks: np.ndarray) -> np.ndarray:
+    """Rank [0, 2, 2, 3]."""
+    return np.searchsorted(np.sort(ranks), ranks, side="right") - 1
+
+
+def _mean_tied_ranks(ranks: np.ndarray) -> np.ndarray:
+    """Rank [0, 1.5, 1.5, 3]."""
+    idx = np.argsort(ranks)
+    sorted_x = ranks[idx]
+
+    _, inv_sorted = np.unique(sorted_x, return_inverse=True)
+    sum_pos = np.bincount(inv_sorted, weights=np.arange(ranks.size))
+    counts = np.bincount(inv_sorted)
+    mean_pos_per_group = sum_pos / counts
+
+    mean_sorted = mean_pos_per_group[inv_sorted]
+    out = np.empty(ranks.size, dtype=float)
+    out[idx] = mean_sorted
+    return out
+
+
+def _dense_tied_ranks(ranks: np.ndarray) -> np.ndarray:
+    """Rank [0, 1, 1, 2]."""
+    return np.unique(ranks, return_inverse=True)[1]
