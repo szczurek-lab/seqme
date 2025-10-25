@@ -43,9 +43,9 @@ Functions for visual exploration and presentation of metrics.
     :nosignatures:
 
     seqme.show
-    seqme.barplot
-    seqme.parallel_coordinates
-    seqme.plot_series
+    seqme.plot_bar
+    seqme.plot_parallel
+    seqme.plot_line
     seqme.to_latex
 
 
@@ -58,7 +58,7 @@ Helpers for generating, transforming, and exporting sequence data.
     :nosignatures:
 
     seqme.shuffle_characters
-    seqme.random_subset
+    seqme.sample_subset
     seqme.to_fasta
     seqme.read_fasta
 

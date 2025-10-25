@@ -23,7 +23,7 @@ Diagnostics
     :nosignatures:
 
     seqme.utils.feature_alignment_score
-    seqme.utils.spearman_correlation_coefficient
+    seqme.utils.spearman_correlation
     seqme.utils.plot_feature_alignment_score
 
 

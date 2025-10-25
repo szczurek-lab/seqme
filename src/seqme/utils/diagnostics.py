@@ -28,7 +28,7 @@ def feature_alignment_score(xs: np.ndarray, labels: np.ndarray, n_neighbors: int
     return score.item()
 
 
-def spearman_correlation_coefficient(xs_a: np.ndarray, xs_b: np.ndarray) -> float:
+def spearman_correlation(xs_a: np.ndarray, xs_b: np.ndarray) -> float:
     """Compute the Spearman correlation coefficient using the pairwise distance between embedding spaces.
 
     Args:
