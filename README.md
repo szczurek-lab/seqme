@@ -64,7 +64,7 @@ sm.show(df) # Note: Will only display the table in a notebook.
 ```
 
 <p align="center">
-    <img src="table.png" alt="seqme logo" width="40%">
+    <img src="https://raw.githubusercontent.com/szczurek-lab/seqme/main/docs/_static/logo_title.svg/readme_table.png" alt="table" width="40%">
 </p>
 
 Check out the [docs](https://seqme.readthedocs.io/en/stable/tutorials/index.html) for in-depth tutorials and examples.
