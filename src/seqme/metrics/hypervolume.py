@@ -5,7 +5,7 @@ import moocore
 import numpy as np
 from scipy.spatial import ConvexHull, QhullError
 
-from seqme.core import Metric, MetricResult
+from seqme.core.base import Metric, MetricResult
 
 
 class Hypervolume(Metric):

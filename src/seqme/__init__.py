@@ -1,5 +1,5 @@
 from seqme import metrics, models, utils
-from seqme.core import (
+from seqme.core.base import (
     Cache,
     Metric,
     MetricResult,
@@ -20,6 +20,7 @@ from seqme.core import (
     to_pickle,
     top_k,
 )
+from seqme.core.rank import rank
 
 __all__ = [
     "Metric",
@@ -31,6 +32,7 @@ __all__ = [
     "parallel_coordinates",
     "plot_series",
     "random_subset",
+    "rank",
     "read_fasta",
     "read_pickle",
     "rename",

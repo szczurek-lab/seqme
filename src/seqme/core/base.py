@@ -89,7 +89,7 @@ def evaluate(
     metric_names = [m.name for m in metrics]
     metric_duplicates = [name for name, count in Counter(metric_names).items() if count > 1]
     if len(metric_duplicates) > 0:
-        duplicate_names = ", ".join(metric_duplicates)
+        duplicate_names = " ".join(metric_duplicates)
         raise ValueError(f"Metrics must have unique names. Found duplicates: {duplicate_names}.")
 
     for group_name, seqs in sequences.items():
@@ -837,6 +837,8 @@ def parallel_coordinates(
     ax.grid(True, axis="x", linewidth=1.0, color="black", linestyle="-", alpha=0.3)
     ax.grid(True, axis="y", linewidth=0.8, color="gray", linestyle="--", alpha=0.2)
 
+    objectives = df.attrs["objective"]
+
     # Normalize each metric separately
     normalized = {}
     ranges = {}
@@ -844,7 +846,11 @@ def parallel_coordinates(
         vals = df[m]["value"].values
         vmin, vmax = vals.min(), vals.max()
         ranges[m] = (vmin, vmax)
-        normalized[m] = (vals - vmin) / (vmax - vmin) if vmax > vmin else np.zeros_like(vals)
+
+        if vmax > vmin:
+            normalized[m] = (vals - vmin) / (vmax - vmin)
+        else:
+            normalized[m] = np.ones_like(vals) if objectives[m] == "maximize" else np.zeros_like(vals)
 
     for i, name in enumerate(names):
         values = [normalized[m][i] for m in metric_names]
@@ -855,7 +861,7 @@ def parallel_coordinates(
             vmin, vmax = ranges[m]
             if vmin <= 0 <= vmax:
                 ax.hlines(
-                    y=(0 - vmin) / (vmax - vmin),
+                    y=-vmin / (vmax - vmin) if vmax > vmin else 1.0 if objectives[m] == "maximize" else 0.0,
                     xmin=i - zero_width / 2,
                     xmax=i + zero_width / 2,
                     color="gray",
@@ -881,8 +887,6 @@ def parallel_coordinates(
         )
     else:
         ax.legend(loc=legend_loc)
-
-    objectives = df.attrs["objective"]
 
     arrows = {"maximize": "↑", "minimize": "↓"}
     xlabels = [f"{m}{arrows[objectives[m]]}" if show_arrow else m for m in metric_names]

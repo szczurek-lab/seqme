@@ -21,13 +21,14 @@ Core objects and classes that define the ``seqme`` evaluation and metric API.
 
 Data Manipulation
 -----------------
-Utility functions to combine, filter, and reorganize metric results and sequences.
+Utility functions to combine, filter, and reorganize metric results.
 
 .. autosummary::
     :toctree:
     :nosignatures:
 
     seqme.combine
+    seqme.rank
     seqme.top_k
     seqme.sort
     seqme.rename
