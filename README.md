@@ -63,7 +63,7 @@ df = sm.evaluate(sequences, metrics)
 sm.show(df) # Note: Will only display the table in a notebook.
 ```
 
-<p align="left">
+<p align="center">
     <img src="table.png" alt="seqme logo" width="35%">
 </p>
 
