@@ -89,7 +89,7 @@ def evaluate(
     metric_names = [m.name for m in metrics]
     metric_duplicates = [name for name, count in Counter(metric_names).items() if count > 1]
     if len(metric_duplicates) > 0:
-        duplicate_names = " ".join(metric_duplicates)
+        duplicate_names = ", ".join(metric_duplicates)
         raise ValueError(f"Metrics must have unique names. Found duplicates: {duplicate_names}.")
 
     for group_name, seqs in sequences.items():
@@ -439,7 +439,7 @@ def show(
         fmts = []
         if color:
             objective = df.attrs["objective"][metric]
-            values = df[metric]["value"]
+            values = df[(metric, "value")]
             frac = _fraction(values.at[idx], values.min(), values.max(), objective)
             gradient = gradient_lerp(f"{color}00", f"{color}ff", frac)
             fmts += [f"background-color:{gradient}"]
@@ -454,7 +454,7 @@ def show(
         fmts = []
         if color:
             objective = df.attrs["objective"][metric]
-            values = df[metric]["value"]
+            values = df[(metric, "value")]
             frac = _fraction(values.at[idx], values.min(), values.max(), objective)
             if frac > 0:
                 width = f"{frac * 100:.1f}%"
@@ -843,7 +843,7 @@ def parallel_coordinates(
     normalized = {}
     ranges = {}
     for m in metric_names:
-        vals = df[m]["value"].values
+        vals = df[(m, "value")].values
         vmin, vmax = vals.min(), vals.max()
         ranges[m] = (vmin, vmax)
 
@@ -1016,8 +1016,8 @@ def plot_series(
         df_model = df_model.sort_index()
 
         xs = df_model.index
-        vs = df_model[metric]["value"]
-        dev = df_model[metric]["deviation"]
+        vs = df_model[(metric, "value")]
+        dev = df_model[(metric, "deviation")]
 
         lines = ax.plot(
             xs,
