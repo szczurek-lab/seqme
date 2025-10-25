@@ -701,7 +701,7 @@ def to_latex(
     output_path.write_text(latex_code)
 
 
-def barplot(
+def plot_bar(
     df: pd.DataFrame,
     metric: str,
     *,
@@ -771,7 +771,7 @@ def barplot(
         plt.show()
 
 
-def parallel_coordinates(
+def plot_parallel(
     df: pd.DataFrame,
     *,
     n_decimals: int | list[int] = 2,
@@ -949,7 +949,7 @@ def parallel_coordinates(
         plt.show()
 
 
-def plot_series(
+def plot_line(
     df: pd.DataFrame,
     metric: str,
     *,
@@ -1247,7 +1247,7 @@ def shuffle_characters(sequences: list[str], seed: int | None = 0) -> list[str]:
     return shuffled
 
 
-def random_subset(
+def sample_subset(
     sequences: list[str],
     n_samples: int,
     return_indices: bool = False,
