@@ -42,9 +42,9 @@ Run in a Jupyter notebook:
 import seqme as sm
 
 sequences = {
-    "Random": ["MKQW", "RKSPL"],
-    "UniProt": ["KKWQ", "RKSPL", "RASD"],
-    "HydrAMP": ["MMRK", "RKSPL", "RRLSK", "RRLSK"],
+    "DBAASP": ["PGLGFY", "AAVLNA", "LAHRYH"],
+    "UniProt": ["GFGD", "DPWDWV", "IEFFT"],
+    "HydrAMP": ["FGLGFF", "MSSILA", "LAHRYHW"],
 }
 
 cache = sm.Cache(
@@ -54,9 +54,9 @@ cache = sm.Cache(
 )
 
 metrics = [
-    sm.metrics.Uniqueness(),
+    sm.metrics.Diversity(),
     sm.metrics.Novelty(reference=sequences["UniProt"]),
-    sm.metrics.FBD(reference=sequences["Random"], embedder=cache.model("esm2")),
+    sm.metrics.FBD(reference=sequences["DBAASP"], embedder=cache.model("esm2")),
 ]
 
 df = sm.evaluate(sequences, metrics)
@@ -64,7 +64,7 @@ sm.show(df) # Note: Will only display the table in a notebook.
 ```
 
 <p align="center">
-    <img src="table.png" alt="seqme logo" width="35%">
+    <img src="table.png" alt="seqme logo" width="40%">
 </p>
 
 Check out the [docs](https://seqme.readthedocs.io/en/stable/tutorials/index.html) for in-depth tutorials and examples.
