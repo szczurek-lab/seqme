@@ -5,7 +5,7 @@ import numpy as np
 from sklearn.model_selection import KFold  # type: ignore
 from sklearn.neighbors import KernelDensity  # type: ignore
 
-from seqme.core import Metric, MetricResult
+from seqme.core.base import Metric, MetricResult
 
 
 class ConformityScore(Metric):

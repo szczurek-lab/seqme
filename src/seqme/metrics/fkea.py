@@ -5,7 +5,7 @@ from typing import Literal
 import numpy as np
 import torch
 
-from seqme.core import Metric, MetricResult
+from seqme.core.base import Metric, MetricResult
 
 
 class FourierBasedKernelEntropyApproximation(Metric):

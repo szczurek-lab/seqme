@@ -1,6 +1,6 @@
 from typing import Literal
 
-from seqme.core import Metric, MetricResult
+from seqme.core.base import Metric, MetricResult
 
 
 class Count(Metric):
