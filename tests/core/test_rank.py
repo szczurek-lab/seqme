@@ -70,3 +70,6 @@ def test_mean_rank_tie():
 
     df2 = sm.rank(df, tiebreak="mean-rank", name="Rank (mean-rank)", ties="dense")
     assert np.all(df2["Rank (mean-rank)"]["value"] == np.array([2, 3, 1, 2]))
+
+    df2 = sm.rank(df, tiebreak="mean-rank", name="Rank (mean-rank)", ties="auto")
+    assert np.all(df2["Rank (mean-rank)"]["value"] == np.array([2, 4, 1, 2]))

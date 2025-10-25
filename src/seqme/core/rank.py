@@ -15,7 +15,7 @@ def rank(
 ) -> pd.DataFrame:
     """Calculate the non-dominated rank of each entry using one or more metrics.
 
-    Overrides the column if it already exists.
+    If the column already exists, then don't use it to compute the rank unless explicitly selected in ``metrics``. Rank overrides the column ``name``if it already exists.
 
     Reference:
         - David Come and Joshua Knowles, *Techniques for Highly Multiobjective Optimisation: Some Nondominated Points are Better than Others* (https://arxiv.org/pdf/0908.3025.pdf)
@@ -26,7 +26,7 @@ def rank(
 
     Args:
         df: Metric dataframe.
-        metrics: Metrics for dominance-based comparison. If None, use all metrics in dataframe.
+        metrics: Metrics for dominance-based comparison. If None, use all metrics in dataframe (except the column with the same name if it exists).
         tiebreak: How to break ties when rows have same rank. If None, ranks correspond to each "peeled" Pareto set.
 
             - ``crowding-distance``: Crowding distance.
@@ -50,6 +50,9 @@ def rank(
 
     if metrics is None:
         metrics = df.columns.get_level_values(0).unique().tolist()
+
+        if name in metrics:
+            metrics.remove(name)
 
     for metric in metrics:
         if metric not in df.columns.get_level_values(0):
