@@ -8,8 +8,8 @@ from scipy.stats import spearmanr
 from sklearn.neighbors import NearestNeighbors
 
 
-def feature_alignment_score(xs: np.ndarray, labels: np.ndarray, n_neighbors: int = 5) -> float:
-    """Compute the feature alignment score of an embedding model.
+def knn_alignment_score(xs: np.ndarray, labels: np.ndarray, n_neighbors: int = 5) -> float:
+    """Compute the k-NN feature alignment score of an embedding model.
 
     Args:
         xs: Sequence embeddings.
@@ -28,7 +28,7 @@ def feature_alignment_score(xs: np.ndarray, labels: np.ndarray, n_neighbors: int
     return score.item()
 
 
-def spearman_correlation(xs_a: np.ndarray, xs_b: np.ndarray) -> float:
+def spearman_alignment_score(xs_a: np.ndarray, xs_b: np.ndarray) -> float:
     """Compute the Spearman correlation coefficient using the pairwise distance between embedding spaces.
 
     Args:
@@ -45,7 +45,7 @@ def spearman_correlation(xs_a: np.ndarray, xs_b: np.ndarray) -> float:
     return float(res.statistic)
 
 
-def plot_feature_alignment_score(
+def plot_knn_alignment_score(
     xs: np.ndarray,
     labels: np.ndarray,
     n_neighbors: list[int],
@@ -54,7 +54,7 @@ def plot_feature_alignment_score(
     ax: Axes = None,
 ):
     """
-    Plot the feature alignment score of an embedding model using variable-number of neighbors.
+    Plot the k-NN feature alignment score of an embedding model using variable-number of neighbors.
 
     Args:
         xs: Sequence embeddings.
@@ -65,7 +65,7 @@ def plot_feature_alignment_score(
         ax: Optional Axes.
 
     """
-    scores = [feature_alignment_score(xs, labels, k) for k in n_neighbors]
+    scores = [knn_alignment_score(xs, labels, k) for k in n_neighbors]
 
     created_fig = False
     if ax is None:

@@ -48,21 +48,6 @@ Functions for visual exploration and presentation of metrics.
     seqme.plot_line
     seqme.to_latex
 
-
-Sequence Operations
--------------------
-Helpers for generating, transforming, and exporting sequence data.
-
-.. autosummary::
-    :toctree:
-    :nosignatures:
-
-    seqme.shuffle_characters
-    seqme.sample_subset
-    seqme.to_fasta
-    seqme.read_fasta
-
-
 Input / Output
 --------------
 Functions for serializing and loading data and metric results.
@@ -73,3 +58,5 @@ Functions for serializing and loading data and metric results.
 
     seqme.to_pickle
     seqme.read_pickle
+    seqme.to_fasta
+    seqme.read_fasta
