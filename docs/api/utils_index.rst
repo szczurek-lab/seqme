@@ -27,4 +27,13 @@ Diagnostics
     seqme.utils.plot_knn_alignment_score
 
 
-    
+Sequence Operations
+-------------------
+Helpers for generating and transforming sequence data.
+
+.. autosummary::
+    :toctree:
+    :nosignatures:
+
+    seqme.utils.shuffle_characters
+    seqme.utils.sample_subset
