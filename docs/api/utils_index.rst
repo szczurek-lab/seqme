@@ -22,9 +22,9 @@ Diagnostics
     :toctree:
     :nosignatures:
 
-    seqme.utils.feature_alignment_score
-    seqme.utils.spearman_correlation
-    seqme.utils.plot_feature_alignment_score
+    seqme.utils.spearman_alignment_score
+    seqme.utils.knn_alignment_score
+    seqme.utils.plot_knn_alignment_score
 
 
     
