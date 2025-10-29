@@ -383,13 +383,13 @@ def show(
     Args:
         df: DataFrame with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], attributed with 'objective'.
         n_decimals: Decimal precision for formatting.
-        color: Color (hex) for highlighting best scores. If None, no coloring.
-        color_style: Style of the coloring. Ignored if color is None.
+        color: Color (hex) for highlighting best scores. If ``None``, no coloring.
+        color_style: Style of the coloring. Ignored if color is ``None``.
         notation: Whether to use scientific notation (exponent) or fixed-point notation (decimals).
         na_value: str to show for cells with no metric value, i.e., cells with NaN values.
         show_arrow: Whether to include the objective arrow in the column names.
         level: The tuple index-names level to consider as a group.
-        hline_level: When to add horizontal lines seperaing model names. If None, add horizontal lines at the first level if more than 1 level.
+        hline_level: When to add horizontal lines seperaing model names. If ``None``, add horizontal lines at the first level if more than 1 level.
         caption: Bottom caption text.
 
     Returns:
@@ -577,7 +577,7 @@ def to_latex(
         df: DataFrame with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], attributed with 'objective'.
         path: Output filename, e.g., "./path/table.tex".
         n_decimals: Decimal precision for formatting.
-        color: Color (hex) for highlighting best scores. If None, no coloring.
+        color: Color (hex) for highlighting best scores. If ``None``, no coloring.
         notation: Whether to use scientific notation (exponent) or fixed-point notation (decimals).
         na_value: str to show for cells with no metric value, i.e., cells with NaN values.
         show_arrow: Whether to include the objective arrow in the column names.
@@ -716,7 +716,7 @@ def plot_bar(
 
     Args:
         df: A DataFrame with a MultiIndex column [metric, {"value", "deviation"}].
-        metric: The name of the metric to plot.
+        metric: The name of the metric to plot. If ``None``, plot all metrics in ``df``, assumes one metric is in the dataframe.
         show_deviation: Whether to plot the deviation if available.
         color: Bar color. Default is teal.
         x_ticks_rotation: Rotation angle for x-axis labels.
@@ -798,15 +798,15 @@ def plot_parallel(
 
     Args:
         df: A DataFrame with a MultiIndex column [metric, {"value", "deviation"}].
-        metrics: Which metrics to plot. If None, plot all metrics in ``df``.
+        metrics: Which metrics to plot. If ``None``, plot all metrics in ``df``.
         n_decimals: Decimal precision for formatting.
-        x_ticks_fontsize: Font size of x-ticks. If None, selects default fontsize.
+        x_ticks_fontsize: Font size of x-ticks. If ``None``, selects default fontsize.
         x_ticks_rotation: Rotation angle for x-axis tick labels.
         y_ticks_fontsize: Font size of y-labels.
         show_yticks: Whether to you show the minimum and maximum value on the y-axis for each metric.
         show_arrow: Whether to show an arrow indicating maximize/minimize in the x-labels.
-        arrow_size: Size of arrows displayed in the plot. If None, do not show.
-        zero_width: Width of the zero value indicator. If None, do not show.
+        arrow_size: Size of arrows displayed in the plot. If ``None``, do not show.
+        zero_width: Width of the zero value indicator. If ``None``, do not show.
         x_pad: Left and right padding of axes.
         legend_loc: Legend location.
         figsize: Size of the figure.
@@ -981,12 +981,12 @@ def plot_line(
 
     Args:
         df: A DataFrame with a MultiIndex column [metric, {"value", "deviation"}].
-        metric: The name of the metric to plot.
+        metric: The name of the metric to plot. If ``None``, plot all metrics in ``df``, assumes one metric is in the dataframe.
         show_deviation: Whether to the plot deviation if available.
         linestyle: Series linestyle.
         color: Color for each series.
-        marker: Marker type for serie values. If None, no marker is shown.
-        marker_size: Size of marker. If None, auto-selects size.
+        marker: Marker type for serie values. If ``None``, no marker is shown.
+        marker_size: Size of marker. If ``None``, auto-selects size.
         xlabel: Name of x-label.
         alpha: opacity level of deviation intervals.
         show_arrow: Whether to show an arrow indicating maximize/minimize.
@@ -1102,12 +1102,12 @@ def plot_scatter(
 
     Args:
         df: A DataFrame with a MultiIndex column [metric, {"value", "deviation"}].
-        metrics: The name of the metrics to plot. If None, use all in ``df`` (must be two).
+        metrics: The name of the metrics to plot. If ``None``, plot all metrics in ``df``, assumes two metrics are in the dataframe.
         show_deviation: Whether to plot the deviation if available.
         color: Circle color.
         show_arrow: Whether to show an arrow indicating maximize/minimize in the x- and y-labels.
-        marker: Marker type for serie values. If None, no marker is shown.
-        marker_size: Size of marker. If None, auto-selects size.
+        marker: Marker type for serie values. If ``None``, no marker is shown.
+        marker_size: Size of marker. If ``None``, auto-selects size.
         linestyle: Series linestyle.
         alpha: opacity level of deviation intervals.
         linewidth: Line width of connected points.
