@@ -702,14 +702,14 @@ def to_latex(
 
 def plot_bar(
     df: pd.DataFrame,
-    metric: str,
+    metric: str | None = None,
     *,
     show_deviation: bool = True,
     color: str = "#68d6bc",
     x_ticks_rotation: float = 45,
     ylim: tuple[float, float] | None = None,
-    figsize: tuple[int, int] = (4, 3),
     show_arrow: bool = True,
+    figsize: tuple[int, int] = (4, 3),
     ax: Axes | None = None,
 ):
     """Plot a bar chart for a given metric with optional error bars.
@@ -721,11 +721,18 @@ def plot_bar(
         color: Bar color. Default is teal.
         x_ticks_rotation: Rotation angle for x-axis labels.
         ylim: y-axis limits (optional).
-        figsize: Size of the figure.
         show_arrow: Whether to show an arrow indicating maximize/minimize in the x-labels.
+        figsize: Size of the figure.
         ax: Optional matplotlib Axes to plot on.
     """
-    if metric not in df.columns.get_level_values(0):
+    available_metrics = list(df.columns.get_level_values(0).unique())
+    if metric is None:
+        if len(available_metrics) > 1:
+            raise ValueError("Specify the metric to use.")
+
+        metric = available_metrics[0]
+
+    if metric not in available_metrics:
         raise ValueError(f"'{metric}' is not a column in the DataFrame.")
 
     values = df[(metric, "value")]
@@ -772,10 +779,9 @@ def plot_bar(
 
 def plot_parallel(
     df: pd.DataFrame,
+    metrics: list[str] | None = None,
     *,
     n_decimals: int | list[int] = 2,
-    figsize: tuple[int, int] = (5, 3),
-    legend_loc: Literal["right margin"] | str | None = "right margin",
     x_ticks_fontsize: float | None = None,
     x_ticks_rotation: float = 90,
     y_ticks_fontsize: float = 8,
@@ -784,15 +790,16 @@ def plot_parallel(
     arrow_size: float | None = None,
     zero_width: float | None = 0.25,
     x_pad: float = 0.25,
+    legend_loc: Literal["right margin"] | str | None = "right margin",
+    figsize: tuple[int, int] = (5, 3),
     ax: Axes | None = None,
 ):
     """Plot a parallel coordinates plot where each coordinate is a metric.
 
     Args:
         df: A DataFrame with a MultiIndex column [metric, {"value", "deviation"}].
+        metrics: Which metrics to plot. If None, plot all metrics in ``df``.
         n_decimals: Decimal precision for formatting.
-        figsize: Size of the figure.
-        legend_loc: Legend location.
         x_ticks_fontsize: Font size of x-ticks. If None, selects default fontsize.
         x_ticks_rotation: Rotation angle for x-axis tick labels.
         y_ticks_fontsize: Font size of y-labels.
@@ -801,15 +808,21 @@ def plot_parallel(
         arrow_size: Size of arrows displayed in the plot. If None, do not show.
         zero_width: Width of the zero value indicator. If None, do not show.
         x_pad: Left and right padding of axes.
+        legend_loc: Legend location.
+        figsize: Size of the figure.
         ax: Optional matplotlib Axes to plot on.
     """
-    for idx in df.index:
-        vals = df.loc[idx, pd.IndexSlice[:, "value"]]  # type: ignore
-        if vals.isna().any():
-            raise ValueError(f"'{idx}' has NaN values.")
+    if metrics is None:
+        metrics = list(df.columns.get_level_values(0).unique())
 
-    metric_names = list(df.columns.get_level_values(0).unique())
-    n_metrics = len(metric_names)
+    if len(metrics) < 2:
+        raise ValueError("Expected at least two metrics.")
+
+    for metric in metrics:
+        if df[(metric, "value")].isna().any():
+            raise ValueError(f"'{metric}' has NaN values.")
+
+    n_metrics = len(metrics)
     n_decimals = [n_decimals] * n_metrics if isinstance(n_decimals, int) else n_decimals
 
     if len(n_decimals) != n_metrics:
@@ -841,7 +854,7 @@ def plot_parallel(
     # Normalize each metric separately
     normalized = {}
     ranges = {}
-    for m in metric_names:
+    for m in metrics:
         vals = df[(m, "value")].values
         vmin, vmax = vals.min(), vals.max()
         ranges[m] = (vmin, vmax)
@@ -852,11 +865,11 @@ def plot_parallel(
             normalized[m] = np.ones_like(vals) if objectives[m] == "maximize" else np.zeros_like(vals)
 
     for i, name in enumerate(names):
-        values = [normalized[m][i] for m in metric_names]
+        values = [normalized[m][i] for m in metrics]
         ax.plot(values, label=name)
 
     if zero_width:
-        for i, m in enumerate(metric_names):
+        for i, m in enumerate(metrics):
             vmin, vmax = ranges[m]
             if vmin <= 0 <= vmax:
                 ax.hlines(
@@ -868,7 +881,7 @@ def plot_parallel(
                     alpha=0.8,
                 )
 
-    for i, m in enumerate(metric_names):
+    for i, m in enumerate(metrics):
         vmin, vmax = ranges[m]
         ax2 = ax.twinx()
         ax2.set_ylim(0, 1)
@@ -888,11 +901,11 @@ def plot_parallel(
         ax.legend(loc=legend_loc)
 
     arrows = {"maximize": "↑", "minimize": "↓"}
-    xlabels = [f"{m}{arrows[objectives[m]]}" if show_arrow else m for m in metric_names]
+    xlabels = [f"{m}{arrows[objectives[m]]}" if show_arrow else m for m in metrics]
     ax.set_xticklabels(xlabels, rotation=x_ticks_rotation, ha="center", va="top", fontsize=x_ticks_fontsize)
 
     if arrow_size is not None:
-        for i, m in enumerate(metric_names):
+        for i, m in enumerate(metrics):
             vmin, vmax = ranges[m]
             y_min, y_max = ax.get_ylim()
 
@@ -917,7 +930,7 @@ def plot_parallel(
         auto_pad = y_ticks_fontsize + y_offset_bottom + x_label_y_pad
         ax.tick_params(axis="x", pad=auto_pad)
 
-        for i, m in enumerate(metric_names):
+        for i, m in enumerate(metrics):
             vmin, vmax = ranges[m]
 
             ax.text(
@@ -950,7 +963,7 @@ def plot_parallel(
 
 def plot_line(
     df: pd.DataFrame,
-    metric: str,
+    metric: str | None = None,
     *,
     show_deviation: bool = True,
     linestyle: str | list[str] = "-",
@@ -981,6 +994,13 @@ def plot_line(
         figsize: Size of the figure.
         ax: Optional matplotlib Axes to plot on.
     """
+    available_metrics = list(df.columns.get_level_values(0).unique())
+    if metric is None:
+        if len(available_metrics) > 1:
+            raise ValueError("Specify the metric to use.")
+
+        metric = available_metrics[0]
+
     if metric not in df.columns.get_level_values(0):
         raise ValueError(f"'{metric}' is not a column in the DataFrame.")
 
@@ -1061,10 +1081,161 @@ def plot_line(
         plt.show()
 
 
+def plot_scatter(
+    df: pd.DataFrame,
+    metrics: list[str] | tuple[str, str] | None = None,
+    *,
+    show_deviation: bool = True,
+    color: list[str] | None = None,
+    show_arrow: bool = True,
+    marker: str | None = "o",
+    marker_size: float | None = None,
+    linestyle: str | None = "--",
+    alpha: float = 0.5,
+    linewidth: float = 1.0,
+    outline_width: float = 1.0,
+    legend_loc: Literal["right margin"] | str | None = "right margin",
+    figsize: tuple[int, int] = (4, 3),
+    ax: Axes | None = None,
+):
+    """Plot a scatter plot for two metrics with optional error rectangles or bars.
+
+    Args:
+        df: A DataFrame with a MultiIndex column [metric, {"value", "deviation"}].
+        metrics: The name of the metrics to plot. If None, use all in ``df`` (must be two).
+        show_deviation: Whether to plot the deviation if available.
+        color: Circle color.
+        show_arrow: Whether to show an arrow indicating maximize/minimize in the x- and y-labels.
+        marker: Marker type for serie values. If None, no marker is shown.
+        marker_size: Size of marker. If None, auto-selects size.
+        linestyle: Series linestyle.
+        alpha: opacity level of deviation intervals.
+        linewidth: Line width of connected points.
+        outline_width: Deviation line width.
+        legend_loc: Legend location.
+        figsize: Size of the figure.
+        ax: Optional matplotlib Axes to plot on.
+    """
+    if metrics is None:
+        metrics = list(df.columns.get_level_values(0).unique())
+
+    if len(metrics) != 2:
+        raise ValueError(f"Expected two metrics, got {len(metrics)}.")
+
+    for metric in metrics:
+        if metric not in df.columns.get_level_values(0):
+            raise ValueError(f"'{metric}' is not a column in the DataFrame.")
+
+    for metric in metrics:
+        if df[(metric, "value")].isna().any():
+            raise ValueError(f"'{metric}' has NaN values.")
+
+    model_names = list(df.index.get_level_values(0).unique())
+
+    if color:
+        if len(color) != len(model_names):
+            raise ValueError(f"Expected a color for each entry. Got {len(color)}, expected {len(model_names)}.")
+
+    created_fig = False
+    if ax is None:
+        _, ax = plt.subplots(figsize=figsize)
+        created_fig = True
+
+    metric1, metric2 = metrics
+
+    for i, model_name in enumerate(model_names):
+        df_model = df.loc[model_name]
+        df_model = df_model.sort_index()
+
+        xs = np.array(df_model[(metric1, "value")])
+        ys = np.array(df_model[(metric2, "value")])
+
+        sc = ax.scatter(
+            xs,
+            ys,
+            marker=marker,
+            s=marker_size,
+            color=color[i] if color else None,
+            label=model_name,
+            zorder=2,
+        )
+
+        # @TODO: special identifier (circle) of iteration 1
+
+        if show_deviation:
+            c = color[i] if color else sc.get_facecolors()  # type: ignore
+
+            xs_dev = np.array(df_model[(metric1, "deviation")])
+            ys_dev = np.array(df_model[(metric2, "deviation")])
+
+            nan_xs_dev = np.isnan(xs_dev).any()
+            nan_ys_dev = np.isnan(ys_dev).any()
+
+            if (not nan_xs_dev) and (not nan_ys_dev):
+                fill_alpha = alpha * 0.5
+
+                for i in range(xs.size):
+                    w, h = xs_dev[i], ys_dev[i]
+                    x, y = xs[i] - w / 2, ys[i] - h / 2
+                    face_rect = mpl.patches.Rectangle(
+                        (x, y), w, h, linewidth=outline_width, facecolor=c, alpha=fill_alpha, zorder=0
+                    )
+                    edge_rect = mpl.patches.Rectangle(
+                        (x, y),
+                        w,
+                        h,
+                        linewidth=outline_width,
+                        edgecolor=c,
+                        facecolor="none",
+                        zorder=1,
+                        alpha=alpha,
+                    )
+                    ax.add_patch(face_rect)
+                    ax.add_patch(edge_rect)
+            elif (not nan_xs_dev) or (not nan_ys_dev):
+                if not nan_xs_dev:
+                    p1 = np.stack([xs - xs_dev, ys], axis=1)
+                    p2 = np.stack([xs + xs_dev, ys], axis=1)
+                else:
+                    p1 = np.stack([xs, ys - ys_dev], axis=1)
+                    p2 = np.stack([xs, ys + ys_dev], axis=1)
+
+                segments = np.stack([p1, p2], axis=1)
+                lc = mpl.collections.LineCollection(segments, colors=c, linewidths=linewidth, zorder=1, alpha=alpha)  # type: ignore
+                ax.add_collection(lc)
+
+        if linestyle and xs.size > 1:
+            ax.plot(xs, ys, color=c, linestyle=linestyle, zorder=0)  # type: ignore
+
+    arrows = {"maximize": "↑", "minimize": "↓"}
+
+    arrow1 = arrows[df.attrs["objective"][metric1]]
+    ax.set_xlabel(f"{metric1}{arrow1}" if show_arrow else metric1)
+
+    arrow2 = arrows[df.attrs["objective"][metric2]]
+    ax.set_ylabel(f"{metric2}{arrow2}" if show_arrow else metric2)
+
+    if legend_loc == "right margin":
+        ax.legend(
+            frameon=False,
+            loc="center left",
+            bbox_to_anchor=(1, 0.5),
+            ncol=(1 if len(model_names) <= 14 else 2 if len(model_names) <= 30 else 3),
+        )
+    else:
+        ax.legend(loc=legend_loc)
+
+    ax.grid(axis="both", linestyle="--", alpha=0.7)
+    ax.set_axisbelow(True)
+
+    if created_fig:
+        plt.show()
+
+
 class Cache:
     """Caches model-generated feature representations of sequences.
 
-    Allows storing and retrieving embeddings per model to avoid
+    Allows storing and retrieving representations per model to avoid
     recomputation, with support for adding models and precomputed values.
     """
 
@@ -1076,8 +1247,8 @@ class Cache:
         """Initialize the cache with optional models and precomputed representations.
 
         Args:
-            models: Mapping from model name to callable for generating embeddings.
-            init_cache: Initial cache of embeddings by model and sequence.
+            models: Mapping from model name to callable for generating representations.
+            init_cache: Initial cache of sequence feature representations by model and sequence.
         """
         self.model_to_callable = models.copy() if models else {}
         self.model_to_cache = init_cache.copy() if init_cache else {}
@@ -1087,17 +1258,17 @@ class Cache:
                 self.model_to_cache[name] = {}
 
     def __call__(self, sequences: list[str], model_name: str, stack: bool) -> list[Any] | np.ndarray:
-        """Return embeddings for the given sequences using the specified model.
+        """Return feature representations for the given sequences using the specified model.
 
         Uncached sequences are computed and stored.
 
         Args:
             sequences: List of input texts.
             model_name: Name of the model to use.
-            stack: Whether the embeddings should be stacked as a numpy array. If true then stack as a numpy array else return a list of embeddings.
+            stack: Whether the feature representations should be stacked as a numpy array. If true then stack as a numpy array else return a list of representations.
 
         Returns:
-            Embeddings in the same order as the input sequences.
+            Feature representations in the same order as the input sequences.
         """
         sequence_to_rep = self.model_to_cache[model_name]
 
@@ -1125,7 +1296,7 @@ class Cache:
 
         Args:
             model_name: Name of the model to use.
-            stack: Whether the embeddings should be stacked as a numpy array. If true then stack as a numpy array else return a list of embeddings.
+            stack: Whether the feature representations should be stacked as a numpy array. If true then stack as a numpy array else return a list of feature representations.
 
         Raises:
             ValueError: If the model is unknown.
@@ -1139,11 +1310,11 @@ class Cache:
         model_name: str,
         element: Callable[[list[str]], list[Any] | np.ndarray] | dict[str, Any],
     ):
-        """Add a new model or precomputed embeddings to the cache.
+        """Add a new model or precomputed representations to the cache.
 
         Args:
             model_name: Name of the model to use.
-            element: A callable embedding function or pre-computed (sequence, embedding) pairs.
+            element: A callable representations function or pre-computed (sequence, representation) pairs.
 
         Raises:
             ValueError: If the model already exists.
@@ -1185,7 +1356,7 @@ class Cache:
         """Return a copy of the current cache.
 
         Returns:
-            A nested dictionary of cached embeddings.
+            A nested dictionary of cached sequence representations.
         """
         return self.model_to_cache.copy()
 

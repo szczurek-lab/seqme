@@ -6,6 +6,8 @@ Plotting functionality for models mapping sequences to either embedding- or prop
 
 Projections
 -----------
+Projection and visualization of sequence embeddings.
+
 .. autosummary::
     :toctree:
     :nosignatures:
@@ -18,6 +20,8 @@ Projections
 
 Diagnostics
 -----------
+Helpers to select an appropriate embedding model.
+
 .. autosummary::
     :toctree:
     :nosignatures:

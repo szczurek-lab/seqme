@@ -15,7 +15,7 @@ def rank(
 ) -> pd.DataFrame:
     """Calculate the non-dominated rank of each entry using one or more metrics.
 
-    If the column already exists, then don't use it to compute the rank unless explicitly selected in ``metrics``. Rank overrides the column ``name``if it already exists.
+    If the column already exists, then don't use it to compute the rank unless explicitly selected in ``metrics``. Rank overrides the column ``name`` if it already exists.
 
     Reference:
         - David Come and Joshua Knowles, *Techniques for Highly Multiobjective Optimisation: Some Nondominated Points are Better than Others* (https://arxiv.org/pdf/0908.3025.pdf)

@@ -44,6 +44,7 @@ Functions for visual exploration and presentation of metrics.
 
     seqme.show
     seqme.plot_bar
+    seqme.plot_scatter
     seqme.plot_parallel
     seqme.plot_line
     seqme.to_latex
