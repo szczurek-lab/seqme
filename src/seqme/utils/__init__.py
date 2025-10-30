@@ -1,6 +1,6 @@
 from seqme.utils.diagnostics import knn_alignment_score, plot_knn_alignment_score, spearman_alignment_score
 from seqme.utils.projection import pca, plot_embeddings, tsne, umap
-from seqme.utils.sequences import sample_subset, shuffle_characters
+from seqme.utils.sequences import shuffle_characters, subsample
 
 __all__ = [
     "knn_alignment_score",
@@ -10,6 +10,6 @@ __all__ = [
     "pca",
     "tsne",
     "umap",
-    "sample_subset",
+    "subsample",
     "shuffle_characters",
 ]
