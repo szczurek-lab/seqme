@@ -78,7 +78,7 @@ class GENALM:
 
     Computes sequence-level embeddings by averaging token embeddings.
 
-    Installation: ``pip install 'seqme[genalm]'``
+    Installation: ``pip install "seqme[genalm]"``
 
     Reference:
         Fishman et al., "GENA-LM: a family of open-source foundational DNA language models for long sequences"

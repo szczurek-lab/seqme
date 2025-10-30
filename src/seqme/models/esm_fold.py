@@ -14,7 +14,7 @@ class ESMFold:
 
     The model predicts the 3D-structure (fold) of a protein sequence.
 
-    Installation: ``pip install 'seqme[esmfold]'``
+    Installation: ``pip install "seqme[esmfold]"``
 
     Reference:
         Lin et al., "Language models of protein sequences at the scale of evolution enable accurate structure prediction"
