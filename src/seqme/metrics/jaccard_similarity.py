@@ -16,7 +16,6 @@ class NGramJaccardSimilarity(Metric):
         n: int,
         *,
         objective: Literal["minimize", "maximize"] = "minimize",
-        reference_name: str | None = None,
         name: str = "Jaccard-similarity",
     ):
         """Initialize the metric.
@@ -25,12 +24,10 @@ class NGramJaccardSimilarity(Metric):
             reference: list of strings to build the reference n-gram set.
             n: size of the n-grams.
             objective: "minimize" to reward novelty, "maximize" to reward overlap.
-            reference_name: optional label; appended to the metric name.
             name: Metric name.
         """
         self.n = n
         self._objective = objective
-        self.data_name = reference_name
         self.reference_ngrams = self._make_ngram_set(reference)
         self._name = name
 

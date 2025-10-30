@@ -20,9 +20,7 @@ def test_ensemble_equal():
 def test_ensemble_weighted():
     sequences = ["KKK", "KKKK", "KKKKK"]
 
-    ensemble = sm.models.Ensemble(
-        [sm.models.Charge(), biased_model(sm.models.Charge(), offset=1)], importance_weights=[1, 2]
-    )
+    ensemble = sm.models.Ensemble([sm.models.Charge(), biased_model(sm.models.Charge(), offset=1)], weights=[1, 2])
     values = ensemble(sequences)
 
     assert values.shape == (3,)
