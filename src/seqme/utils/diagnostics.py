@@ -49,10 +49,10 @@ def plot_knn_alignment_score(
     xs: np.ndarray,
     labels: np.ndarray,
     n_neighbors: list[int],
-    label: str = None,
+    label: str | None = None,
     legend_loc: Literal["right margin"] | str | None = "right margin",
     figsize: tuple[int, int] = (4, 3),
-    ax: Axes = None,
+    ax: Axes | None = None,
 ):
     """
     Plot the k-NN feature alignment score of an embedding model using variable-number of neighbors.

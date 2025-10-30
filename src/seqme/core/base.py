@@ -361,9 +361,9 @@ def top_k(
 def show(
     df: pd.DataFrame,
     *,
-    n_decimals: int | list[int] = 2,
     color: str | None = "#68d6bc",
     color_style: Literal["solid", "gradient", "bar"] = "solid",
+    n_decimals: int | list[int] = 2,
     notation: Literal["decimals", "exponent"] | list[Literal["decimals", "exponent"]] = "decimals",
     na_value: str = "-",
     show_arrow: bool = True,
@@ -382,9 +382,9 @@ def show(
 
     Args:
         df: DataFrame with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], attributed with 'objective'.
-        n_decimals: Decimal precision for formatting.
         color: Color (hex) for highlighting best scores. If ``None``, no coloring.
         color_style: Style of the coloring. Ignored if color is ``None``.
+        n_decimals: Decimal precision for formatting.
         notation: Whether to use scientific notation (exponent) or fixed-point notation (decimals).
         na_value: str to show for cells with no metric value, i.e., cells with NaN values.
         show_arrow: Whether to include the objective arrow in the column names.
@@ -564,8 +564,8 @@ def to_latex(
     df: pd.DataFrame,
     path: str | Path,
     *,
-    n_decimals: int | list[int] = 2,
     color: str | None = None,
+    n_decimals: int | list[int] = 2,
     notation: Literal["decimals", "exponent"] | list[Literal["decimals", "exponent"]] = "decimals",
     na_value: str = "-",
     show_arrow: bool = True,
@@ -576,8 +576,8 @@ def to_latex(
     Args:
         df: DataFrame with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], attributed with 'objective'.
         path: Output filename, e.g., "./path/table.tex".
-        n_decimals: Decimal precision for formatting.
         color: Color (hex) for highlighting best scores. If ``None``, no coloring.
+        n_decimals: Decimal precision for formatting.
         notation: Whether to use scientific notation (exponent) or fixed-point notation (decimals).
         na_value: str to show for cells with no metric value, i.e., cells with NaN values.
         show_arrow: Whether to include the objective arrow in the column names.
@@ -704,11 +704,11 @@ def plot_bar(
     df: pd.DataFrame,
     metric: str | None = None,
     *,
-    show_deviation: bool = True,
     color: str = "#68d6bc",
-    x_ticks_rotation: float = 45,
+    xticks_rotation: float = 45,
     ylim: tuple[float, float] | None = None,
     show_arrow: bool = True,
+    show_deviation: bool = True,
     figsize: tuple[int, int] = (4, 3),
     ax: Axes | None = None,
 ):
@@ -717,11 +717,11 @@ def plot_bar(
     Args:
         df: A DataFrame with a MultiIndex column [metric, {"value", "deviation"}].
         metric: The name of the metric to plot. If ``None``, plot all metrics in ``df``, assumes one metric is in the dataframe.
-        show_deviation: Whether to plot the deviation if available.
         color: Bar color. Default is teal.
-        x_ticks_rotation: Rotation angle for x-axis labels.
+        xticks_rotation: Rotation angle for x-axis labels.
         ylim: y-axis limits (optional).
         show_arrow: Whether to show an arrow indicating maximize/minimize in the x-labels.
+        show_deviation: Whether to plot the deviation if available.
         figsize: Size of the figure.
         ax: Optional matplotlib Axes to plot on.
     """
@@ -763,7 +763,7 @@ def plot_bar(
     arrow = arrows[df.attrs["objective"][metric]]
 
     ax.set_xticks(range(len(values)))
-    ax.set_xticklabels(bar_names, rotation=x_ticks_rotation, ha="center")
+    ax.set_xticklabels(bar_names, rotation=xticks_rotation, ha="center")
 
     ax.set_ylabel(f"{metric}{arrow}" if show_arrow else metric)
 
@@ -782,14 +782,14 @@ def plot_parallel(
     metrics: list[str] | None = None,
     *,
     n_decimals: int | list[int] = 2,
-    x_ticks_fontsize: float | None = None,
-    x_ticks_rotation: float = 90,
-    y_ticks_fontsize: float = 8,
+    xticks_fontsize: float | None = None,
+    xticks_rotation: float = 90,
+    yticks_fontsize: float = 8,
     show_yticks: bool = True,
     show_arrow: bool = True,
     arrow_size: float | None = None,
     zero_width: float | None = 0.25,
-    x_pad: float = 0.25,
+    xpad: float = 0.25,
     legend_loc: Literal["right margin"] | str | None = "right margin",
     figsize: tuple[int, int] = (5, 3),
     ax: Axes | None = None,
@@ -799,15 +799,15 @@ def plot_parallel(
     Args:
         df: A DataFrame with a MultiIndex column [metric, {"value", "deviation"}].
         metrics: Which metrics to plot. If ``None``, plot all metrics in ``df``.
-        n_decimals: Decimal precision for formatting.
-        x_ticks_fontsize: Font size of x-ticks. If ``None``, selects default fontsize.
-        x_ticks_rotation: Rotation angle for x-axis tick labels.
-        y_ticks_fontsize: Font size of y-labels.
+        n_decimals: Decimal precision for formatting metric values.
+        xticks_fontsize: Font size of x-ticks. If ``None``, selects default fontsize.
+        xticks_rotation: Rotation angle for x-axis tick labels.
+        yticks_fontsize: Font size of y-ticks.
         show_yticks: Whether to you show the minimum and maximum value on the y-axis for each metric.
         show_arrow: Whether to show an arrow indicating maximize/minimize in the x-labels.
         arrow_size: Size of arrows displayed in the plot. If ``None``, do not show.
         zero_width: Width of the zero value indicator. If ``None``, do not show.
-        x_pad: Left and right padding of axes.
+        xpad: Left and right padding of axes.
         legend_loc: Legend location.
         figsize: Size of the figure.
         ax: Optional matplotlib Axes to plot on.
@@ -841,7 +841,7 @@ def plot_parallel(
         _, ax = plt.subplots(figsize=figsize)
         created_fig = True
 
-    ax.set_xlim(0 - x_pad, n_metrics - 1 + x_pad)
+    ax.set_xlim(0 - xpad, n_metrics - 1 + xpad)
     ax.set_xticks(range(n_metrics))
 
     ax.set_yticklabels([])
@@ -902,7 +902,7 @@ def plot_parallel(
 
     arrows = {"maximize": "↑", "minimize": "↓"}
     xlabels = [f"{m}{arrows[objectives[m]]}" if show_arrow else m for m in metrics]
-    ax.set_xticklabels(xlabels, rotation=x_ticks_rotation, ha="center", va="top", fontsize=x_ticks_fontsize)
+    ax.set_xticklabels(xlabels, rotation=xticks_rotation, ha="center", va="top", fontsize=xticks_fontsize)
 
     if arrow_size is not None:
         for i, m in enumerate(metrics):
@@ -927,7 +927,7 @@ def plot_parallel(
         y_offset_bottom = 0.1 * (y_max - y_min) / figsize[1]
 
         x_label_y_pad = 0.5
-        auto_pad = y_ticks_fontsize + y_offset_bottom + x_label_y_pad
+        auto_pad = yticks_fontsize + y_offset_bottom + x_label_y_pad
         ax.tick_params(axis="x", pad=auto_pad)
 
         for i, m in enumerate(metrics):
@@ -939,7 +939,7 @@ def plot_parallel(
                 f"{vmax:.{n_decimals[i]}f}",
                 ha="center",
                 va="bottom",
-                fontsize=y_ticks_fontsize,
+                fontsize=yticks_fontsize,
                 color="black",
                 clip_on=False,
                 fontweight="bold" if objectives[m] == "maximize" else None,
@@ -951,7 +951,7 @@ def plot_parallel(
                 f"{vmin:.{n_decimals[i]}f}",
                 ha="center",
                 va="top",
-                fontsize=y_ticks_fontsize,
+                fontsize=yticks_fontsize,
                 color="black",
                 clip_on=False,
                 fontweight="bold" if objectives[m] == "minimize" else None,
@@ -965,14 +965,14 @@ def plot_line(
     df: pd.DataFrame,
     metric: str | None = None,
     *,
-    show_deviation: bool = True,
-    linestyle: str | list[str] = "-",
     color: list[str] | None = None,
+    xlabel: str = "Iteration",
+    linestyle: str | list[str] = "-",
+    show_arrow: bool = True,
     marker: str | None = "x",
     marker_size: float | None = None,
-    xlabel: str = "Iteration",
-    alpha: float = 0.4,
-    show_arrow: bool = True,
+    show_deviation: bool = True,
+    deviation_alpha: float = 0.4,
     legend_loc: Literal["right margin"] | str | None = "right margin",
     figsize: tuple[int, int] = (4, 3),
     ax: Axes | None = None,
@@ -982,14 +982,14 @@ def plot_line(
     Args:
         df: A DataFrame with a MultiIndex column [metric, {"value", "deviation"}].
         metric: The name of the metric to plot. If ``None``, plot all metrics in ``df``, assumes one metric is in the dataframe.
-        show_deviation: Whether to the plot deviation if available.
-        linestyle: Series linestyle.
         color: Color for each series.
+        xlabel: Name of x-label.
+        linestyle: Series linestyle.
+        show_arrow: Whether to show an arrow indicating maximize/minimize.
         marker: Marker type for serie values. If ``None``, no marker is shown.
         marker_size: Size of marker. If ``None``, auto-selects size.
-        xlabel: Name of x-label.
-        alpha: opacity level of deviation intervals.
-        show_arrow: Whether to show an arrow indicating maximize/minimize.
+        show_deviation: Whether to the plot deviation if available.
+        deviation_alpha: opacity level of deviation intervals.
         legend_loc: Legend location.
         figsize: Size of the figure.
         ax: Optional matplotlib Axes to plot on.
@@ -1050,7 +1050,7 @@ def plot_line(
 
         if show_deviation:
             c = lines[0].get_color()
-            ax.fill_between(xs, vs - dev, vs + dev, alpha=alpha, color=c)
+            ax.fill_between(xs, vs - dev, vs + dev, alpha=deviation_alpha, color=c)
 
     objective = df.attrs["objective"][metric]
     arrows = {"maximize": "↑", "minimize": "↓"}
@@ -1085,15 +1085,15 @@ def plot_scatter(
     df: pd.DataFrame,
     metrics: list[str] | tuple[str, str] | None = None,
     *,
-    show_deviation: bool = True,
     color: list[str] | None = None,
     show_arrow: bool = True,
     marker: str | None = "o",
     marker_size: float | None = None,
     linestyle: str | None = "--",
-    alpha: float = 0.5,
     linewidth: float = 1.0,
-    outline_width: float = 1.0,
+    show_deviation: bool = True,
+    deviation_alpha: float = 0.5,
+    deviation_linewidth: float = 1.0,
     legend_loc: Literal["right margin"] | str | None = "right margin",
     figsize: tuple[int, int] = (4, 3),
     ax: Axes | None = None,
@@ -1103,15 +1103,15 @@ def plot_scatter(
     Args:
         df: A DataFrame with a MultiIndex column [metric, {"value", "deviation"}].
         metrics: The name of the metrics to plot. If ``None``, plot all metrics in ``df``, assumes two metrics are in the dataframe.
-        show_deviation: Whether to plot the deviation if available.
         color: Circle color.
         show_arrow: Whether to show an arrow indicating maximize/minimize in the x- and y-labels.
         marker: Marker type for serie values. If ``None``, no marker is shown.
         marker_size: Size of marker. If ``None``, auto-selects size.
         linestyle: Series linestyle. If ``None``, dont show connecting lines.
-        alpha: opacity level of deviation intervals.
         linewidth: Line width of connected points.
-        outline_width: Deviation line width.
+        show_deviation: Whether to plot the deviation if available.
+        deviation_alpha: opacity level of deviation intervals.
+        deviation_linewidth: Deviation line width.
         legend_loc: Legend location.
         figsize: Size of the figure.
         ax: Optional matplotlib Axes to plot on.
@@ -1170,23 +1170,23 @@ def plot_scatter(
             nan_ys_dev = np.isnan(ys_dev).any()
 
             if (not nan_xs_dev) and (not nan_ys_dev):
-                fill_alpha = alpha * 0.5
+                fill_alpha = deviation_alpha * 0.5
 
                 for i in range(xs.size):
                     w, h = xs_dev[i], ys_dev[i]
                     x, y = xs[i] - w / 2, ys[i] - h / 2
                     face_rect = mpl.patches.Rectangle(
-                        (x, y), w, h, linewidth=outline_width, facecolor=c, alpha=fill_alpha, zorder=0
+                        (x, y), w, h, linewidth=deviation_linewidth, facecolor=c, alpha=fill_alpha, zorder=0
                     )
                     edge_rect = mpl.patches.Rectangle(
                         (x, y),
                         w,
                         h,
-                        linewidth=outline_width,
+                        linewidth=deviation_linewidth,
                         edgecolor=c,
                         facecolor="none",
                         zorder=1,
-                        alpha=alpha,
+                        alpha=deviation_alpha,
                     )
                     ax.add_patch(face_rect)
                     ax.add_patch(edge_rect)
@@ -1199,7 +1199,13 @@ def plot_scatter(
                     p2 = np.stack([xs, ys + ys_dev], axis=1)
 
                 segments = np.stack([p1, p2], axis=1)
-                lc = mpl.collections.LineCollection(segments, colors=c, linewidths=linewidth, zorder=1, alpha=alpha)  # type: ignore
+                lc = mpl.collections.LineCollection(
+                    segments,  # type: ignore
+                    colors=c,
+                    linewidths=linewidth,
+                    zorder=1,
+                    alpha=deviation_alpha,
+                )
                 ax.add_collection(lc)
 
         if linestyle and xs.size > 1:
