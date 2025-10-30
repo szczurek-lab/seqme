@@ -26,8 +26,8 @@ def rank(
 
     Args:
         df: Metric dataframe.
-        metrics: Metrics for dominance-based comparison. If None, use all metrics in dataframe (except the column with the same name if it exists).
-        tiebreak: How to break ties when rows have same rank. If None, ranks correspond to each "peeled" Pareto set.
+        metrics: Metrics for dominance-based comparison. If ``None``, use all metrics in dataframe (except the column with the same name if it exists).
+        tiebreak: How to break ties when rows have same rank. If ``None``, ranks correspond to each "peeled" Pareto set.
 
             - ``crowding-distance``: Crowding distance.
             - ``mean-rank``: Mean rank.

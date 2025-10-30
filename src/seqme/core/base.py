@@ -1108,7 +1108,7 @@ def plot_scatter(
         show_arrow: Whether to show an arrow indicating maximize/minimize in the x- and y-labels.
         marker: Marker type for serie values. If ``None``, no marker is shown.
         marker_size: Size of marker. If ``None``, auto-selects size.
-        linestyle: Series linestyle.
+        linestyle: Series linestyle. If ``None``, dont show connecting lines.
         alpha: opacity level of deviation intervals.
         linewidth: Line width of connected points.
         outline_width: Deviation line width.
@@ -1160,11 +1160,9 @@ def plot_scatter(
             zorder=2,
         )
 
-        # @TODO: special identifier (circle) of iteration 1
+        c = color[i] if color else sc.get_facecolors()  # type: ignore
 
         if show_deviation:
-            c = color[i] if color else sc.get_facecolors()  # type: ignore
-
             xs_dev = np.array(df_model[(metric1, "deviation")])
             ys_dev = np.array(df_model[(metric2, "deviation")])
 
