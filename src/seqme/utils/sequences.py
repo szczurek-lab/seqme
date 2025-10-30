@@ -23,7 +23,7 @@ def shuffle_characters(sequences: list[str], seed: int | None = 0) -> list[str]:
     return shuffled
 
 
-def sample_subset(
+def subsample(
     sequences: list[str],
     n_samples: int,
     *,

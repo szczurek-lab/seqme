@@ -40,4 +40,4 @@ Helpers for generating and transforming sequence data.
     :nosignatures:
 
     seqme.utils.shuffle_characters
-    seqme.utils.sample_subset
+    seqme.utils.subsample
