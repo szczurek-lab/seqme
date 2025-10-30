@@ -26,6 +26,7 @@ def shuffle_characters(sequences: list[str], seed: int | None = 0) -> list[str]:
 def sample_subset(
     sequences: list[str],
     n_samples: int,
+    *,
     return_indices: bool = False,
     seed: int | None = 0,
 ) -> list[str] | tuple[list[str], np.ndarray]:

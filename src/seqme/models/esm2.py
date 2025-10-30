@@ -55,8 +55,8 @@ class ESM2:
         *,
         device: str | None = None,
         batch_size: int = 256,
-        verbose: bool = False,
         cache_dir: str | None = None,
+        verbose: bool = False,
     ):
         """
         Initialize the ESM2 model.
@@ -65,8 +65,8 @@ class ESM2:
             model_name: Model checkpoint name or enum.
             device: Device to run inference on, e.g., "cuda" or "cpu".
             batch_size: Number of sequences to process per batch.
-            verbose: Whether to display a progress bar.
             cache_dir: Directory to cache the model.
+            verbose: Whether to display a progress bar.
         """
         if isinstance(model_name, ESM2Checkpoint):
             model_name = model_name.value

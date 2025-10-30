@@ -17,14 +17,14 @@ def plot_embeddings(
     title: str | None = None,
     xlabel: str = "dim1",
     ylabel: str = "dim2",
-    figsize: tuple[int, int] = (4, 3),
     outline_width: float = 0,
     point_size: float = 20,
     show_legend: bool = True,
-    legend_loc: Literal["right margin"] | str | None = "right margin",
     legend_point_size: float | None = 20,
     alpha: float = 0.6,
     show_ticks: bool = False,
+    legend_loc: Literal["right margin"] | str | None = "right margin",
+    figsize: tuple[int, int] = (4, 3),
     ax: Axes | None = None,
 ):
     """Plot projections for one or more groups.
@@ -35,17 +35,17 @@ def plot_embeddings(
         colors: Colors for each group of points.
         cmap: Colors used for values.
         title: Optional plot title.
-        ax: Optional matplotlib Axes to plot on.
         xlabel: x-axis label.
         ylabel: y-axis label.
-        figsize: Size of the figure (if no Axes provided).
         outline_width: Width of the outline around points.
         point_size: Size of scatter points.
         show_legend: Whether to show legend (only for categorical data).
-        legend_loc: Legend location.
         legend_point_size: Size of scatter points in the legend.
         alpha: Transparency of points.
         show_ticks: Whether to show axis ticks.
+        legend_loc: Legend location.
+        figsize: Size of the figure (if no Axes provided).
+        ax: Optional matplotlib Axes to plot on.
     """
     # try making the parameters lists then parse those normally.
 
@@ -209,7 +209,7 @@ def tsne(embeddings: np.ndarray | list[np.ndarray], seed: int | None = 42) -> np
     return _tsne(embeddings)
 
 
-def umap(embeddings: np.ndarray | list[np.ndarray], seed: int = 42) -> np.ndarray | list[np.ndarray]:
+def umap(embeddings: np.ndarray | list[np.ndarray], seed: int | None = 42) -> np.ndarray | list[np.ndarray]:
     """Project embeddings into 2D using UMAP.
 
     Args:

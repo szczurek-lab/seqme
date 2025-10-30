@@ -51,6 +51,7 @@ def plot_knn_alignment_score(
     n_neighbors: list[int],
     label: str = None,
     legend_loc: Literal["right margin"] | str | None = "right margin",
+    figsize: tuple[int, int] = (4, 3),
     ax: Axes = None,
 ):
     """
@@ -62,6 +63,7 @@ def plot_knn_alignment_score(
         n_neighbors: Number of neighbors used by k-NN.
         label: Model name.
         legend_loc: Legend location.
+        figsize: Size of the figure.
         ax: Optional Axes.
 
     """
@@ -69,7 +71,7 @@ def plot_knn_alignment_score(
 
     created_fig = False
     if ax is None:
-        _, ax = plt.subplots(figsize=(4, 3))
+        _, ax = plt.subplots(figsize=figsize)
         created_fig = True
 
     ax.plot(n_neighbors, scores, label=label)
