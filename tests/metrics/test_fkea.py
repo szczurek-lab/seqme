@@ -78,7 +78,7 @@ def test_vendi_different_lengths(shifted_embedder):
 
 
 def test_invalid_alpha(shifted_embedder):
-    with pytest.raises(ValueError, match=r"^Expected alpha >= 1.$"):
+    with pytest.raises(ValueError, match=r"^Expected alpha > 0.$"):
         FKEA(embedder=shifted_embedder, bandwidth=2.0, n_random_fourier_features=32, alpha=0.0)
 
 

@@ -67,8 +67,8 @@ class FourierBasedKernelEntropyApproximation(Metric):
 
         self._n_sequences: int | None = None
 
-        if self.alpha < 1:
-            raise ValueError("Expected alpha >= 1.")
+        if self.alpha <= 0:
+            raise ValueError("Expected alpha > 0.")
 
     def __call__(self, sequences: list[str]) -> MetricResult:
         """Computes FKEA of the input sequences.
@@ -144,9 +144,6 @@ def calculate_fourier_vendi(
 
 def _calculate_renyi_entropy(eigenvalues: torch.Tensor, alpha: float | int = 2, eps: float = 1e-8) -> float:
     eigenvalues = torch.clamp(eigenvalues, min=eps)
-
-    if alpha < 1:
-        raise ValueError("Expected alpha >= 1.")
 
     if alpha == math.inf:
         score = 1 / torch.max(eigenvalues)

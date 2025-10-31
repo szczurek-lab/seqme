@@ -33,7 +33,7 @@ class Hypervolume(Metric):
 
             nadir: Worst acceptable value in each objective dimension.
             ideal: Best value in each objective dimension (used for normalizing points to [0;1]).
-            strict: If true and values < ``nadir`` (or values > ``ideal``) raise an exception.
+            strict: If ``True`` and values < ``nadir`` (or values > ``ideal``) raise an exception.
             name: Metric name.
         """
         self.predictors = predictors
@@ -78,7 +78,7 @@ def calculate_hypervolume(
         nadir: Reference point (worse than or equal to all actual points).
         ideal: Best value in each objective dimension (used for normalizing points to [0;1]).
         method: Either hypervolume indicator ("hvi") or "convex-hull".
-        strict: If true, if values < nadir (or values > ideal) raise an exception.
+        strict: If ``True``, if values < ``nadir`` (or values > ``ideal``) raise an exception.
 
     Returns:
         Hypervolume
