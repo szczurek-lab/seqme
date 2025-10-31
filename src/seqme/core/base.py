@@ -139,14 +139,14 @@ def combine(
         dfs: List of DataFrames, each with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], and an 'objective' attribute.
         on_overlap: How to handle cells with multiple values.
 
-            - "fail": raises an exception on overlap.
-            - "mean,std": sets the cell value to the mean and the deviation to the std of the values.
+            - ``'fail'``: raises an exception on overlap.
+            - ``'mean,std'``: sets the cell value to the mean and the deviation to the std of the values.
 
     Returns:
         A single DataFrame combining multiple metric dataframes.
 
     Raises:
-        ValueError: If dfs is empty, any DataFrame lacks 'objective', objectives conflict, or potentially overlapping non-null cells.
+        ValueError: If ``dfs`` is empty, any DataFrame lacks 'objective', objectives conflict, or potentially overlapping non-null cells.
     """
     if not dfs:
         raise ValueError("The list of DataFrames is empty.")
@@ -240,7 +240,7 @@ def rename(df: pd.DataFrame, metrics: dict[str, str]) -> pd.DataFrame:
         A copy of the original dataframe with the metrics (columns) renamed.
 
     Raises:
-        ValueError: If an `old` metric name is not present in the `df`, or if a `new` name would create a duplicate objective key.
+        ValueError: If an `old` metric name is not present in the ``df``, or if a `new` name would create a duplicate objective key.
     """
     old_metrics = pd.unique(df.columns.get_level_values(0)).tolist()
     old_objectives = {metric: df.attrs["objective"][metric] for metric in old_metrics}
@@ -386,7 +386,7 @@ def show(
         color_style: Style of the coloring. Ignored if color is ``None``.
         n_decimals: Decimal precision for formatting.
         notation: Whether to use scientific notation (exponent) or fixed-point notation (decimals).
-        na_value: str to show for cells with no metric value, i.e., cells with NaN values.
+        na_value: string to show for cells with no metric value, i.e., cells with NaN values.
         show_arrow: Whether to include the objective arrow in the column names.
         level: The tuple index-names level to consider as a group.
         hline_level: When to add horizontal lines seperaing model names. If ``None``, add horizontal lines at the first level if more than 1 level.
@@ -575,7 +575,7 @@ def to_latex(
 
     Args:
         df: DataFrame with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], attributed with 'objective'.
-        path: Output filename, e.g., "./path/table.tex".
+        path: Output filename, e.g., ``"./path/table.tex"``.
         color: Color (hex) for highlighting best scores. If ``None``, no coloring.
         n_decimals: Decimal precision for formatting.
         notation: Whether to use scientific notation (exponent) or fixed-point notation (decimals).
@@ -1267,7 +1267,7 @@ class Cache:
         Uncached sequences are computed and stored.
 
         Args:
-            sequences: List of input texts.
+            sequences: List of text sequences.
             model_name: Name of the model to use.
             stack: Whether the feature representations should be stacked as a numpy array. If true then stack as a numpy array else return a list of representations.
 
@@ -1445,7 +1445,7 @@ def to_fasta(sequences: list[str], path: str | Path, *, headers: list[str] | Non
 
     Args:
        sequences: List of text sequences.
-       path: Output filepath, e.g., "/path/seqs.fasta".
+       path: Output filepath, e.g., ``"/path/seqs.fasta"``.
        headers: Optional sequence names.
     """
     if headers is not None and len(headers) != len(sequences):
@@ -1487,7 +1487,7 @@ def to_pickle(content: Any, path: str | Path):
 
     Args:
        content: Pickable object.
-       path: Output filepath, e.g., "/path/cache.pkl".
+       path: Output filepath, e.g., ``"/path/cache.pkl"``.
     """
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)

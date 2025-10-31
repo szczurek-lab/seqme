@@ -36,7 +36,7 @@ class RNAFM:
 
         Args:
             model_name: Either a mRNA or ncRNA checkpoint.
-            device: Device to run inference on, e.g., "cuda" or "cpu".
+            device: Device to run inference on, e.g., ``"cuda"`` or ``"cpu"``.
             batch_size: Number of sequences to process per batch.
             verbose: Whether to display a progress bar.
         """

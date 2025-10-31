@@ -63,7 +63,7 @@ class ESM2:
 
         Args:
             model_name: Model checkpoint name or enum.
-            device: Device to run inference on, e.g., "cuda" or "cpu".
+            device: Device to run inference on, e.g., ``"cuda"`` or ``"cpu"``.
             batch_size: Number of sequences to process per batch.
             cache_dir: Directory to cache the model.
             verbose: Whether to display a progress bar.

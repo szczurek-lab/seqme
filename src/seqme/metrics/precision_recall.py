@@ -37,8 +37,8 @@ class Precision(Metric):
             reference: List of reference sequences to build the reference manifold.
             embedder: Function that maps sequences to embeddings.
             batch_size: Number of samples per batch when computing distances by rows.
-            device: Compute device, e.g., "cpu" or "cuda".
-            strict: Enforce equal number of eval and reference samples if True.
+            device: Compute device, e.g., ``"cpu"`` or ``"cuda"``.
+            strict: Enforce equal number of eval and reference samples if ``True``.
             name: Metric name
         """
         self.n_neighbors = n_neighbors
@@ -121,8 +121,8 @@ class Recall(Metric):
             reference: List of reference sequences to build the reference manifold.
             embedder: Function that maps sequences to embeddings.
             batch_size: Number of samples per batch when computing distances by rows.
-            device: Compute device, e.g., "cpu" or "cuda".
-            strict: Enforce equal number of eval and reference samples if True.
+            device: Compute device, e.g., ``"cpu"`` or ``"cuda"``.
+            strict: Enforce equal number of eval and reference samples if ``True``.
             name: Metric name.
         """
         self.n_neighbors = n_neighbors
