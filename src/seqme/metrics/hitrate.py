@@ -15,7 +15,7 @@ class HitRate(Metric):
 
         Args:
             condition_fn: A function that takes a list of sequences and returns
-                       a boolean NumPy array of the same length, where True
+                       a boolean NumPy array of the same length, where ``True``
                        indicates a “hit” for that sequence.
             name: Name of the metric.
         """

@@ -29,16 +29,16 @@ def rank(
         metrics: Metrics for dominance-based comparison. If ``None``, use all metrics in dataframe (except the column with the same name if it exists).
         tiebreak: How to break ties when rows have same rank. If ``None``, ranks correspond to each "peeled" Pareto set.
 
-            - ``crowding-distance``: Crowding distance.
-            - ``mean-rank``: Mean rank.
+            - ``'crowding-distance'``: Crowding distance.
+            - ``'mean-rank'``: Mean rank.
 
         ties: How to do rank numbering when there are ties.
 
-            - ``min``: ``[1, 2, 2, 4]``-ranking
-            - ``max``: ``[1, 3, 3, 4]``-ranking
-            - ``mean``: ``[1, 2.5, 2.5, 4]``-ranking
-            - ``dense``: ``[1, 2, 2, 3]``-ranking
-            - ``auto``: ``dense`` if ``tiebreak`` is ``None`` else ``min``
+            - ``'min'``: ``[1, 2, 2, 4]``-ranking
+            - ``'max'``: ``[1, 3, 3, 4]``-ranking
+            - ``'mean'``: ``[1, 2.5, 2.5, 4]``-ranking
+            - ``'dense'``: ``[1, 2, 2, 3]``-ranking
+            - ``'auto'``: ``'dense'`` if ``tiebreak`` is ``None`` else ``'min'``
 
         name: Name of metric.
 

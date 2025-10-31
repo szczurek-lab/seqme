@@ -17,7 +17,6 @@ from seqme.models.physicochemical import (
     IsoelectricPoint,
     ProteinWeight,
 )
-from seqme.models.prost_t5 import ProstT5
 from seqme.models.rna_fm import RNAFM
 from seqme.models.third_party import ThirdPartyModel
 
@@ -42,7 +41,6 @@ __all__ = [
     "HyformerCheckpoint",
     "KmerFrequencyEmbedding",
     "PCA",
-    "ProstT5",
     "RNAFM",
     "ThirdPartyModel",
 ]

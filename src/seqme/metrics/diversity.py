@@ -22,8 +22,8 @@ class Diversity(Metric):
 
         Args:
             reference: Reference sequences to compare against. If ``None``, compare against other sequences within `sequences`.
-            k: If not ``None`` randomly sample `k` other sequences to compute diversity against.
-            seed: For reproducibility. Only used if k is not ``None``.
+            k: If not ``None`` randomly sample ``k`` other sequences to compute diversity against.
+            seed: For reproducibility. Only used if ``k`` is not ``None``.
             name: Metric name.
         """
         self.reference = reference

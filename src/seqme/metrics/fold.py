@@ -31,14 +31,14 @@ class Fold(Metric):
             metric: The underlying metric to evaluate per fold.
             deviation: Type of deviation to compute:
 
-                - ``se``: Standard error
-                - ``std``: Standard deviation
-                - ``var``: Variance
+                - ``'se'``: Standard error
+                - ``'std'``: Standard deviation
+                - ``'var'``: Variance
 
             estimate: How to estimate the deviation.
-            n_splits: Number of folds to create (exclusive with split_size).
-            split_size: Fixed size for each fold (exclusive with n_splits).
-            drop_last: Drop final fold if smaller than split_size.
+            n_splits: Number of folds to create (exclusive with ``split_size``).
+            split_size: Fixed size for each fold (exclusive with ``n_splits``).
+            drop_last: Drop final fold if smaller than ``split_size``.
             strict: Error on any non-null fold deviation.
             shuffle: Shuffle data before splitting.
             seed: Seed for reproducible shuffling.

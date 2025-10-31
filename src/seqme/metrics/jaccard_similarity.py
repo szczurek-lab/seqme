@@ -5,9 +5,9 @@ from seqme.core.base import Metric, MetricResult
 
 class NGramJaccardSimilarity(Metric):
     r"""
-    Average Jaccard similarity between each generated sequence and a reference corpus, based on n-grams of size `n`, using \|A ∩ R\| / \|A ∪ R\|.
+    Average Jaccard similarity between each generated sequence and a reference corpus, based on n-grams of size ``n``, using \|A ∩ R\| / \|A ∪ R\|.
 
-    You can choose to 'minimize' (novelty) or 'maximize' (overlap) via the `objective` parameter.
+    You can choose to ``'minimize'`` (novelty) or ``'maximize'`` (overlap) via the ``objective`` parameter.
     """
 
     def __init__(

@@ -62,7 +62,6 @@ dependencies = [
 
 esm2 = ["transformers"]
 esmfold = ["transformers"]
-prostt5 = ["transformers", "sentencepiece"]
 aa_descriptors = ["modlamp"]
 hyformer_molecules = [
     "deepchem",

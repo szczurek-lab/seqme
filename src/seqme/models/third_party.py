@@ -29,9 +29,9 @@ class ThirdPartyModel:
         Args:
             entry_point: String specifying the module and function, in the form 'module.path:function'.
             repo_path: Root directory for plugin environments and repos.
-            python_bin: Optional path to a python executable. If None, creates a venv enviroment using the exposed python executable.
+            python_bin: Optional path to a python executable. If ``None``, creates a venv enviroment using the exposed python executable.
             repo_url: Optional Git repository URL for the plugin (Optionally prefixed with 'git+').
-            branch: Optional branch to clone. If none, clone the whole repository.
+            branch: Optional branch to clone. If ``None``, clone the whole repository.
 
         Raises:
             ValueError: If entry_point is not of the form 'module:function'.
@@ -82,9 +82,9 @@ class Plugin:
 
         Args:
             plugins_root: Root directory for plugin environments and repos.
-            python_bin: Optional path to a python executable. If None, creates a venv enviroment using the exposed python executable.
+            python_bin: Optional path to a python executable. If ``None``, creates a venv enviroment using the exposed python executable.
             repo_url: Optional Git repository URL for the plugin to clone.
-            branch: Optional branch to clone. If none, clone the whole repository.
+            branch: Optional branch to clone. If ``None``, clone the whole repository.
         """
         plugins_root.mkdir(parents=True, exist_ok=True)
         repo_dir = plugins_root / "repo"
