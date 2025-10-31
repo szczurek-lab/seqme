@@ -1269,7 +1269,7 @@ class Cache:
         Args:
             sequences: List of text sequences.
             model_name: Name of the model to use.
-            stack: Whether the feature representations should be stacked as a numpy array. If true then stack as a numpy array else return a list of representations.
+            stack: Whether the feature representations should be stacked as a numpy array. If ``True`` then stack as a numpy array else return a list of representations.
 
         Returns:
             Feature representations in the same order as the input sequences.
@@ -1300,7 +1300,7 @@ class Cache:
 
         Args:
             model_name: Name of the model to use.
-            stack: Whether the feature representations should be stacked as a numpy array. If true then stack as a numpy array else return a list of feature representations.
+            stack: Whether the feature representations should be stacked as a numpy array. If ``True`` then stack as a numpy array else return a list of feature representations.
 
         Raises:
             ValueError: If the model is unknown.

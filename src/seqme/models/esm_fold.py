@@ -104,7 +104,7 @@ class ESMFold:
         Args:
             sequences: List of input amino acid sequences.
             convention: Whether to return "atom14" or the carbon alphas ("ca") position of each amino acid.
-            compute_ptm: If true, computes the ptm score (structure confidence score) but reduces the batch size to 1 in order to do so.
+            compute_ptm: If ``True``, computes the ptm score (structure confidence score) but reduces the batch size to 1 in order to do so.
             return_type: if "list", return list of dict else if "dict" return dict of lists.
 
         Returns:

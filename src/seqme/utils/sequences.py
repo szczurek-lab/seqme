@@ -36,7 +36,7 @@ def subsample(
     Args:
         sequences: The list of sequences to sample from.
         n_samples: The number of sequences to sample.
-        return_indices: If true, return a tuple of the sequence subset and indices else return only the sequence subset.
+        return_indices: If ``True``, return a tuple of the sequence subset and indices else return only the sequence subset.
         seed: Local seed when sampling. If ``None``, no fixed local seed is used.
 
     Returns:

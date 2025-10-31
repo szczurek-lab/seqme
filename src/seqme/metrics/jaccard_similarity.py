@@ -23,7 +23,7 @@ class NGramJaccardSimilarity(Metric):
         Args:
             reference: list of strings to build the reference n-gram set.
             n: size of the n-grams.
-            objective: "minimize" to reward novelty, "maximize" to reward overlap.
+            objective: ``"minimize"`` to reward novelty, ``"maximize"`` to reward overlap.
             name: Metric name.
         """
         self.n = n
@@ -44,7 +44,7 @@ class NGramJaccardSimilarity(Metric):
         return {seq[i : i + self.n] for i in range(L - self.n + 1)}
 
     def __call__(self, sequences: list[str]) -> MetricResult:
-        """Compute the average Jaccard similarity between each generated sequence and a reference corpus, based on n-grams of size `n`.
+        """Compute the average Jaccard similarity between each generated sequence and a reference corpus, based on n-grams of size ``n``.
 
         Args:
             sequences: A list of generated sequences to evaluate.
