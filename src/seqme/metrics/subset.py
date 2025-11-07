@@ -27,12 +27,15 @@ class Subset(Metric):
         self.n_samples = n_samples
         self.seed = seed
 
+        if n_samples <= 0:
+            raise ValueError("n_samples must be greater than 0.")
+
     def __call__(self, sequences: list[str]) -> MetricResult:
         """
         Call the wrapped metric on a subset of sequences.
 
         Args:
-            sequences: Sequences to split into folds.
+            sequences: Sequences to sample a subset from.
 
         Returns:
             Metric computed on subset of sequences.
