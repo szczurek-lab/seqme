@@ -34,7 +34,7 @@ def test_hyformer_shape_and_means(hyformer):
     assert perplexity.tolist() == pytest.approx(expected_perplexity, abs=_ABS_TOLERANCE)
 
     # test generation
-    generated_samples = hyformer.generate(num_samples=2, seed=0)
+    generated_samples = hyformer.generate(num_samples=2, seed=1337)
     assert isinstance(generated_samples, list)
     assert isinstance(generated_samples[0], str)
     expected_samples = np.array(["KCKKWKWKKKLV", "RWWRWWRWG"])
