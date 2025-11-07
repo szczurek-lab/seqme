@@ -89,14 +89,12 @@ def wasserstein_distance(e1: np.ndarray, e2: np.ndarray, eps: float = 1e-6) -> f
     mu1, sigma1 = e1.mean(axis=0), np.cov(e1, rowvar=False)
     mu2, sigma2 = e2.mean(axis=0), np.cov(e2, rowvar=False)
 
-    covmean, err = scipy.linalg.sqrtm(sigma1.dot(sigma2), disp=False)
+    covmean = scipy.linalg.sqrtm(sigma1.dot(sigma2))
 
     is_real = np.allclose(np.diagonal(covmean).imag, 0, atol=1e-3)
-    if np.isinf(err) or not is_real:
+    if not np.isfinite(covmean).all() or not is_real:
         offset = np.eye(sigma1.shape[0]) * eps
-        covmean, err = scipy.linalg.sqrtm((sigma1 + offset).dot(sigma2 + offset), disp=False)
-        if np.isinf(err):
-            return float("nan")
+        covmean = scipy.linalg.sqrtm((sigma1 + offset).dot(sigma2 + offset))
 
     # Handle numerical issues with imaginary components
     if np.iscomplexobj(covmean):
