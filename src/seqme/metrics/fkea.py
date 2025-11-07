@@ -38,7 +38,7 @@ class FourierBasedKernelEntropyApproximation(Metric):
         n_random_fourier_features: int | None = 2048,
         batch_size: int = 256,
         device: str = "cpu",
-        seed: int = 42,
+        seed: int = 0,
         strict: bool = True,
         name: str = "FKEA",
     ):
@@ -133,7 +133,7 @@ def calculate_fourier_vendi(
     bandwidth: float,
     batch_size: int,
     alpha: float = 2.0,
-    seed: int = 42,
+    seed: int = 0,
 ) -> float:
     std = math.sqrt(bandwidth / 2.0)
     x_cov = _cov_random_fourier_features(xs, random_fourier_feature_dim, std, batch_size, seed)

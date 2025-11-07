@@ -17,7 +17,7 @@ class KLDivergence(Metric):
         *,
         n_draws: int = 10_000,
         kde_bandwidth: float | Literal["scott", "silverman"] = "silverman",
-        seed: int | None = 0,
+        seed: int = 0,
         name: str = "KL-divergence",
     ):
         """
