@@ -38,7 +38,7 @@ class FourierBasedKernelEntropyApproximation(Metric):
         n_random_fourier_features: int | None = 2048,
         batch_size: int = 256,
         device: str = "cpu",
-        seed: int = 42,
+        seed: int = 0,
         strict: bool = True,
         name: str = "FKEA",
     ):

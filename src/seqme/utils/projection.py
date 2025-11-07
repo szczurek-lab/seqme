@@ -157,7 +157,7 @@ def plot_embeddings(
         plt.show()
 
 
-def pca(embeddings: np.ndarray | list[np.ndarray], seed: int | None = 42) -> np.ndarray | list[np.ndarray]:
+def pca(embeddings: np.ndarray | list[np.ndarray], seed: int | None = 0) -> np.ndarray | list[np.ndarray]:
     """Project embeddings into 2D using PCA.
 
     Args:
@@ -183,7 +183,7 @@ def pca(embeddings: np.ndarray | list[np.ndarray], seed: int | None = 42) -> np.
     return _pca(embeddings)
 
 
-def tsne(embeddings: np.ndarray | list[np.ndarray], seed: int | None = 42) -> np.ndarray | list[np.ndarray]:
+def tsne(embeddings: np.ndarray | list[np.ndarray], seed: int | None = 0) -> np.ndarray | list[np.ndarray]:
     """Project embeddings into 2D using t-SNE.
 
     Args:
@@ -209,7 +209,7 @@ def tsne(embeddings: np.ndarray | list[np.ndarray], seed: int | None = 42) -> np
     return _tsne(embeddings)
 
 
-def umap(embeddings: np.ndarray | list[np.ndarray], seed: int | None = 42) -> np.ndarray | list[np.ndarray]:
+def umap(embeddings: np.ndarray | list[np.ndarray], seed: int | None = 0) -> np.ndarray | list[np.ndarray]:
     """Project embeddings into 2D using UMAP.
 
     Args:

@@ -59,6 +59,7 @@ General or utility metrics that don't fit into the main categories.
     :nosignatures:
 
     seqme.metrics.Fold
+    seqme.metrics.Subset
     seqme.metrics.Count
     seqme.metrics.Length
 
@@ -192,6 +193,12 @@ Supported sequence types
      - |ok|
      - |ok|
    * - :py:class:`seqme.metrics.Fold`
+     - |ok|
+     - |ok|
+     - |ok|
+     - |ok|
+     - |ok|
+   * - :py:class:`seqme.metrics.Subset`
      - |ok|
      - |ok|
      - |ok|

@@ -14,6 +14,7 @@ from seqme.metrics.length import Length
 from seqme.metrics.mmd import KID, MMD
 from seqme.metrics.novelty import Novelty
 from seqme.metrics.precision_recall import Precision, Recall
+from seqme.metrics.subset import Subset
 from seqme.metrics.threshold import Threshold
 from seqme.metrics.uniqueness import Uniqueness
 
@@ -36,6 +37,7 @@ __all__ = [
     "Novelty",
     "Precision",
     "Recall",
+    "Subset",
     "Threshold",
     "Uniqueness",
 ]

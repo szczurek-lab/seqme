@@ -21,6 +21,7 @@ def test_fkea_overlap(shifted_embedder):
         bandwidth=2.0,
         n_random_fourier_features=256,
         alpha=2.0,
+        seed=42,
     )
 
     assert metric.name == "FKEA"
@@ -32,7 +33,7 @@ def test_fkea_overlap(shifted_embedder):
 
 
 def test_fkea_two_modes(shifted_embedder):
-    metric = FKEA(embedder=shifted_embedder, bandwidth=10.0, n_random_fourier_features=2, alpha=2.0)
+    metric = FKEA(embedder=shifted_embedder, bandwidth=10.0, n_random_fourier_features=2, alpha=2.0, seed=42)
 
     assert metric.name == "FKEA"
     assert metric.objective == "maximize"
@@ -57,7 +58,7 @@ def test_fkea_different_lengths(shifted_embedder):
     assert metric.objective == "maximize"
 
     result = metric(["KAAA", "RRRRRRRRRR", "RRRRRRRRRRR"])
-    assert pytest.approx(result.value) == pytest.approx(1.0057, abs=1e-4)
+    assert pytest.approx(result.value) == pytest.approx(1.1099, abs=1e-4)
     assert result.deviation is None
 
 
@@ -67,6 +68,7 @@ def test_vendi_different_lengths(shifted_embedder):
         bandwidth=10.0,
         n_random_fourier_features=None,
         alpha=2.0,
+        seed=42,
     )
 
     assert metric.name == "FKEA"
@@ -105,6 +107,7 @@ def test_fkea_many(two_mode_embedder):
         bandwidth=2.0,
         n_random_fourier_features=256,
         alpha=2.0,
+        seed=42,
     )
 
     assert metric.name == "FKEA"

@@ -1,0 +1,51 @@
+from typing import Literal
+
+import numpy as np
+
+from seqme.core.base import Metric, MetricResult
+
+
+class Subset(Metric):
+    """A utility function to approximate computational expensive metrics by subsampling the sequences to evaluate."""
+
+    def __init__(
+        self,
+        metric: Metric,
+        *,
+        n_samples: int,
+        seed: int | None = 0,
+    ):
+        """
+        Initialize subset wrapper.
+
+        Args:
+            metric: The metric to evaluate.
+            n_samples: Number of sequences to sample.
+            seed: Seed for reproducible shuffling.
+        """
+        self.metric = metric
+        self.n_samples = n_samples
+        self.seed = seed
+
+    def __call__(self, sequences: list[str]) -> MetricResult:
+        """
+        Call the wrapped metric on a subset of sequences.
+
+        Args:
+            sequences: Sequences to split into folds.
+
+        Returns:
+            Metric computed on subset of sequences.
+        """
+        rng = np.random.default_rng(self.seed)
+        indices = rng.choice(np.arange(len(sequences), dtype=int), size=self.n_samples, replace=False)
+        subset = [sequences[idx] for idx in indices]
+        return self.metric(subset)
+
+    @property
+    def name(self) -> str:
+        return self.metric.name
+
+    @property
+    def objective(self) -> Literal["minimize", "maximize"]:
+        return self.metric.objective

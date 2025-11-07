@@ -112,7 +112,7 @@ class Hyformer:
         return self.embed(sequences)
 
     def generate(
-        self, num_samples: int, temperature: float = 1.0, top_k: int | None = None, seed: int = 1337
+        self, num_samples: int, temperature: float = 1.0, top_k: int | None = None, seed: int = 0
     ) -> list[str]:
         """Generate sequences de novo.
 
@@ -134,7 +134,7 @@ class Hyformer:
             return self._generate(num_samples, temperature, top_k, seed)
 
     def _generate_legacy(
-        self, num_samples: int, temperature: float = 1.0, top_k: int | None = None, seed: int = 1337
+        self, num_samples: int, temperature: float = 1.0, top_k: int | None = None, seed: int = 0
     ) -> list[str]:
         generated = []
         for _ in tqdm(range(0, num_samples, self.batch_size), "Generating samples"):
@@ -145,7 +145,7 @@ class Hyformer:
         return generated[:num_samples]
 
     def _generate(
-        self, num_samples: int, temperature: float = 1.0, top_k: int | None = None, seed: int = 1337
+        self, num_samples: int, temperature: float = 1.0, top_k: int | None = None, seed: int = 0
     ) -> list[str]:
         _PREFIX_INPUT_IDS = torch.tensor(
             [[self.tokenizer.task_token_id(self._generative_task_key), self.tokenizer.bos_token_id]] * self.batch_size,

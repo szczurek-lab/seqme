@@ -22,7 +22,7 @@ class Fold(Metric):
         drop_last: bool = False,
         strict: bool = True,
         shuffle: bool = False,
-        seed: int | None = None,
+        seed: int | None = 0,
     ):
         """
         Initialize a Fold wrapper.
