@@ -6,14 +6,14 @@ from seqme.core.base import Metric, MetricResult
 
 
 class Subset(Metric):
-    """A utility function to approximate computational expensive metrics by subsampling the sequences to evaluate."""
+    """A utility function to approximate computational expensive metrics by evaluating a subset of the sequences in a group."""
 
     def __init__(
         self,
         metric: Metric,
         *,
         n_samples: int,
-        seed: int | None = 0,
+        seed: int = 0,
     ):
         """
         Initialize subset wrapper.

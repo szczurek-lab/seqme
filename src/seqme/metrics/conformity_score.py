@@ -24,7 +24,7 @@ class ConformityScore(Metric):
         *,
         n_splits: int = 5,
         kde_bandwidth: float | Literal["scott", "silverman"] = "silverman",
-        seed: int | None = 0,
+        seed: int = 0,
         name: str = "Conformity score",
     ):
         """

@@ -224,7 +224,7 @@ def umap(embeddings: np.ndarray | list[np.ndarray], seed: int | None = 0) -> np.
     """
 
     def _umap(embeds: np.ndarray) -> np.ndarray:
-        return UMAP(n_components=2, n_jobs=1 if seed else None, random_state=seed).fit_transform(embeds)
+        return UMAP(n_components=2, n_jobs=1 if seed is not None else None, random_state=seed).fit_transform(embeds)
 
     if isinstance(embeddings, list):
         embeddings, splits = _prepare_data_groups(embeddings)

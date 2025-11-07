@@ -14,7 +14,7 @@ class Diversity(Metric):
         reference: list[str] = None,
         k: int | None = None,
         *,
-        seed: int | None = 0,
+        seed: int = 0,
         name: str = "Diversity",
     ):
         """
@@ -73,7 +73,7 @@ def compute_diversity(
     *,
     reference: list[str] = None,
     k: int | None = None,
-    seed: int | None = 0,
+    seed: int = 0,
 ) -> float:
     """
     Compute diversity.
