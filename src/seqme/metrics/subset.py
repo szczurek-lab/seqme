@@ -37,6 +37,11 @@ class Subset(Metric):
         Returns:
             Metric computed on subset of sequences.
         """
+        if len(sequences) < self.n_samples:
+            raise ValueError(
+                f"Too few sequences to subsample. Expected at least {self.n_samples} sequences, got {len(sequences)} sequences."
+            )
+
         rng = np.random.default_rng(self.seed)
         indices = rng.choice(np.arange(len(sequences), dtype=int), size=self.n_samples, replace=False)
         subset = [sequences[idx] for idx in indices]

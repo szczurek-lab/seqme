@@ -27,3 +27,13 @@ def test_uses_fixed_seed():
     result2 = metric(sequences)
     assert result2.value == 550
     assert result2.deviation == 450
+
+
+def test_too_few_samples():
+    metric = Subset(metric=Length(), n_samples=10)
+    assert metric.name == "Length"
+    assert metric.objective == "minimize"
+
+    sequences = ["A"]
+    with pytest.raises(ValueError):
+        metric(sequences)
