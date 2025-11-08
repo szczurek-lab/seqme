@@ -37,7 +37,7 @@ class MMD(Metric):
             estimate: Expectation estimate.
             sigma: Bandwidth parameter for the Gaussian RBF kernel.
             scale: Scaling factor for the MMD score.
-            device: Device to run on.
+            device: Compute device, e.g., ``"cpu"`` or ``"cuda"``.
             name: Metric name.
         """
         self.reference = reference
@@ -53,6 +53,12 @@ class MMD(Metric):
         if self.reference_embeddings.shape[0] == 0:
             raise ValueError("Reference embeddings must contain at least one sample.")
 
+        if sigma <= 0:
+            raise ValueError("Expected sigma > 0.")
+
+        if scale <= 0:
+            raise ValueError("Expected scale > 0")
+
     def __call__(self, sequences: list[str]) -> MetricResult:
         """Compute the MMD between embeddings of the input sequences and the reference.
 
@@ -60,7 +66,7 @@ class MMD(Metric):
             sequences: Sequences to evaluate.
 
         Returns:
-            MetricResult contains the MMD score, where lower values indicate better performance.
+            MetricResult: MMD score.
         """
         if len(sequences) == 0:
             raise ValueError("Sequences must contain at least one sample.")
@@ -108,7 +114,7 @@ class KID(Metric):
             estimate: Expectation estimate.
             degree: Polynomial kernel degree.
             coef0: Coefficient.
-            device: Device to run on.
+            device: Compute device, e.g., ``"cpu"`` or ``"cuda"``.
             name: Metric name.
         """
         self.reference = reference
@@ -124,6 +130,9 @@ class KID(Metric):
         if self.reference_embeddings.shape[0] == 0:
             raise ValueError("Reference embeddings must contain at least one sample.")
 
+        if degree <= 0:
+            raise ValueError("Expected degree > 0")
+
     def __call__(self, sequences: list[str]) -> MetricResult:
         """Compute the MMD between embeddings of the input sequences and the reference.
 
@@ -131,7 +140,7 @@ class KID(Metric):
             sequences: Sequences to evaluate.
 
         Returns:
-            MetricResult contains the MMD score, where lower values indicate better performance.
+            MetricResult: MMD score.
         """
         if len(sequences) == 0:
             raise ValueError("Sequences must contain at least one sample.")

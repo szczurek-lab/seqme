@@ -38,7 +38,7 @@ class Precision(Metric):
             embedder: Function that maps sequences to embeddings.
             batch_size: Number of samples per batch when computing distances by rows.
             device: Compute device, e.g., ``"cpu"`` or ``"cuda"``.
-            strict: Enforce equal number of eval and reference samples if ``True``.
+            strict: Enforce equal number of evaluation and reference samples if ``True``.
             name: Metric name
         """
         self.n_neighbors = n_neighbors
@@ -51,7 +51,7 @@ class Precision(Metric):
         self._name = name
 
         if self.n_neighbors < 1:
-            raise ValueError("neighborhood_size must be greater than 0.")
+            raise ValueError("n_neighbors must be greater than 0.")
 
         self.reference_embeddings = torch.from_numpy(self.embedder(self.reference))
 
@@ -60,13 +60,13 @@ class Precision(Metric):
 
     def __call__(self, sequences: list[str]) -> MetricResult:
         """
-        Compute precision or recall for the given evaluation sequences.
+        Compute the Improved Precision of the sequences.
 
         Args:
-            sequences: List of sequences to evaluate.
+            sequences: Sequences to evaluate.
 
         Returns:
-            MetricResult containing the computed score.
+            MetricResult: Improved Precision.
         """
         seq_embeddings = torch.from_numpy(self.embedder(sequences))
 
@@ -135,7 +135,7 @@ class Recall(Metric):
         self.strict = strict
 
         if self.n_neighbors < 1:
-            raise ValueError("neighborhood_size must be greater than 0.")
+            raise ValueError("n_neighbors must be greater than 0.")
 
         self.reference_embeddings = torch.from_numpy(self.embedder(self.reference))
 
@@ -143,13 +143,13 @@ class Recall(Metric):
             raise ValueError("Reference embeddings must contain at least one samples.")
 
     def __call__(self, sequences: list[str]) -> MetricResult:
-        """Compute precision or recall for the given evaluation sequences.
+        """Compute the Improved Recall of the sequences.
 
         Args:
             sequences: List of sequences to evaluate.
 
         Returns:
-            MetricResult containing the computed score.
+            MetricResult: Improved Recall.
         """
         seq_embeddings = torch.from_numpy(self.embedder(sequences))
 

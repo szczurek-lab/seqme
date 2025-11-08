@@ -8,7 +8,7 @@ def shuffle_characters(sequences: list[str], seed: int | None = 0) -> list[str]:
     Randomly shuffle characters within each sequence.
 
     Args:
-        sequences: List of input strings to shuffle.
+        sequences: Sequences to shuffle.
         seed: Local seed when sampling. If ``None``, no fixed local seed is used.
 
     Returns:
@@ -31,16 +31,16 @@ def subsample(
     seed: int | None = 0,
 ) -> list[str] | tuple[list[str], np.ndarray]:
     """
-    Sample a subset of the sequences with no replacement.
+    Sample a subset of the sequences without replacement.
 
     Args:
-        sequences: The list of sequences to sample from.
-        n_samples: The number of sequences to sample.
+        sequences: Sequences to sample from.
+        n_samples: Number of sequences to sample.
         return_indices: If ``True``, return a tuple of the sequence subset and indices else return only the sequence subset.
         seed: Local seed when sampling. If ``None``, no fixed local seed is used.
 
     Returns:
-        A list of ``n_samples`` randomly chosen, unique sequences. Optionally, including the indices.
+        A list of ``n_samples`` randomly chosen sequences. Optionally, including the indices.
 
     Raises:
         ValueError: If ``n_samples`` exceeds the number of available sequences.

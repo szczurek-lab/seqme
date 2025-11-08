@@ -65,13 +65,13 @@ class RNAFM:
     @torch.inference_mode()
     def embed(self, sequences: list[str], layer: int = 12) -> np.ndarray:
         """
-        Compute embeddings for a list of sequences.
+        Compute the embeddings of the RNA sequences.
 
         Each sequence is tokenized and passed through the model.
         Token embeddings are averaged to produce a single embedding per sequence.
 
         Args:
-            sequences: List of RNA sequences.
+            sequences: RNA sequences to embed.
             layer: Embedding layer. Last layer is 12.
 
         Returns:

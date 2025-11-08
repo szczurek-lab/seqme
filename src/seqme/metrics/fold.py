@@ -25,7 +25,7 @@ class Fold(Metric):
         seed: int = 0,
     ):
         """
-        Initialize a Fold wrapper.
+        Initialize the Fold wrapper.
 
         Args:
             metric: The underlying metric to evaluate per fold.
@@ -41,7 +41,7 @@ class Fold(Metric):
             drop_last: Drop final fold if smaller than ``split_size``.
             strict: Error on any non-null fold deviation.
             shuffle: Shuffle data before splitting.
-            seed: Seed for reproducible shuffling.
+            seed: Seed for deterministic shuffling of sequences when creating folds.
         """
         self.metric = metric
         self.deviation = deviation
@@ -58,15 +58,20 @@ class Fold(Metric):
         if (self.n_splits is None) and (self.split_size is None):
             raise ValueError("One of n_splits or split_size must be specified.")
 
+        if (self.n_splits is not None) and (self.n_splits < 2):
+            raise ValueError("Expected n_splits >= 2.")
+        if (self.split_size is not None) and (self.split_size <= 0):
+            raise ValueError("Expected split_size > 0.")
+
     def __call__(self, sequences: list[str]) -> MetricResult:
         """
-        Call the wrapped metric on each fold of `sequences` and aggregate the results.
+        Call the wrapped metric on each fold of ``sequences`` and aggregate the results.
 
         Args:
             sequences: Sequences to split into folds.
 
         Returns:
-            Aggregated mean value and standard error, standard error or variance across folds.
+            MetricResult: Aggregated mean value and standard error, standard error or variance across folds.
         """
         n = len(sequences)
         indices = np.arange(n)

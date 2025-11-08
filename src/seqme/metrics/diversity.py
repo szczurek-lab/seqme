@@ -21,9 +21,9 @@ class Diversity(Metric):
         Initialize the metric.
 
         Args:
-            reference: Reference sequences to compare against. If ``None``, compare against other sequences within `sequences`.
+            reference: Reference sequences to compare against. If ``None``, compare against other sequences within ``sequences``.
             k: If not ``None`` randomly sample ``k`` other sequences to compute diversity against.
-            seed: For reproducibility. Only used if ``k`` is not ``None``.
+            seed: For determinstic sampling. Only used if ``k`` is not ``None``.
             name: Metric name.
         """
         self.reference = reference
@@ -31,8 +31,8 @@ class Diversity(Metric):
         self.seed = seed
         self._name = name
 
-        if self.k:
-            if self.k < 1:
+        if self.k is not None:
+            if self.k <= 0:
                 raise ValueError("Expected k > 0.")
 
             if self.reference:
@@ -43,13 +43,13 @@ class Diversity(Metric):
         """
         Compute the diversity.
 
-        Note: For a large number of ``sequences``, a small value for ``k`` (e.g., 10) provides a stable approximation of the diversity.
+        Note: For a large number of ``sequences``, a small value for ``k`` (e.g., 10) usually provides a stable approximation of the diversity.
 
         Args:
-            sequences: A list of generated sequences to evaluate.
+            sequences: Sequences to evaluate.
 
         Returns:
-            MetricResult contains the diversity score.
+            MetricResult: Diversity score.
         """
         score = compute_diversity(
             sequences,
@@ -79,10 +79,10 @@ def compute_diversity(
     Compute diversity.
 
     Args:
-        sequences: Text sequences to compute diversity on.
+        sequences: Sequences to compute diversity on.
         reference: Reference sequences to compare against. If ``None``, compare against other sequences within ``sequences``.
         k: If not ``None`` randomly sample ``k`` other sequences to compute diversity against.
-        seed: For reproducibility. Only used if k is not ``None``.
+        seed: For deterministic sampling. Only used if k is not ``None``.
 
     Returns:
         Diversity.

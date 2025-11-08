@@ -6,16 +6,16 @@ from .exceptions import OptionalDependencyError
 
 
 class AliphaticIndex:
-    """Aliphatic index of peptide sequences.
+    """Aliphatic index of amino acid sequences.
 
     Installation: ``pip install "seqme[aa_descriptors]"``
     """
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
-        """Computes the Aliphatic index.
+        """Compute aliphatic index.
 
         Args:
-            sequences: List of amino acid sequences.
+            sequences: Amino acid sequences.
 
         Returns:
             Aliphatic index for each sequence.
@@ -31,16 +31,16 @@ class AliphaticIndex:
 
 
 class Aromaticity:
-    """Aromaticity of peptide sequences.
+    """Aromaticity of amino acid sequences.
 
     Installation: ``pip install "seqme[aa_descriptors]"``
     """
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
-        """Compute the aromaticity.
+        """Compute aromaticity.
 
         Args:
-            sequences: List of amino acid sequences.
+            sequences: Amino acid sequences.
 
         Returns:
             Aromaticity value for each sequence.
@@ -62,10 +62,10 @@ class BomanIndex:
     """
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
-        """Computes the Boman index.
+        """Compute Boman index.
 
         Args:
-            sequences: List of amino acid sequences.
+            sequences: Amino acid sequences.
 
         Returns:
             Boman index value for each sequence.
@@ -81,13 +81,13 @@ class BomanIndex:
 
 
 class Charge:
-    """Net charge of peptides at a given pH.
+    """Net charge of amino acid sequences at a given pH.
 
     Installation: ``pip install "seqme[aa_descriptors]"``
     """
 
     def __init__(self, ph: float = 7.0):
-        """Initializes the Net charge.
+        """Initialize model.
 
         Args:
             ph: pH value at which to calculate the charge.
@@ -95,7 +95,7 @@ class Charge:
         self.ph = ph
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
-        """Computes the net charge.
+        """Compute net charge.
 
         Args:
             sequences: List of amino acid sequences.
@@ -114,16 +114,16 @@ class Charge:
 
 
 class Gravy:
-    """GRAVY (hydropathy) score for peptide sequences.
+    """GRAVY (hydropathy) score for amino acid sequences.
 
     Installation: ``pip install "seqme[aa_descriptors]"``
     """
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
-        """Computes the GRAVY.
+        """Compute GRAVY.
 
         Args:
-            sequences: List of amino acid sequences.
+            sequences: Amino acid sequences.
 
         Returns:
             GRAVY score for each sequence.
@@ -155,10 +155,10 @@ class Hydrophobicity:
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
         """
-        Computes the hydrophobicity.
+        Compute hydrophobicity.
 
         Args:
-            sequences: List of amino acid sequences.
+            sequences: Amino acid sequences.
 
         Returns:
             Hydrophobicity score for each sequence.
@@ -175,7 +175,7 @@ class Hydrophobicity:
 
 
 class HydrophobicMoment:
-    """Hydrophobic moment (i.e., amphiphilicity) for one or more peptide sequences using a sliding-window approach.
+    """Hydrophobic moment (i.e., amphiphilicity) for one or more amino acid sequences using a sliding-window approach.
 
     Installation: ``pip install "seqme[aa_descriptors]"``
     """
@@ -201,7 +201,7 @@ class HydrophobicMoment:
         self.modality = modality
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
-        """Computes the hydrophobic moment.
+        """Compute hydrophobic moment.
 
         Args:
             sequences: List of amino acid sequences.
@@ -227,10 +227,10 @@ class InstabilityIndex:
     """
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
-        """Computes the instability index.
+        """Compute instability index.
 
         Args:
-            sequences: List of amino acid sequences.
+            sequences: Amino acid sequences.
 
         Returns:
             Instability index for each sequence.
@@ -246,16 +246,16 @@ class InstabilityIndex:
 
 
 class IsoelectricPoint:
-    """Isoelectric point of peptide sequences.
+    """Isoelectric point of amino acid sequences.
 
     Installation: ``pip install "seqme[aa_descriptors]"``
     """
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
-        """Computes the isoelectric point of peptide sequences.
+        """Compute isoelectric point.
 
         Args:
-            sequences: List of amino acid sequences.
+            sequences: Amino acid sequences.
 
         Returns:
             Isoelectric point for each sequence.
@@ -271,16 +271,16 @@ class IsoelectricPoint:
 
 
 class ProteinWeight:
-    """Molecular weight of protein/peptide sequences.
+    """Molecular weight of amino acid sequences.
 
     Installation: ``pip install "seqme[aa_descriptors]"``
     """
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
-        """Computes the molecular weight of peptide sequences.
+        """Compute molecular weight of amino acid sequences.
 
         Args:
-            sequences: List of amino acid sequences.
+            sequences: Amino acid sequences.
 
         Returns:
             Molecular weight for each sequence.

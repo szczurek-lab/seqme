@@ -27,7 +27,7 @@ class PCA:
         """Project sequences into PCA space.
 
         Args:
-            sequences: List of sequences.
+            sequences: Sequences to project their embeddings.
 
         Returns:
             A NumPy array of shape (n_sequences, n_components) containing the embeddings.

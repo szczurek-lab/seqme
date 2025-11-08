@@ -74,8 +74,8 @@ def evaluate(
     """Compute a set of metrics for multiple sequence groups.
 
     Args:
-        sequences: A dict mapping group names to lists of sequences.
-        metrics: A list of metrics to compute per sequence group.
+        sequences: A dict mapping group name to lists of sequences.
+        metrics: Metrics to compute per sequence group.
         verbose: Whether to show a progress-bar.
 
     Returns:
@@ -136,14 +136,14 @@ def combine(
     """Combine multiple DataFrames with metric results into a single DataFrame.
 
     Args:
-        dfs: List of DataFrames, each with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], and an 'objective' attribute.
+        dfs: Metric dataframes, each with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], and an 'objective' attribute.
         on_overlap: How to handle cells with multiple values.
 
             - ``'fail'``: raises an exception on overlap.
             - ``'mean,std'``: sets the cell value to the mean and the deviation to the std of the values.
 
     Returns:
-        A single DataFrame combining multiple metric dataframes.
+        DataFrame: A single DataFrame combining multiple metric dataframes.
 
     Raises:
         ValueError: If ``dfs`` is empty, any DataFrame lacks 'objective', objectives conflict, or potentially overlapping non-null cells.
@@ -321,7 +321,7 @@ def top_k(
         keep: Which entry to keep if multiple are equally good.
 
     Returns:
-        A subset of the metric dataframe with the top-k rows.
+        DataFrame: A subset of the metric dataframe with the top-k rows.
     """
 
     def get_best(df: pd.DataFrame, metric: str, k: int, keep: str) -> pd.DataFrame:
@@ -571,7 +571,7 @@ def to_latex(
     show_arrow: bool = True,
     caption: str = None,
 ):
-    """Convert a metric dataframe to a LaTeX table.
+    """Export a metric dataframe to a LaTeX table.
 
     Args:
         df: DataFrame with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], attributed with 'objective'.

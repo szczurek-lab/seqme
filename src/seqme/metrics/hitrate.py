@@ -27,11 +27,10 @@ class HitRate(Metric):
         Applies the filter to count hits and returns the average hit-rate.
 
         Args:
-            sequences: List of sequences to evaluate.
+            sequences: Sequences to evaluate.
 
         Returns:
-            A MetricResult whose value is the mean of the boolean mask,
-            i.e., the proportion of sequences where condition_fn returned True.
+            MetricResult: Proportion of sequences where ``condition_fn`` returned ``True``.
         """
         valid = self.condition_fn(sequences)
         hit_rate = valid.mean().item()

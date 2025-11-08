@@ -7,9 +7,11 @@ from sklearn.neighbors import NearestNeighbors
 from seqme.core.base import Metric, MetricResult
 
 
-class Authenticity(Metric):
+class AuthPct(Metric):
     """
     Proportion of authentic generated samples.
+
+    Authenticity is defined as the fraction of sequences whose nearest training neighbor is closer to some other training sample than to the sequence.
 
     Reference:
         Alaa et al., "How Faithful is your Synthetic Data? Sample-level Metrics for Evaluating and Auditing Generative Models." (2022). (https://arxiv.org/abs/2102.08921)
@@ -22,8 +24,7 @@ class Authenticity(Metric):
         *,
         name: str = "Authenticity",
     ):
-        """
-        Initialize the Authenticity metric.
+        """Initialize the metric.
 
         Args:
             train_set: List of sequences used to train the generative model.
@@ -41,13 +42,13 @@ class Authenticity(Metric):
 
     def __call__(self, sequences: list[str]) -> MetricResult:
         """
-        Compute the authenticity score based on the embeddings of the input sequences and the reference.
+        Compute the authenticity score based on the embeddings of the input sequences and the train set.
 
         Args:
-            sequences: Generated sequences to evaluate.
+            sequences: Sequences to evaluate.
 
         Returns:
-            MetricResult contains the authenticity score, which represents the proportion of authentic samples.
+            MetricResult: Authenticity score.
         """
         if len(sequences) == 0:
             raise ValueError("Sequences must contain at least one sample.")
@@ -72,7 +73,7 @@ class Authenticity(Metric):
 
 def compute_authenticity(real_data: np.ndarray, synthetic_data: np.ndarray) -> float:
     """
-    Computes the authenticity metric, defined as one minus the fraction of synthetic samples closer to training data than any other training sample.
+    Authenticity is defined as the fraction of sequences whose nearest training neighbor is closer to some other training sample than to the sequence.
 
     Args:
         real_data: Embeddings of the real data.
@@ -91,14 +92,3 @@ def compute_authenticity(real_data: np.ndarray, synthetic_data: np.ndarray) -> f
     authenticity = np.mean(auth_mask)
 
     return authenticity
-
-
-class AuthPct(Authenticity):
-    """
-    Proportion of authentic generated samples.
-
-    Reference:
-        Alaa et al., "How Faithful is your Synthetic Data? Sample-level Metrics for Evaluating and Auditing Generative Models." (2022). (https://arxiv.org/abs/2102.08921)
-    """
-
-    pass

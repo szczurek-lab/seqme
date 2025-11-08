@@ -6,7 +6,7 @@ from seqme.core.base import Metric, MetricResult
 
 
 class Subset(Metric):
-    """A utility function to approximate computational expensive metrics by evaluating a subset of the sequences in a group."""
+    """A wrapper to approximate expensive metrics by evaluating a subset of the sequences in a group."""
 
     def __init__(
         self,
@@ -19,9 +19,9 @@ class Subset(Metric):
         Initialize subset wrapper.
 
         Args:
-            metric: The metric to evaluate.
+            metric: Metric to compute.
             n_samples: Number of sequences to sample.
-            seed: Seed for reproducible shuffling.
+            seed: Seed for deterministic sampling.
         """
         self.metric = metric
         self.n_samples = n_samples
@@ -32,13 +32,13 @@ class Subset(Metric):
 
     def __call__(self, sequences: list[str]) -> MetricResult:
         """
-        Call the wrapped metric on a subset of sequences.
+        Compute the metric on a subset of sequences.
 
         Args:
-            sequences: Sequences to sample a subset from.
+            sequences: Sequences to sample a subset from and evaluate.
 
         Returns:
-            Metric computed on subset of sequences.
+            MetricResult: Metric computed on subset of sequences.
         """
         if len(sequences) < self.n_samples:
             raise ValueError(

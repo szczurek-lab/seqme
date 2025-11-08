@@ -11,11 +11,11 @@ class Count(Metric):
         Count the number of input sequences.
 
         Args:
-            sequences: A list of sequences.
+            sequences: Sequences to evaluate.
             name: Metric name.
 
         Returns:
-            MetricResult: value is the number of sequences. Deviation is None.
+            MetricResult: Number of sequences.
         """
         return MetricResult(value=len(sequences))
 

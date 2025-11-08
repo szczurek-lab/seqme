@@ -2,8 +2,8 @@ from collections.abc import Callable
 from typing import Literal
 
 import numpy as np
-from sklearn.model_selection import KFold  # type: ignore
-from sklearn.neighbors import KernelDensity  # type: ignore
+from sklearn.model_selection import KFold
+from sklearn.neighbors import KernelDensity
 
 from seqme.core.base import Metric, MetricResult
 
@@ -28,15 +28,14 @@ class ConformityScore(Metric):
         name: str = "Conformity score",
     ):
         """
-        Initialize the conformity score metric.
+        Initialize the metric.
 
         Args:
             reference: Reference sequences assumed to represent the target distribution.
             predictors: A list of predictor functions. Each should take a list of sequences and return a 1D NumPy array of features.
             n_splits: Number of cross-validation folds for KDE.
             kde_bandwidth: Bandwidth parameter for the Gaussian KDE.
-            reference_name: Optional name for the reference dataset.
-            seed: Seed for KFold shuffling.
+            seed: Seed for deterministic k-fold shuffling.
             name: Metric name.
         """
         if n_splits < 2:
@@ -61,11 +60,10 @@ class ConformityScore(Metric):
         Compute the conformity score for the given sequences.
 
         Args:
-            sequences: List of generated sequences to evaluate.
+            sequences: Sequences to evaluate.
 
         Returns:
-            MetricResult: Contains the mean and standard error of the conformity
-                scores across all folds.
+            MetricResult: Mean and standard error of the conformity scores across all folds.
         """
         seqs_predictors = self._sequences_to_predictors(sequences)  # (n_gen, n_descs)
         conformity_scores = self._compute_conformity_score(seqs_predictors)

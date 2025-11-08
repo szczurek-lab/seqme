@@ -162,7 +162,7 @@ def pca(embeddings: np.ndarray | list[np.ndarray], seed: int | None = 0) -> np.n
 
     Args:
         embeddings: 2D array where each row is a data point.
-        seed: Seed for reproducibility in PCA.
+        seed: Seed for deterministic computation of PCA.
 
     Returns:
         2D array of shape (n_samples, 2) or list.
@@ -188,7 +188,7 @@ def tsne(embeddings: np.ndarray | list[np.ndarray], seed: int | None = 0) -> np.
 
     Args:
         embeddings: 2D array where each row is a data point or list.
-        seed: Seed for reproducibility in t-SNE.
+        seed: Seed for deterministic computation of t-SNE.
 
     Returns:
         2D array of shape (n_samples, 2) or list.
@@ -214,7 +214,7 @@ def umap(embeddings: np.ndarray | list[np.ndarray], seed: int | None = 0) -> np.
 
     Args:
         embeddings: 2D array where each row is a data point.
-        seed: Seed for reproducibility in UMAP.
+        seed: Seed for deterministic computation of UMAP.
 
     Returns:
         2D array of shape (n_samples, 2) or list.

@@ -314,10 +314,10 @@ class Hyformer:
         labels = labels[:, 1:].contiguous()
 
         ppls = torch.zeros(logits.shape[0])
-        for idx, (log_prob, label) in enumerate(zip(log_probs, labels, strict=False)):
+        for idx, (log_prob, label) in enumerate(zip(log_probs, labels, strict=True)):
             ppl = 0
             n = 0
-            for lp, lab in zip(log_prob, label, strict=False):
+            for lp, lab in zip(log_prob, label, strict=True):
                 if lab == ignore_index:
                     continue
                 n += 1
