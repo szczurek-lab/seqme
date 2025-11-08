@@ -30,7 +30,7 @@ class HitRate(Metric):
             sequences: Sequences to evaluate.
 
         Returns:
-            MetricResult containing the proportion of sequences where ``condition_fn`` returned ``True``.
+            MetricResult: Proportion of sequences where ``condition_fn`` returned ``True``.
         """
         valid = self.condition_fn(sequences)
         hit_rate = valid.mean().item()

@@ -83,7 +83,7 @@ class FKEA(Metric):
             sequences: Sequences to evaluate.
 
         Returns:
-            MetricResult containing the FKEA score.
+            MetricResult: FKEA score.
         """
         if self.strict:
             if self._n_sequences is None:

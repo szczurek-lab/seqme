@@ -7,15 +7,16 @@ class Uniqueness(Metric):
     """Fraction of unique sequences within the provided list of sequences."""
 
     def __call__(self, sequences: list[str]) -> MetricResult:
-        """Compute the uniqueness score as the proportion of unique sequences.
+        """Compute the fraction of sequences remaining after removing any duplicate sequences.
+
+        Example:
+            If ``sequences`` contains ``["KR", "KR"]``, the uniqueness is ``0.5``.
 
         Args:
             sequences: Sequences to evaluate.
 
         Returns:
-            MetricResult containing the uniqueness score between 0 and 1,
-                where 0 indicates no unique sequences (all duplicates)
-                and 1 indicates all sequences are distinct.
+            MetricResult: Uniqueness.
         """
         total = len(sequences)
         if total == 0:

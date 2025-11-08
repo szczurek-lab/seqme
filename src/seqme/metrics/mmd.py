@@ -66,7 +66,7 @@ class MMD(Metric):
             sequences: Sequences to evaluate.
 
         Returns:
-            MetricResult containing the MMD score.
+            MetricResult: MMD score.
         """
         if len(sequences) == 0:
             raise ValueError("Sequences must contain at least one sample.")
@@ -140,7 +140,7 @@ class KID(Metric):
             sequences: Sequences to evaluate.
 
         Returns:
-            MetricResult contains the MMD score, where lower values indicate better performance.
+            MetricResult: MMD score.
         """
         if len(sequences) == 0:
             raise ValueError("Sequences must contain at least one sample.")

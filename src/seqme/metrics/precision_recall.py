@@ -60,13 +60,13 @@ class Precision(Metric):
 
     def __call__(self, sequences: list[str]) -> MetricResult:
         """
-        Compute precision or recall for the given evaluation sequences.
+        Compute the Improved Precision of the sequences.
 
         Args:
             sequences: Sequences to evaluate.
 
         Returns:
-            MetricResult containing the computed score.
+            MetricResult: Improved Precision.
         """
         seq_embeddings = torch.from_numpy(self.embedder(sequences))
 
@@ -143,13 +143,13 @@ class Recall(Metric):
             raise ValueError("Reference embeddings must contain at least one samples.")
 
     def __call__(self, sequences: list[str]) -> MetricResult:
-        """Compute precision or recall for the given evaluation sequences.
+        """Compute the Improved Recall of the sequences.
 
         Args:
             sequences: List of sequences to evaluate.
 
         Returns:
-            MetricResult containing the computed score.
+            MetricResult: Improved Recall.
         """
         seq_embeddings = torch.from_numpy(self.embedder(sequences))
 

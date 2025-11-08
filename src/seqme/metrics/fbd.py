@@ -52,7 +52,7 @@ class FBD(Metric):
             sequences: Sequences to evaluate.
 
         Returns:
-            MetricResult containing the FBD score.
+            MetricResult: FBD score.
         """
         seq_embeddings = self.embedder(sequences)
         dist = wasserstein_distance(seq_embeddings, self.reference_embeddings)

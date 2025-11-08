@@ -27,9 +27,8 @@ class Novelty(Metric):
             sequences: Sequences to evaluate.
 
         Returns:
-            MetricResult containing the novelty score between 0 and 1, where
-                0 indicates no novel sequences and 1 indicates all sequences
-                are novel.
+            MetricResult: The novelty score between 0 and 1,
+                where 0 indicates no novel sequences and 1 indicates all sequences are novel.
         """
         total = len(sequences)
         if total == 0:

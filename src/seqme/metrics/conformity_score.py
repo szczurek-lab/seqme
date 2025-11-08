@@ -64,8 +64,7 @@ class ConformityScore(Metric):
             sequences: Sequences to evaluate.
 
         Returns:
-            MetricResult containing the mean and standard error of the conformity
-                scores across all folds.
+            MetricResult: Mean and standard error of the conformity scores across all folds.
         """
         seqs_predictors = self._sequences_to_predictors(sequences)  # (n_gen, n_descs)
         conformity_scores = self._compute_conformity_score(seqs_predictors)

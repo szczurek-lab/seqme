@@ -20,8 +20,8 @@ class Ensemble:
         Initialize the ensemble of predictors.
 
         Args:
-            predictors: List of callables that produce predictions for given sequences.
-            weights: Optional list of weights for each predictor. If omitted, all predictors are weighted equally.
+            predictors: List of callables that produce predictions for the given sequences.
+            weights: Optional list of weights for each predictor. If ``None``, all predictors are weighted equally.
 
         Raises:
             ValueError: If the length of ``weights`` does not match the number of predictors.
@@ -36,10 +36,10 @@ class Ensemble:
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
         """
-        Compute ensemble predictions for a list of sequences.
+        Compute ensemble predictions on a list of sequences.
 
         Args:
-            sequences: List of input strings to predict on.
+            sequences: Input sequences to the predictors.
 
         Returns:
             Array of weighted predictions, one value per input sequence.

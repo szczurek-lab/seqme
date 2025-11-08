@@ -48,7 +48,7 @@ class AuthPct(Metric):
             sequences: Sequences to evaluate.
 
         Returns:
-            MetricResult containing the authenticity score.
+            MetricResult: Authenticity score.
         """
         if len(sequences) == 0:
             raise ValueError("Sequences must contain at least one sample.")

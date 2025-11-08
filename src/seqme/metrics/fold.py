@@ -71,7 +71,7 @@ class Fold(Metric):
             sequences: Sequences to split into folds.
 
         Returns:
-            Aggregated mean value and standard error, standard error or variance across folds.
+            MetricResult: Aggregated mean value and standard error, standard error or variance across folds.
         """
         n = len(sequences)
         indices = np.arange(n)

@@ -38,7 +38,7 @@ class Subset(Metric):
             sequences: Sequences to sample a subset from and evaluate.
 
         Returns:
-            Metric computed on subset of sequences.
+            MetricResult: Metric computed on subset of sequences.
         """
         if len(sequences) < self.n_samples:
             raise ValueError(

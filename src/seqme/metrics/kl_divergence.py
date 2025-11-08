@@ -51,7 +51,7 @@ class KLDivergence(Metric):
             sequences: Sequences to evaluate.
 
         Returns:
-            MetricResult containing KL-divergence and standard error.
+            MetricResult: KL-divergence and standard error.
         """
         seqs_predictor = self.predictor(sequences)
         kl_div, standard_error = continuous_kl_mc(

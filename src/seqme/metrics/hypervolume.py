@@ -28,7 +28,7 @@ class Hypervolume(Metric):
             predictors: A list of functions. Each function maps a sequence to a numeric value aimed to be maximized.
             method: Which Hypervolume computation method to use
 
-                - ``'hvi'``: Hypervalue indicator
+                - ``'hvi'``: Hypervolume indicator
                 - ``'convex-hull'``: Volume of the convex-hull
 
             nadir: Smallest (worst) value in each objective dimension. If ``None``, set to zero vector.
@@ -58,13 +58,13 @@ class Hypervolume(Metric):
                 raise ValueError("Expected nadir <= ideal.")
 
     def __call__(self, sequences: list[str]) -> MetricResult:
-        """Evaluate hypervolume for the predicted properties of the input sequences.
+        """Compute hypervolume for the predicted properties of the input sequences.
 
         Args:
             sequences: Sequences to evaluate.
 
         Returns:
-            MetricResult containing the hypervolume.
+            MetricResult: Hypervolume.
         """
         values = np.stack([predictor(sequences) for predictor in self.predictors], axis=1)
         hypervolume = calculate_hypervolume(values, self.nadir, self.ideal, self.method, self.strict)

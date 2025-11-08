@@ -42,7 +42,7 @@ class Threshold(Metric):
             sequences: Sequences to evaluate.
 
         Returns:
-            MetricResult containing the fraction of sequences within the threshold.
+            MetricResult: Fraction of sequences within the threshold.
         """
         values = self.predictor(sequences)
 

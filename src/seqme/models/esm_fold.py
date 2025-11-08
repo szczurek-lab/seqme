@@ -102,8 +102,8 @@ class ESMFold:
             where the dimension with 14 elements, corresponds to an amino acids atom positions, and the dimension with 3 elements corresponds to "xyz"-coordinates. If an amino-acid has fewer than 14 atoms, then those positions should be discarded / ignored as they are unused.
 
         Args:
-            sequences: List of input amino acid sequences.
-            convention: Whether to return "atom14" or the carbon alphas ("ca") position of each amino acid.
+            sequences: Protein sequences which 3D-structure is predicted.
+            convention: Whether to return "atom14" or the carbon alphas ("ca") position of each amino acid in a sequence.
             compute_ptm: If ``True``, computes the ptm score (structure confidence score) but reduces the batch size to 1 in order to do so.
             return_type: if "list", return list of dict else if "dict" return dict of lists.
 

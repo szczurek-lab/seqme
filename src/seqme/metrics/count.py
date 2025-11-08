@@ -15,7 +15,7 @@ class Count(Metric):
             name: Metric name.
 
         Returns:
-            MetricResult containing the number of sequences.
+            MetricResult: Number of sequences.
         """
         return MetricResult(value=len(sequences))
 

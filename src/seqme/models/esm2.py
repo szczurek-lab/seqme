@@ -37,10 +37,9 @@ class ESM2Checkpoint(str, Enum):
 
 class ESM2:
     """
-    Wrapper for the ESM2 protein/peptide embedding model from HuggingFace.
+    Wrapper for the ESM2 protein/peptide embedding model.
 
-    Computes sequence-level embeddings by averaging token embeddings,
-    excluding [CLS] and [EOS] tokens.
+    Computes sequence-level embeddings by averaging token embeddings excluding [CLS] and [EOS] tokens.
 
     Installation: ``pip install "seqme[esm2]"``
 
@@ -59,7 +58,7 @@ class ESM2:
         verbose: bool = False,
     ):
         """
-        Initialize the ESM2 model.
+        Initialize the model.
 
         Args:
             model_name: Model checkpoint name or enum.
@@ -95,13 +94,13 @@ class ESM2:
     @torch.inference_mode()
     def embed(self, sequences: list[str], layer: int = -1) -> np.ndarray:
         """
-        Compute embeddings for a list of sequences.
+        Compute embeddings of amino acid sequences.
 
         Each sequence is tokenized and passed through the model.
         Token embeddings are averaged (excluding special tokens) to produce a single embedding per sequence.
 
         Args:
-            sequences: List of input amino acid sequences.
+            sequences: Amino acid sequences.
             layer: Layer to retrieve embeddings from.
 
         Returns:
@@ -125,10 +124,10 @@ class ESM2:
     @torch.inference_mode()
     def compute_pseudo_perplexity(self, sequences: list[str], mask_size: int = 1) -> np.ndarray:
         """
-        Compute pseudo-perplexity for a list of sequences, masking `mask_size` positions per pass.
+        Compute pseudo-perplexity for a list of sequences, masking ``mask_size`` positions per pass.
 
         Args:
-            sequences: List of amino acid sequences.
+            sequences: Amino acid sequences.
             mask_size: Number of tokens to mask simultaneously in each forward pass.
 
         Returns:

@@ -23,7 +23,7 @@ class Length(Metric):
             sequences: A list of sequences.
 
         Returns:
-            MetricResult containing mean sequence length and sequence length standard deviation.
+            MetricResult: Mean sequence length and sequence length standard deviation.
         """
         lengths = [len(sequence) for sequence in sequences]
 

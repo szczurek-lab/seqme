@@ -50,7 +50,7 @@ class NGramJaccardSimilarity(Metric):
             sequences: Sequences to evaluate.
 
         Returns:
-            MetricResult containing the Jaccard similarity.
+            MetricResult: Jaccard similarity.
         """
         total = len(sequences)
         if total == 0:

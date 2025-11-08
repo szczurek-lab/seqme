@@ -49,7 +49,7 @@ class Diversity(Metric):
             sequences: Sequences to evaluate.
 
         Returns:
-            MetricResult containing the diversity score.
+            MetricResult: Diversity score.
         """
         score = compute_diversity(
             sequences,

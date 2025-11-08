@@ -37,8 +37,7 @@ class ID(Metric):
             sequences: Sequences to evaluate.
 
         Returns:
-            MetricResult containing two elements:
-
+            MetricResult:
                 - value: Mean of predictor outputs.
                 - std: Standard deviation of predictor outputs.
         """
