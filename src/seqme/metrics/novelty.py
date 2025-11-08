@@ -4,7 +4,7 @@ from seqme.core.base import Metric, MetricResult
 
 
 class Novelty(Metric):
-    """Fraction of sequences not in the reference."""
+    """Fraction of sequences not in the reference set."""
 
     def __init__(self, reference: list[str], *, name: str = "Novelty"):
         """
@@ -21,13 +21,13 @@ class Novelty(Metric):
 
     def __call__(self, sequences: list[str]) -> MetricResult:
         """
-        Compute the Novelty score as the proportion of input sequences that are not present in the reference set.
+        Compute the novelty as the proportion of input sequences that are not present in the reference set.
 
         Args:
-            sequences: Generated sequences to evaluate for novelty.
+            sequences: Sequences to evaluate.
 
         Returns:
-            MetricResult contains the novelty score between 0 and 1, where
+            MetricResult containing the novelty score between 0 and 1, where
                 0 indicates no novel sequences and 1 indicates all sequences
                 are novel.
         """

@@ -6,7 +6,7 @@ import numpy as np
 from seqme.core.base import Metric, MetricResult
 
 
-class Identity(Metric):
+class ID(Metric):
     """Applies a user-provided predictor to a list of sequences and returns the mean and standard deviation of the predictors outputs."""
 
     def __init__(
@@ -34,10 +34,11 @@ class Identity(Metric):
         Applies the predictor to the sequences and returns the mean and standard deviation of the resulting values (if more than one sequence).
 
         Args:
-            sequences: List of sequences to evaluate.
+            sequences: Sequences to evaluate.
 
         Returns:
-            MetricResult: Contains two elements:
+            MetricResult containing two elements:
+
                 - value: Mean of predictor outputs.
                 - std: Standard deviation of predictor outputs.
         """
@@ -51,9 +52,3 @@ class Identity(Metric):
     @property
     def objective(self) -> Literal["minimize", "maximize"]:
         return self._objective
-
-
-class ID(Identity):
-    """Applies a user-provided predictor to a list of sequences and returns the average and standard deviation of the predictor's outputs."""
-
-    pass

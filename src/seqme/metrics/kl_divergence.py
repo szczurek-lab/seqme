@@ -25,7 +25,7 @@ class KLDivergence(Metric):
 
         Args:
             reference: Reference sequences assumed to represent the target distribution.
-            predictor: Predictor function which return a 1D NumPy array.
+            predictor: Predictor function which returns a 1D NumPy array. One value per sequence.
             n_draws: Number of Monte Carlo samples to draw from reference distribution.
             kde_bandwidth: Bandwidth parameter for the Gaussian KDE.
             seed: Seed for KL-divergence Monte-Carlo sampling.
@@ -40,15 +40,18 @@ class KLDivergence(Metric):
 
         self.reference_predictor = self.predictor(self.reference)
 
+        if self.n_draws <= 0:
+            raise ValueError("Expected n_draws > 0.")
+
     def __call__(self, sequences: list[str]) -> MetricResult:
         """
         Compute the KL-divergence between reference and sequence predictor.
 
         Args:
-            sequences: List of generated sequences to evaluate.
+            sequences: Sequences to evaluate.
 
         Returns:
-            MetricResult: KL-divergence and standard error.
+            MetricResult containing KL-divergence and standard error.
         """
         seqs_predictor = self.predictor(sequences)
         kl_div, standard_error = continuous_kl_mc(

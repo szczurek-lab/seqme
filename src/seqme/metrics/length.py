@@ -9,7 +9,7 @@ class Length(Metric):
     """Average sequence length."""
 
     def __init__(self, objective: Literal["minimize", "maximize"] = "minimize"):
-        """Initializes the metric.
+        """Initialize the metric.
 
         Args:
             objective: Whether to minimize or maximize the metric.
@@ -23,7 +23,7 @@ class Length(Metric):
             sequences: A list of sequences.
 
         Returns:
-            MetricResult: Mean sequence length. Deviation is sequence length standard deviation.
+            MetricResult containing mean sequence length and sequence length standard deviation.
         """
         lengths = [len(sequence) for sequence in sequences]
 

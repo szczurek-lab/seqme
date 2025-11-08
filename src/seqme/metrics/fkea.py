@@ -8,7 +8,7 @@ import torch
 from seqme.core.base import Metric, MetricResult
 
 
-class FourierBasedKernelEntropyApproximation(Metric):
+class FKEA(Metric):
     """
     Fourier-based Kernel Entropy Approximation (FKEA) approximates the VENDI-score and RKE-score using random Fourier features.
 
@@ -42,16 +42,16 @@ class FourierBasedKernelEntropyApproximation(Metric):
         strict: bool = True,
         name: str = "FKEA",
     ):
-        """Initializes the FKEA metric with an embedding function.
+        """Initialize the metric with an embedding function and kernel bandwidth.
 
         Args:
             embedder: A function that maps a list of sequences to a 2D NumPy array of embeddings.
             bandwidth: Bandwidth parameter for the Gaussian kernel.
             alpha: alpha-norm of the normalized kernels eigenvalues. If ``alpha=2`` then it corresponds to the RKE-score otherwise VENDI-alpha.
-            n_random_fourier_features: Number of random Fourier features per sequence. Used to approximate the kernel function. Consider increasing this to get a better approximation. If ``None``, use the exact kernel covariance matrix.
-            batch_size: Number of samples per batch when computing the kernel approximation.
+            n_random_fourier_features: Number of random Fourier features. Used to approximate the kernel function. Consider increasing this to get a better approximation. If ``None``, use the exact kernel covariance matrix.
+            batch_size: Number of samples per batch when computing the kernel.
             device: Compute device, e.g., ``"cpu"`` or ``"cuda"``.
-            seed: Seed for reproducible sampling.
+            seed: Seed for reproducible sampling of Fourier features.
             strict: Enforce equal number of samples for computation.
             name: Metric name.
         """
@@ -67,6 +67,12 @@ class FourierBasedKernelEntropyApproximation(Metric):
 
         self._n_sequences: int | None = None
 
+        if (self.n_random_fourier_features is not None) and (self.n_random_fourier_features <= 0):
+            raise ValueError("Expected n_random_fourier_features > 0.")
+
+        if self.bandwidth <= 0:
+            raise ValueError("Expected bandwidth > 0.")
+
         if self.alpha <= 0:
             raise ValueError("Expected alpha > 0.")
 
@@ -74,10 +80,10 @@ class FourierBasedKernelEntropyApproximation(Metric):
         """Computes FKEA of the input sequences.
 
         Args:
-            sequences: A list of generated sequences to evaluate.
+            sequences: Sequences to evaluate.
 
         Returns:
-            MetricResult containing the FKEA score. Higher is better.
+            MetricResult containing the FKEA score.
         """
         if self.strict:
             if self._n_sequences is None:
@@ -103,28 +109,6 @@ class FourierBasedKernelEntropyApproximation(Metric):
     @property
     def objective(self) -> Literal["minimize", "maximize"]:
         return "maximize"
-
-
-class FKEA(FourierBasedKernelEntropyApproximation):
-    """
-    Fourier-based Kernel Entropy Approximation (FKEA) approximates the VENDI-score and RKE-score using random Fourier features.
-
-    This is a reference-free method to estimate diversity in a set of
-    generated sequences. It is positively correlated with the number of
-    distinct modes or clusters in the embedding space, without requiring
-    access to real/reference data.
-
-    The method works by projecting embeddings into a randomized Fourier
-    feature space, approximating the Gaussian kernel, and computing the
-    α-norm of the normalized kernel eigenvalues.
-
-    - If alpha=2, this corresponds to the RKE-score.
-    - If alpha≠2, this corresponds to the VENDI-α score.
-
-    Reference:
-        Friedman et al., The Vendi Score: A Diversity Evaluation Metric for Machine Learning (https://arxiv.org/abs/2210.02410)
-        Ospanov, Zhang, Jalali et al., "Towards a Scalable Reference-Free Evaluation of Generative Models" (https://arxiv.org/pdf/2407.02961)
-    """
 
 
 def calculate_fourier_vendi(

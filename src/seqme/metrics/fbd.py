@@ -7,7 +7,7 @@ import scipy.linalg
 from seqme.core.base import Metric, MetricResult
 
 
-class FrechetBiologicalDistance(Metric):
+class FBD(Metric):
     """Fréchet Biological Distance (FBD) between a set of generated sequences and a reference dataset based on their embeddings.
 
     This metric estimates how similar the distributions of two sets of embeddings
@@ -26,7 +26,7 @@ class FrechetBiologicalDistance(Metric):
         name: str = "FBD",
     ):
         """
-        Initializes the FBD metric with a reference dataset and an embedding function.
+        Initializes the metric with a reference dataset and an embedding function.
 
         Args:
             reference: A list of reference sequences (e.g., real data).
@@ -46,14 +46,13 @@ class FrechetBiologicalDistance(Metric):
             raise ValueError("Reference embeddings must contain at least two samples.")
 
     def __call__(self, sequences: list[str]) -> MetricResult:
-        """
-        Computes the FBD between the reference and the input sequences.
+        """Compute the FBD between the reference and the input sequences.
 
         Args:
-            sequences: A list of generated sequences to evaluate.
+            sequences: Sequences to evaluate.
 
         Returns:
-            MetricResult containing the FBD score. Lower is better.
+            MetricResult containing the FBD score.
         """
         seq_embeddings = self.embedder(sequences)
         dist = wasserstein_distance(seq_embeddings, self.reference_embeddings)
@@ -109,17 +108,3 @@ def wasserstein_distance(e1: np.ndarray, e2: np.ndarray, eps: float = 1e-6) -> f
     dist = max(0.0, dist)  # numerical stability
 
     return dist
-
-
-class FBD(FrechetBiologicalDistance):
-    """Fréchet Biological Distance (FBD) between a set of generated sequences and a reference dataset based on their embeddings.
-
-    This metric estimates how similar the distributions of two sets of embeddings
-    are using the Wasserstein-2 (Fréchet) distance.
-
-    Reference:
-        Heusel et al., "GANs Trained by a Two Time-Scale Update Rule Converge to a
-        Local Nash Equilibrium" (https://arxiv.org/abs/1706.08500)
-    """
-
-    pass

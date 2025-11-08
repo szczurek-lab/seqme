@@ -4,16 +4,16 @@ from seqme.core.base import Metric, MetricResult
 
 
 class Uniqueness(Metric):
-    """Fraction of unique sequences within the provided list of generated sequences."""
+    """Fraction of unique sequences within the provided list of sequences."""
 
     def __call__(self, sequences: list[str]) -> MetricResult:
-        """Compute the uniqueness score as the proportion of unique sequences in the input list.
+        """Compute the uniqueness score as the proportion of unique sequences.
 
         Args:
-            sequences: Generated sequences to evaluate.
+            sequences: Sequences to evaluate.
 
         Returns:
-            Contains the uniqueness score between 0 and 1,
+            MetricResult containing the uniqueness score between 0 and 1,
                 where 0 indicates no unique sequences (all duplicates)
                 and 1 indicates all sequences are distinct.
         """

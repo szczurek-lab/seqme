@@ -7,8 +7,7 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "seqme"
-# copyright = "2025, Møller-Larsen et. al."
-author = "Møller-Larsen et. al."
+author = "Møller-Larsen et al."
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

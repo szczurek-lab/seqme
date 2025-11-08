@@ -47,7 +47,7 @@ class NGramJaccardSimilarity(Metric):
         """Compute the average Jaccard similarity between each generated sequence and a reference corpus, based on n-grams of size ``n``.
 
         Args:
-            sequences: A list of generated sequences to evaluate.
+            sequences: Sequences to evaluate.
 
         Returns:
             MetricResult containing the Jaccard similarity.

@@ -28,7 +28,7 @@ class ConformityScore(Metric):
         name: str = "Conformity score",
     ):
         """
-        Initialize the conformity score metric.
+        Initialize the metric.
 
         Args:
             reference: Reference sequences assumed to represent the target distribution.
@@ -61,10 +61,10 @@ class ConformityScore(Metric):
         Compute the conformity score for the given sequences.
 
         Args:
-            sequences: List of generated sequences to evaluate.
+            sequences: Sequences to evaluate.
 
         Returns:
-            MetricResult: Contains the mean and standard error of the conformity
+            MetricResult containing the mean and standard error of the conformity
                 scores across all folds.
         """
         seqs_predictors = self._sequences_to_predictors(sequences)  # (n_gen, n_descs)
