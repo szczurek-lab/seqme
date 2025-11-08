@@ -1,11 +1,11 @@
 Metrics
 #######
-``seqme`` provides a unified framework for evaluating generated across **three metric spaces** — sequence, embedding, and property — along with a few general-purpose utilities.
+``seqme`` provides a unified framework for evaluating sequences across **three metric spaces** — sequence, embedding, and property — along with a few general-purpose utilities.
 
 
 Sequence-based Metrics
 ----------------------
-Metrics that operate directly on the raw sequence data.
+Metrics that operate directly on the raw sequences.
 
 .. autosummary::
     :toctree:
