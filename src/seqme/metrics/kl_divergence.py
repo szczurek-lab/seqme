@@ -87,7 +87,7 @@ def continuous_kl_mc(
         x_samples: Array of samples drawn from the comparison distribution Q.
         kde_bandwidth: Bandwidth parameter for the Gaussian KDE.
         n_draws: Number of Monte Carlo samples to draw from P.
-        seed: Seed for the random number generator to ensure reproducibility.
+        seed: Seed for deterministic sampling of Gaussian KDE.
 
     Returns:
         A tuple containing:

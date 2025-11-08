@@ -23,7 +23,7 @@ class Diversity(Metric):
         Args:
             reference: Reference sequences to compare against. If ``None``, compare against other sequences within ``sequences``.
             k: If not ``None`` randomly sample ``k`` other sequences to compute diversity against.
-            seed: For reproducibility. Only used if ``k`` is not ``None``.
+            seed: For determinstic sampling. Only used if ``k`` is not ``None``.
             name: Metric name.
         """
         self.reference = reference
@@ -82,7 +82,7 @@ def compute_diversity(
         sequences: Sequences to compute diversity on.
         reference: Reference sequences to compare against. If ``None``, compare against other sequences within ``sequences``.
         k: If not ``None`` randomly sample ``k`` other sequences to compute diversity against.
-        seed: For reproducibility. Only used if k is not ``None``.
+        seed: For deterministic sampling. Only used if k is not ``None``.
 
     Returns:
         Diversity.

@@ -35,7 +35,7 @@ class ConformityScore(Metric):
             predictors: A list of predictor functions. Each should take a list of sequences and return a 1D NumPy array of features.
             n_splits: Number of cross-validation folds for KDE.
             kde_bandwidth: Bandwidth parameter for the Gaussian KDE.
-            seed: Seed for KFold shuffling.
+            seed: Seed for deterministic k-fold shuffling.
             name: Metric name.
         """
         if n_splits < 2:

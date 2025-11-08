@@ -571,7 +571,7 @@ def to_latex(
     show_arrow: bool = True,
     caption: str = None,
 ):
-    """Convert a metric dataframe to a LaTeX table.
+    """Export a metric dataframe to a LaTeX table.
 
     Args:
         df: DataFrame with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], attributed with 'objective'.
