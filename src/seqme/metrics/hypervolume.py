@@ -31,7 +31,7 @@ class Hypervolume(Metric):
                 - ``'hvi'``: Hypervalue indicator
                 - ``'convex-hull'``: Volume of the convex-hull
 
-            nadir: Smallest (worst) value in each objective dimension.
+            nadir: Smallest (worst) value in each objective dimension. If ``None``, set to zero vector.
             ideal: Largest (best) value in each objective dimension (used for normalizing points to [0;1]).
             strict: If ``True`` and values < ``nadir`` (or values > ``ideal``) raise an exception.
             name: Metric name.
@@ -47,6 +47,15 @@ class Hypervolume(Metric):
             raise ValueError(
                 f"Expected nadir to have {len(predictors)} elements, but only has {self.nadir.shape[0]} elements."
             )
+
+        if self.ideal is not None:
+            if self.ideal.shape[0] != len(predictors):
+                raise ValueError(
+                    f"Expected ideal to have {len(predictors)} elements, but only has {self.ideal.shape[0]} elements."
+                )
+
+            if (self.ideal < self.nadir).any():
+                raise ValueError("Expected nadir <= ideal.")
 
     def __call__(self, sequences: list[str]) -> MetricResult:
         """Evaluate hypervolume for the predicted properties of the input sequences.

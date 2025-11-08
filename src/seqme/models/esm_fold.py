@@ -113,6 +113,7 @@ class ESMFold:
 
                     - "atom14": sequence_length x 14 x 3
                     - "ca": sequence_length x 3
+
                 "plddt": Numpy arrays of shape: sequence_length (pLDDT for carbon alpha atom)
                 "ptm": predicted TM-scores if `compute_ptm` is true.
         """

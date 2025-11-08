@@ -5,7 +5,7 @@ class KmerFrequencyEmbedding:
     """Computes normalized k-mer frequency embeddings for sequences."""
 
     def __init__(self, kmers: list[str]):
-        """Initialize KmerFrequencyEmbedding.
+        """Initialize model.
 
         Args:
             kmers: List of valid k-mers (same length).
