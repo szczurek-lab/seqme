@@ -26,13 +26,13 @@ class NGramJaccardSimilarity(Metric):
             objective: ``"minimize"`` to reward novelty, ``"maximize"`` to reward overlap.
             name: Metric name.
         """
+        if n < 1:
+            raise ValueError("Expected n >= 1.")
+
         self.n = n
         self._objective = objective
         self.reference_ngrams = self._make_ngram_set(reference)
         self._name = name
-
-        if self.n < 1:
-            raise ValueError("Expected n >= 1.")
 
     def _make_ngram_set(self, corpus: list[str]) -> set[str]:
         all_ngrams: set[str] = set()
