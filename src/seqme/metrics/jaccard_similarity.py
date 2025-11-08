@@ -31,6 +31,9 @@ class NGramJaccardSimilarity(Metric):
         self.reference_ngrams = self._make_ngram_set(reference)
         self._name = name
 
+        if self.n < 1:
+            raise ValueError("Expected n >= 1.")
+
     def _make_ngram_set(self, corpus: list[str]) -> set[str]:
         all_ngrams: set[str] = set()
         for seq in corpus:
