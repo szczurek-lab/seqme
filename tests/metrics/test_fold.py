@@ -37,14 +37,8 @@ def test_variance():
 
 
 def test_one_fold():
-    metric = Fold(metric=Count(), n_splits=1, estimate="biased")
-    assert metric.name == "Count"
-    assert metric.objective == "maximize"
-
-    sequences = ["AA", "AAA", "AAAA", "AAA", "AAAAAA"]
-    result = metric(sequences)
-    assert result.value == 5
-    assert result.deviation is None
+    with pytest.raises(ValueError):
+        Fold(metric=Count(), n_splits=1, estimate="biased")
 
 
 def test_k_larger_than_sequence_count():

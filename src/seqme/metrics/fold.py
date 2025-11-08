@@ -58,8 +58,8 @@ class Fold(Metric):
         if (self.n_splits is None) and (self.split_size is None):
             raise ValueError("One of n_splits or split_size must be specified.")
 
-        if (self.n_splits is not None) and (self.n_splits <= 0):
-            raise ValueError("Expected n_splits > 0.")
+        if (self.n_splits is not None) and (self.n_splits < 2):
+            raise ValueError("Expected n_splits >= 2.")
         if (self.split_size is not None) and (self.split_size <= 0):
             raise ValueError("Expected split_size > 0.")
 
