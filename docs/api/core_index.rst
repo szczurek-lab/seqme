@@ -1,8 +1,6 @@
 Core
 ####
-Essential functionality for evaluating, manipulating, and visualizing metrics.
-
-This module provides a high-level interface for working with metric tables, managing results, and performing common data manipulation and visualization tasks.
+This module provides a high-level interface for working with metric dataframes, e.g., manipulating, visualizing and saving a metric dataframe.
 
 
 Base Components
@@ -21,7 +19,7 @@ Core objects and classes that define the ``seqme`` evaluation and metric API.
 
 Data Manipulation
 -----------------
-Utility functions to combine, filter, and reorganize metric results.
+Utility functions to combine, filter, and reorganize metric dataframes.
 
 .. autosummary::
     :toctree:
@@ -36,7 +34,7 @@ Utility functions to combine, filter, and reorganize metric results.
 
 Visualization
 -------------
-Functions for visual exploration and presentation of metrics.
+Functions for visual exploration and presentation of metric dataframes.
 
 .. autosummary::
     :toctree:
@@ -51,7 +49,7 @@ Functions for visual exploration and presentation of metrics.
 
 Input / Output
 --------------
-Functions for serializing and loading data and metric results.
+Functions for serializing and loading sequences, cache and metric dataframes.
 
 .. autosummary::
     :toctree:

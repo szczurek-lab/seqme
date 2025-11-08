@@ -1,14 +1,13 @@
 Models
 ======
 
-Mapping biological sequences to numerical representations.
+Models mapping biological sequences to feature representations.
 
 Overview
 --------
-The ``seqme`` library provides a suite of models that convert biomolecular sequences into numerical
-representations. These models fall into two main categories:
+The ``seqme`` library provides a suite of models that convert biological sequences into numerical representations. These models fall into two main categories:
 
-* **Embedding models** — map sequences to high-dimensional vector spaces.
+* **Embedding models** — map sequences to fixed-length vector representations.
 * **Property models** — compute interpretable scalar or descriptor values such as charge, weight, or hydrophobicity.
 
 Models
