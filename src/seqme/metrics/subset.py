@@ -19,9 +19,9 @@ class Subset(Metric):
         Initialize subset wrapper.
 
         Args:
-            metric: The metric to compute.
+            metric: Metric to compute.
             n_samples: Number of sequences to sample.
-            seed: Seed for reproducible sampling.
+            seed: Seed for deterministic sampling.
         """
         self.metric = metric
         self.n_samples = n_samples

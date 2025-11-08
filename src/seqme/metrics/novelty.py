@@ -13,7 +13,6 @@ class Novelty(Metric):
         Args:
             reference: A list of reference sequences against which generated sequences will be compared.
                 Sequences found in this list are considered non-novel.
-            reference_name: An optional label for the reference data. This name will be appended to the metric name for identification.
             name: Metric name.
         """
         self.reference = set(reference)

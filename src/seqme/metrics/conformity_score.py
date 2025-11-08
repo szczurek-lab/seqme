@@ -2,8 +2,8 @@ from collections.abc import Callable
 from typing import Literal
 
 import numpy as np
-from sklearn.model_selection import KFold  # type: ignore
-from sklearn.neighbors import KernelDensity  # type: ignore
+from sklearn.model_selection import KFold
+from sklearn.neighbors import KernelDensity
 
 from seqme.core.base import Metric, MetricResult
 
@@ -35,7 +35,6 @@ class ConformityScore(Metric):
             predictors: A list of predictor functions. Each should take a list of sequences and return a 1D NumPy array of features.
             n_splits: Number of cross-validation folds for KDE.
             kde_bandwidth: Bandwidth parameter for the Gaussian KDE.
-            reference_name: Optional name for the reference dataset.
             seed: Seed for KFold shuffling.
             name: Metric name.
         """

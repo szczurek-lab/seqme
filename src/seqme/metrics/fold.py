@@ -41,7 +41,7 @@ class Fold(Metric):
             drop_last: Drop final fold if smaller than ``split_size``.
             strict: Error on any non-null fold deviation.
             shuffle: Shuffle data before splitting.
-            seed: Seed for reproducible shuffling of sequences when creating folds.
+            seed: Seed for deterministic shuffling of sequences when creating folds.
         """
         self.metric = metric
         self.deviation = deviation

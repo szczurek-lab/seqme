@@ -51,7 +51,7 @@ class FKEA(Metric):
             n_random_fourier_features: Number of random Fourier features. Used to approximate the kernel function. Consider increasing this to get a better approximation. If ``None``, use the exact kernel covariance matrix.
             batch_size: Number of samples per batch when computing the kernel.
             device: Compute device, e.g., ``"cpu"`` or ``"cuda"``.
-            seed: Seed for reproducible sampling of Fourier features.
+            seed: Seed for deterministic sampling of Fourier features.
             strict: Enforce equal number of samples for computation.
             name: Metric name.
         """
