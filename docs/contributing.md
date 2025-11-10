@@ -55,7 +55,7 @@ def test_bar(): # pytest recognizes it as a test
 
 Tests are run automatically with [`pre-commit`](#tooling).
 
-### Code checks
+## Code checks
 
 Use [`ruff`](#tooling) to check and format code:
 
@@ -73,7 +73,7 @@ mypy -p seqme
 
 All checks are run automatically with [`pre-commit`](#tooling).
 
-### Notebook stripping
+## Notebook stripping
 
 Use [`nbstripout`](#tooling) to strip notebook metadata before commiting to repository:
 
@@ -83,7 +83,7 @@ find . -name '*.ipynb' -exec nbstripout --drop-empty-cells --keep-output {} +
 
 This command is run automatically with [`pre-commit`](#tooling).
 
-### Building sphinx docs
+## Building sphinx docs
 
 To build the sphinx docs, do
 
@@ -96,7 +96,7 @@ which generates `docs/_build` directory with HTML files.
 
 Note: Any changes to the sphinx docs, will automatically be built by readthedocs when merged into the main branch.
 
-### Tooling
+## Tooling
 
 - **Linter and formatter:** [`ruff`](https://docs.astral.sh/ruff/)
 - **Static type checking**: [`mypy`](https://mypy.readthedocs.io/en/stable/#)
