@@ -57,7 +57,7 @@ Run in a Jupyter notebook:
    installation
    tutorials/index
    api
-   contributing_guide
+   contributing
 
 .. toctree::
    :maxdepth: 1
