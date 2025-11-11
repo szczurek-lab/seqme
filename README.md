@@ -4,7 +4,7 @@
 
 [![PyPI](https://img.shields.io/pypi/v/seqme.svg)](https://pypi.org/project/seqme/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![License](https://img.shields.io/github/license/szczurek-lab/seqme?v=2)](https://opensource.org/license/bsd-3-clause)
+[![License](https://img.shields.io/github/license/szczurek-lab/seqme)](https://opensource.org/license/bsd-3-clause)
 [![Read the Docs](https://img.shields.io/readthedocs/seqme)](https://seqme.readthedocs.io/)
 
 **seqme** is a modular and extendable python library containing model-agnostic metrics for evaluating biological sequence designs. It enables benchmarking and comparison of generative models for small molecules, DNA, RNA, peptides, and proteins.

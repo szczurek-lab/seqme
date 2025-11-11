@@ -25,7 +25,7 @@ pre-commit install
 
 in the root of the repository. Pre-commit will automatically download all dependencies when it is run for the first time.
 
-To run pre-commit without a calling `git commit`, do
+To run pre-commit without calling `git commit`, do
 
 ```bash
 pre-commit
