@@ -1,7 +1,7 @@
 from typing import Literal
 
 import numpy as np
-import pylev
+from polyleven import levenshtein
 
 from seqme.core.base import Metric, MetricResult
 
@@ -99,7 +99,7 @@ def compute_diversity(
             others = [others[i] for i in idxs]
 
         norms = np.maximum(len(sequence), [len(seq) for seq in others])
-        edits = np.array([pylev.levenshtein(sequence, seq) for seq in others])
+        edits = np.array([levenshtein(sequence, seq) for seq in others])
         norm_edits = edits / norms
 
         div = norm_edits.mean()

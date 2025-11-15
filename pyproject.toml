@@ -54,7 +54,7 @@ dependencies = [
     "tqdm",
     "scikit-learn",
     "umap-learn",
-    "pylev",
+    "polyleven",
     "pylatex",
 ]
 
