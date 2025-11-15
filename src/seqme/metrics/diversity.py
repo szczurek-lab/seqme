@@ -1,7 +1,6 @@
 from typing import Literal
 
 import numpy as np
-import pylev
 
 from seqme.core.base import Metric, MetricResult
 
@@ -99,10 +98,63 @@ def compute_diversity(
             others = [others[i] for i in idxs]
 
         norms = np.maximum(len(sequence), [len(seq) for seq in others])
-        edits = np.array([pylev.levenshtein(sequence, seq) for seq in others])
+        edits = np.array([wfi_levenshtein(sequence, seq) for seq in others])
         norm_edits = edits / norms
 
         div = norm_edits.mean()
         divs.append(div)
 
     return np.mean(divs).item()
+
+
+# Adapted from https://github.com/toastdriven/pylev
+# Distributed under BSD
+
+
+def wfi_levenshtein(s1: str, s2: str) -> int:
+    """Calculates the Levenshtein distance between two strings.
+
+    This version uses an iterative version of the Wagner-Fischer algorithm.
+    """
+    if s1 == s2:
+        return 0
+
+    len1 = len(s1)
+    len2 = len(s2)
+
+    if len1 == 0:
+        return len2
+    if len2 == 0:
+        return len1
+
+    if len1 > len2:
+        s2, s1 = s1, s2
+        len2, len1 = len1, len2
+
+    d0 = list(range(len2 + 1))
+    d1 = list(range(len2 + 1))
+
+    for i in range(len1):
+        d1[0] = i + 1
+        for j in range(len2):
+            cost = d0[j]
+
+            if s1[i] != s2[j]:
+                # substitution
+                cost += 1
+
+                # insertion
+                x_cost = d1[j] + 1
+                if x_cost < cost:
+                    cost = x_cost
+
+                # deletion
+                y_cost = d0[j + 1] + 1
+                if y_cost < cost:
+                    cost = y_cost
+
+            d1[j + 1] = cost
+
+        d0, d1 = d1, d0
+
+    return d0[-1]
