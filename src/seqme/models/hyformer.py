@@ -309,11 +309,11 @@ class Hyformer:
         # log-softmax over the vocabulary for numerical stability
         log_probs = torch.log_softmax(logits, dim=-1)  # (batch, seq_len, vocab)
 
-        # shift logits and labels by one
-        logits = logits[:, :-1, :].contiguous()
+        # shift log_probs and labels by one
+        log_probs = log_probs[:, :-1, :].contiguous()
         labels = labels[:, 1:].contiguous()
 
-        ppls = torch.zeros(logits.shape[0])
+        ppls = torch.zeros(log_probs.shape[0])
         for idx, (log_prob, label) in enumerate(zip(log_probs, labels, strict=True)):
             ppl = 0
             n = 0
