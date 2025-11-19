@@ -1,5 +1,6 @@
 from typing import Literal
 
+import moocore
 import numpy as np
 import pandas as pd
 import scipy.stats
@@ -78,10 +79,6 @@ def rank(
     return df
 
 
-# Adapted from https://github.com/nabenabe0928/fast-pareto
-# Distributed under Apache-2.0: https://github.com/nabenabe0928/fast-pareto/blob/main/LICENSE
-
-
 def non_dominated_rank(
     costs: np.ndarray,
     tie_break: Literal["crowding-distance", "mean-rank"] | None = None,
@@ -103,7 +100,7 @@ def non_dominated_rank(
                 The each non-dominated rank will be tie-broken so that we can sort identically.
                 The shape is (n_observations, ) and the array is a permutation of zero to n_observations - 1.
     """
-    ranks = _non_dominated_rank(costs=costs)
+    ranks = moocore.pareto_rank(costs)
 
     if tie_break is None:
         pass
@@ -128,72 +125,6 @@ def non_dominated_rank(
         raise ValueError(f"Invalid ties: {ties}.")
 
     return ranks + 1
-
-
-def is_pareto_front(costs: np.ndarray, is_unique_lexsorted: bool = False) -> np.ndarray:
-    """Determine the Pareto front from a provided set of costs.
-
-    The time complexity is O(N (log N)^(M - 2)) for M > 3 and O(N log N) for M = 2, 3 where
-    N is n_observations and M is n_objectives. (Kung's algorithm).
-
-    Args:
-        costs: An array of costs (or objectives). The shape is (n_observations, n_objectives).
-        is_unique_lexsorted: Whether to assume the costs are unique lexsorted.
-
-    Returns:
-        on_front: Whether the solution is on the Pareto front. Each element is True or False and the shape is (n_observations, ).
-
-    Note:
-        f dominates g if and only if:
-            1. f[i] <= g[i] for all i, and 2. f[i] < g[i] for some i
-        g is not dominated by f if and only if:
-            1. f[i] > g[i] for some i, or 2. f[i] == g[i] for all i
-    """
-    if not is_unique_lexsorted:
-        costs, order_inv = np.unique(costs, axis=0, return_inverse=True)
-
-    on_front = _is_pareto_front_2d(costs) if costs.shape[-1] == 2 else _is_pareto_front_nd(costs)
-    return on_front[order_inv] if not is_unique_lexsorted else on_front
-
-
-def _is_pareto_front_2d(costs: np.ndarray) -> np.ndarray:
-    n_observations = costs.shape[0]
-    cummin_value1 = np.minimum.accumulate(costs[:, 1])
-    on_front = np.ones(n_observations, dtype=bool)
-    on_front[1:] = cummin_value1[1:] < cummin_value1[:-1]  # True if cummin value1 is new minimum.
-    return on_front
-
-
-def _is_pareto_front_nd(costs: np.ndarray) -> np.ndarray:
-    n_observations = costs.shape[0]
-    on_front = np.zeros(n_observations, dtype=bool)
-    nondominated_indices = np.arange(n_observations)
-    while len(costs) > 0:
-        # The following judges `np.any(costs[i] < costs[0])` for each `i`.
-        nondominated_and_not_top = np.any(costs < costs[0], axis=1)
-        # NOTE: trials[j] cannot dominate trials[i] for i < j because of lexsort. Therefore, nondominated_indices[0] is always non-dominated.
-        on_front[nondominated_indices[0]] = True
-        costs = costs[nondominated_and_not_top]
-        nondominated_indices = nondominated_indices[nondominated_and_not_top]
-
-    return on_front
-
-
-def _non_dominated_rank(costs: np.ndarray) -> np.ndarray:
-    n_observations, n_obj = costs.shape
-    if n_obj == 1:
-        return np.unique(costs[:, 0], return_inverse=True)[1]
-
-    ranks = np.zeros(n_observations, dtype=int)
-    rank = 0
-    indices = np.arange(n_observations)
-    while indices.size > 0:
-        on_front = is_pareto_front(costs, is_unique_lexsorted=False)
-        ranks[indices[on_front]] = rank
-        indices, costs = indices[~on_front], costs[~on_front]
-        rank += 1
-
-    return ranks
 
 
 def _crowding_distance_tie_break(costs: np.ndarray, nd_ranks: np.ndarray) -> np.ndarray:
