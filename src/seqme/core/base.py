@@ -1202,14 +1202,14 @@ def plot_scatter(
                 lc = mpl.collections.LineCollection(
                     segments,  # type: ignore
                     colors=c,
-                    linewidths=linewidth,
+                    linewidths=deviation_linewidth,
                     zorder=1,
                     alpha=deviation_alpha,
                 )
                 ax.add_collection(lc)
 
         if linestyle and xs.size > 1:
-            ax.plot(xs, ys, color=c, linestyle=linestyle, zorder=0)  # type: ignore
+            ax.plot(xs, ys, color=c, linestyle=linestyle, linewidth=linewidth, zorder=0)  # type: ignore
 
     arrows = {"maximize": "↑", "minimize": "↓"}
 
