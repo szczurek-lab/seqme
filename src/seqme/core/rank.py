@@ -103,8 +103,7 @@ def non_dominated_rank(
                 The each non-dominated rank will be tie-broken so that we can sort identically.
                 The shape is (n_observations, ) and the array is a permutation of zero to n_observations - 1.
     """
-    unique_costs, order_inv = np.unique(costs, axis=0, return_inverse=True)
-    ranks = _non_dominated_rank(costs=unique_costs)[order_inv.flatten()]
+    ranks = _non_dominated_rank(costs=costs)
 
     if tie_break is None:
         pass
@@ -131,7 +130,7 @@ def non_dominated_rank(
     return ranks + 1
 
 
-def is_pareto_front(costs: np.ndarray, assume_unique_lexsorted: bool = False) -> np.ndarray:
+def is_pareto_front(costs: np.ndarray, is_unique_lexsorted: bool = False) -> np.ndarray:
     """Determine the Pareto front from a provided set of costs.
 
     The time complexity is O(N (log N)^(M - 2)) for M > 3 and O(N log N) for M = 2, 3 where
@@ -139,7 +138,7 @@ def is_pareto_front(costs: np.ndarray, assume_unique_lexsorted: bool = False) ->
 
     Args:
         costs: An array of costs (or objectives). The shape is (n_observations, n_objectives).
-        assume_unique_lexsorted: Whether to assume the unique lexsorted costs or not. Basically, we omit np.unique(costs, axis=0) if True.
+        is_unique_lexsorted: Whether to assume the costs are unique lexsorted.
 
     Returns:
         on_front: Whether the solution is on the Pareto front. Each element is True or False and the shape is (n_observations, ).
@@ -150,11 +149,11 @@ def is_pareto_front(costs: np.ndarray, assume_unique_lexsorted: bool = False) ->
         g is not dominated by f if and only if:
             1. f[i] > g[i] for some i, or 2. f[i] == g[i] for all i
     """
-    if assume_unique_lexsorted:
+    if not is_unique_lexsorted:
         costs, order_inv = np.unique(costs, axis=0, return_inverse=True)
 
     on_front = _is_pareto_front_2d(costs) if costs.shape[-1] == 2 else _is_pareto_front_nd(costs)
-    return on_front[order_inv] if assume_unique_lexsorted else on_front
+    return on_front[order_inv] if not is_unique_lexsorted else on_front
 
 
 def _is_pareto_front_2d(costs: np.ndarray) -> np.ndarray:
@@ -189,7 +188,7 @@ def _non_dominated_rank(costs: np.ndarray) -> np.ndarray:
     rank = 0
     indices = np.arange(n_observations)
     while indices.size > 0:
-        on_front = is_pareto_front(costs, assume_unique_lexsorted=True)
+        on_front = is_pareto_front(costs, is_unique_lexsorted=False)
         ranks[indices[on_front]] = rank
         indices, costs = indices[~on_front], costs[~on_front]
         rank += 1
