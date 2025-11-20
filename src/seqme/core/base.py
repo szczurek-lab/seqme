@@ -477,39 +477,3 @@ class Cache:
             A nested dictionary of cached sequence representations.
         """
         return self.model_to_cache.copy()
-
-
-def _get_top_indices(df: pd.DataFrame, metric: str) -> tuple[set[int], set[int]]:
-    def top_indices_helper(top_two: pd.Series) -> tuple[set[int], set[int]]:
-        if pd.isna(top_two.values[0]):
-            return set(), set()
-
-        # get all indices with the same value as the best value
-        value1 = top_two.values[0]
-        indices1 = top_two.index[top_two == value1].tolist()
-        if len(indices1) >= 2:
-            return set(indices1), set()
-
-        if len(top_two) < 2 or pd.isna(top_two.values[1]):
-            return set(indices1), set()
-
-        # get all indices with the same value as the second best value
-        value2 = top_two.values[1]
-        indices2 = top_two.index[top_two == value2].tolist()
-
-        return set(indices1), set(indices2)
-
-    if "objective" not in df.attrs:
-        raise ValueError("DataFrame must have an 'objective' attribute. Use 'sm.evaluate' to create the DataFrame.")
-
-    objective = df.attrs["objective"][metric]
-    vals = df[(metric, "value")]
-
-    if objective == "maximize":
-        best_cells = vals.nlargest(2, keep="all")
-    elif objective == "minimize":
-        best_cells = vals.nsmallest(2, keep="all")
-    else:
-        raise ValueError(f"Unknown objective '{objective}' for metric '{metric}'.")
-
-    return top_indices_helper(best_cells)
