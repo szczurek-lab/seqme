@@ -55,7 +55,6 @@ dependencies = [
     "scikit-learn",
     "umap-learn",
     "polyleven",
-    "pylatex",
 ]
 
 [project.optional-dependencies]
