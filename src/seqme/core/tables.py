@@ -148,7 +148,7 @@ def show(
             f"Expected {n_metrics} notations, got {len(notation)}. Provide a single int or a list matching the number of metrics."
         )
 
-    if color:
+    if color is not None:
         if not mpl.colors.is_color_like(color):
             raise ValueError(f"Invalid color: {color}")
         color = mpl.colors.to_hex(color)
@@ -245,7 +245,7 @@ def to_latex(
     if df.index.nlevels != 1:
         raise ValueError("to_latex() does not support tuple sequence names.")
 
-    if color:
+    if color is not None:
         if not mpl.colors.is_color_like(color):
             raise ValueError(f"Invalid color: {color}")
         color = mpl.colors.to_hex(color)
