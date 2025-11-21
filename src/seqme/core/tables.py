@@ -309,7 +309,7 @@ def to_latex(
         return " & ".join(columns)
 
     buffer = WriteBuffer()
-    buffer.inline("\\begin{table}")
+    buffer.inline("\\begin{table}[h]")
     buffer.indent()
 
     buffer.inline("\\centering")
