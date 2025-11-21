@@ -34,7 +34,7 @@ def show(
     Args:
         df: DataFrame with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], attributed with 'objective'.
         n_decimals: Decimal precision for formatting.
-        color: Color (hex) for highlighting best scores. If ``None``, no coloring.
+        color: Color for highlighting best scores. If ``None``, no coloring.
         color_style: Style of the coloring. Ignored if color is ``None``.
         notation: Whether to use scientific notation (exponent) or fixed-point notation (decimals).
         na_value: str to show for cells with no metric value, i.e., cells with NaN values.
@@ -59,9 +59,13 @@ def show(
 
         if pd.isna(val):
             return no_value
+
+        fval = _format_precision(val, n_decimals, suffix_notation)
         if pd.isna(dev):
-            return f"{val:.{n_decimals}{suffix_notation}}"
-        return f"{val:.{n_decimals}{suffix_notation}}±{dev:.{n_decimals}{suffix_notation}}"
+            return fval
+
+        fdev = _format_precision(dev, n_decimals, suffix_notation)
+        return f"{fval}±{fdev}"
 
     def _fraction(val: float, min_value: float, max_value: float, objective: str) -> float:
         if pd.isna(val):
@@ -143,6 +147,11 @@ def show(
         raise ValueError(
             f"Expected {n_metrics} notations, got {len(notation)}. Provide a single int or a list matching the number of metrics."
         )
+
+    if color:
+        if not mpl.colors.is_color_like(color):
+            raise ValueError(f"Invalid color: {color}")
+        color = mpl.colors.to_hex(color)
 
     if level >= df.index.nlevels or level < 0:
         raise ValueError(f"Level should be in range [0;{df.index.nlevels - 1}].")
@@ -227,7 +236,7 @@ def to_latex(
         df: DataFrame with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], attributed with 'objective'.
         path: Output filename, e.g., ``"./path/table.tex"``.
         n_decimals: Decimal precision for formatting.
-        color: Color (hex) for highlighting best scores. If ``None``, no coloring.
+        color: Color for highlighting best scores. If ``None``, no coloring.
         na_value: str to show for cells with no metric value, i.e., cells with NaN values.
         show_arrow: Whether to include the objective arrow in the column names.
         caption: Bottom caption text.
@@ -235,6 +244,11 @@ def to_latex(
     # @TODO: support multi-index rows + levels
     if df.index.nlevels != 1:
         raise ValueError("to_latex() does not support tuple sequence names.")
+
+    if color:
+        if not mpl.colors.is_color_like(color):
+            raise ValueError(f"Invalid color: {color}")
+        color = mpl.colors.to_hex(color)
 
     n_metrics = df.shape[1] // 2
     n_decimals = [n_decimals] * n_metrics if isinstance(n_decimals, int) else n_decimals
@@ -261,14 +275,6 @@ def to_latex(
 
     # LaTeX formatting
 
-    def table_header(metric: str) -> str:
-        arrow = arrows[objectives[metric]]
-        text = f"{metric} ({arrow})" if show_arrow else metric
-        return f"\\textbf{{{text}}}"
-
-    def to_row(columns: list[str]) -> str:
-        return " & ".join(columns)
-
     class WriteBuffer:
         def __init__(self):
             self.content = ""
@@ -294,6 +300,14 @@ def to_latex(
         def dump(self) -> str:
             return self.content
 
+    def table_header(metric: str) -> str:
+        arrow = arrows[objectives[metric]]
+        text = f"{metric} ({arrow})" if show_arrow else metric
+        return f"\\textbf{{{text}}}"
+
+    def to_row(columns: list[str]) -> str:
+        return " & ".join(columns)
+
     buffer = WriteBuffer()
     buffer.inline("\\begin{table}")
     buffer.indent()
@@ -314,25 +328,31 @@ def to_latex(
 
     for row_name, row in df.iterrows():
         values = [row_name]
-        for col_name, val, dev in zip(col_names, row[::2], row[1::2], strict=True):
+        for i, (val, dev) in enumerate(zip(row[::2], row[1::2], strict=True)):
             if pd.isna(val):
                 values.append(na_value)
                 continue
+
+            col_name = col_names[i]
+            n_decimal = n_decimals[i]
+
+            fval = _format_precision(val, n_decimal)
+            fdev = _format_precision(dev, n_decimal) if not pd.isna(dev) else None
 
             best = row_name in best_indices[col_name]
             second_best = row_name in second_best_indices[col_name]
 
             if best:
-                v = f"\\mathbf{{{val}}}"
-                if not pd.isna(dev):
-                    v += " \\pm " + f"\\mathbf{{{dev}}}"
+                v = f"\\mathbf{{{fval}}}"
+                if fdev:
+                    v += f" \\pm \\mathbf{{{fdev}}}"
                 if color:
                     v = f"\\cellcolor[HTML]{{{color[1:]}}}{{{v}}}"
             elif second_best:
-                v = f"{val}" if pd.isna(dev) else f"{val} \\pm {dev}"
+                v = f"{fval} \\pm {fdev}" if fdev else f"{fval}"
                 v = f"\\underline{{{v}}}"
             else:
-                v = f"{val}" if pd.isna(dev) else f"{val} \\pm {dev}"
+                v = f"{fval} \\pm {fdev}" if fdev else f"{fval}"
 
             values.append(f"${v}$")
 
@@ -392,3 +412,7 @@ def _get_top_indices(df: pd.DataFrame, metric: str) -> tuple[set[int], set[int]]
         raise ValueError(f"Unknown objective '{objective}' for metric '{metric}'.")
 
     return top_indices_helper(best_cells)
+
+
+def _format_precision(val: float, n_decimals: int, suffix: str = "f") -> str:
+    return f"{val:.{n_decimals}{suffix}}"
