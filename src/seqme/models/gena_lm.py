@@ -12,28 +12,28 @@ class GENALMCheckpoint(Enum):
     GENA-LM checkpoints.
 
     Embedding checkpoints:
-        bert_base_t2t: 110M parameters, 12 layers, embedding dim: 768, max sequence length: 512bp - Trained on T2T+1000G SNPs.
-        bert_base_t2t_lastln_t2t: 110M parameters, 12 layers, embedding dim: 768, max sequence length: 512 bps - Trained on T2T+1000G SNPs.
-        bert_base_t2t_multi: 110M parameters, 12 layers, embedding dim: 768, max sequence length: 512bp - Trained on T2T+1000G SNPs+Multispecies.
-        bert_large_t2t: 336M parameters, 24 layers, embedding dim: 1024, max sequence length: 512bp - Trained on T2T+1000G SNPs.
-        bigbird_base_t2t: 110M parameters, 12 layers, embedding dim: 768, max sequence length: 4096bp - Trained on T2T+1000G SNPs.
+        - bert_base_t2t: 110M parameters, 12 layers, embedding dim: 768, max sequence length: 512bp - Trained on T2T+1000G SNPs.
+        - bert_base_t2t_lastln_t2t: 110M parameters, 12 layers, embedding dim: 768, max sequence length: 512 bps - Trained on T2T+1000G SNPs.
+        - bert_base_t2t_multi: 110M parameters, 12 layers, embedding dim: 768, max sequence length: 512bp - Trained on T2T+1000G SNPs+Multispecies.
+        - bert_large_t2t: 336M parameters, 24 layers, embedding dim: 1024, max sequence length: 512bp - Trained on T2T+1000G SNPs.
+        - bigbird_base_t2t: 110M parameters, 12 layers, embedding dim: 768, max sequence length: 4096bp - Trained on T2T+1000G SNPs.
 
         Note: In practice the model has M+1 layers. The last layer is a LayerNorm.
 
     Downstream classification checkpoints:
-        bert_base_t2t_promoters: 110M parameters, 12 layers, task sequence length: 300bp.
+        - bert_base_t2t_promoters: 110M parameters, 12 layers, task sequence length: 300bp.
             Binary classification: determining the presence or absence of a promoter within a given region.
 
-        bert_large_t2t_promoters: 336M parameters, 24 layers, task sequence length: 300bp.
+        - bert_large_t2t_promoters: 336M parameters, 24 layers, task sequence length: 300bp.
             Binary classification: determining the presence or absence of a promoter within a given region.
 
-        bert_large_t2t_promoters2: 336M parameters, 24 layers, task sequence length: 2000bp.
+        - bert_large_t2t_promoters2: 336M parameters, 24 layers, task sequence length: 2000bp.
             Binary classification: determining the presence or absence of a promoter within a given region.
 
-        bert_base_t2t_splice_site: 110M parameters, 12 layers, task sequence length: 15000bp. Identifies splicing sites.
+        - bert_base_t2t_splice_site: 110M parameters, 12 layers, task sequence length: 15000bp. Identifies splicing sites.
             Classification: determing the splice donor, splice acceptor and none
 
-        bert_large_t2t_splice_site: 336M parameters, 24 layers, task sequence length: 15000bp. Identifies splicing sites.
+        - bert_large_t2t_splice_site: 336M parameters, 24 layers, task sequence length: 15000bp. Identifies splicing sites.
             Classification: determing the splice donor, splice acceptor and none
     """
 

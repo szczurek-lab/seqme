@@ -15,11 +15,10 @@ class HyformerCheckpoint(str, Enum):
     Hyformer checkpoints from Izdebski et al.
 
     Available checkpoints:
-        molecules_8M: 8M parameters, 8 layers, embedding dim 256, pretrained on GuacaMol dataset [Brown et al.]
-        molecules_50M: 50M parameters, 12 layers, embedding dim 512, pretrained on Uni-Mol dataset [Zhou et al.]
-        peptides_34M: 34M parameters, 8 layers, embedding dim 512, pretrained on combined general-purpose peptide and AMP datasets [Izdebski et al.]
-        peptides_34M_mic: 34M parameters, 8 layers, embedding dim 512, pretrained on combined general-purpose peptide and MIC datasets [Izdebski et al.]
-            and subsequently jointly fine-tuned on peptides with (log2 transformed) MIC values against E. coli bacteria [Szymczak et al.]
+        - molecules_8M: 8M parameters, 8 layers, embedding dim 256, pretrained on GuacaMol dataset [Brown et al.]
+        - molecules_50M: 50M parameters, 12 layers, embedding dim 512, pretrained on Uni-Mol dataset [Zhou et al.]
+        - peptides_34M: 34M parameters, 8 layers, embedding dim 512, pretrained on combined general-purpose peptide and AMP datasets [Izdebski et al.]
+        - peptides_34M_mic: 34M parameters, 8 layers, embedding dim 512, pretrained on combined general-purpose peptide and MIC datasets [Izdebski et al.] and subsequently jointly fine-tuned on peptides with (log2 transformed) MIC values against E. coli bacteria [Szymczak et al.]
 
     If used for prediction, pre-trained models, i.e., `molecules_8M` and `molecules_50M` and `peptides_34M`, predict the physicochemical properties used for pre-training.
     Jointly fine-tuned model `peptides_34M_mic` predicts the log2 transformed MIC values against E. coli bacteria.
@@ -46,7 +45,7 @@ class Hyformer:
 
     Computes sequence-level embeddings by extracting the [CLS] token embedding.
 
-    Installation: for molecules: ``pip install "seqme[hyformer_molecules]" "hyformer @ git+https://github.com/szczurek-lab/hyformer.git@main"``
+    Installation for molecules: ``pip install "seqme[hyformer_molecules]" "hyformer @ git+https://github.com/szczurek-lab/hyformer.git@main"``
 
     Installation for peptides: ``pip install "seqme[hyformer]" "hyformer @ git+https://github.com/szczurek-lab/hyformer.git@v2.0"``.
 

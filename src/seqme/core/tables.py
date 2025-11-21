@@ -219,13 +219,13 @@ def to_latex(
     color: str | None = None,
     na_value: str = "-",
     show_arrow: bool = True,
-    caption: str = None,
+    caption: str | None = None,
 ):
     """Convert a metric dataframe to a LaTeX table.
 
     Args:
         df: DataFrame with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], attributed with 'objective'.
-        path: Output filename, e.g., "./path/table.tex".
+        path: Output filename, e.g., ``"./path/table.tex"``.
         n_decimals: Decimal precision for formatting.
         color: Color (hex) for highlighting best scores. If ``None``, no coloring.
         na_value: str to show for cells with no metric value, i.e., cells with NaN values.

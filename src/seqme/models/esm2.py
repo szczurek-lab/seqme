@@ -13,12 +13,12 @@ class ESM2Checkpoint(str, Enum):
     ESM-2 checkpoints.
 
     Available checkpoints:
-        t6_8M: 8M parameters, 6 layers, embedding dim 320 - compact variant for quick prototyping and resource-constrained inference.
-        t12_35M: 35M parameters, 12 layers, embedding dim 480 - mid-size variant balancing compute and performance.
-        t30_150M: 150M parameters, 30 layers, embedding dim 640 - larger variant that improves representation power for downstream tasks.
-        t33_650M: 650M parameters, 33 layers, embedding dim 1280, commonly used medium-large model that performs well on structure and property prediction tasks.
-        t36_3B: 3B parameters, 36 layers, embedding dim 2560 - large model for more accurate representations and structure inference.
-        t48_15B: 15B parameters, 48 layers, embedding dim 5120 - the largest public ESM-2 variant; offers the highest capacity and best single-sequence structure representational power.
+        - t6_8M: 8M parameters, 6 layers, embedding dim 320 - compact variant for quick prototyping and resource-constrained inference.
+        - t12_35M: 35M parameters, 12 layers, embedding dim 480 - mid-size variant balancing compute and performance.
+        - t30_150M: 150M parameters, 30 layers, embedding dim 640 - larger variant that improves representation power for downstream tasks.
+        - t33_650M: 650M parameters, 33 layers, embedding dim 1280, commonly used medium-large model that performs well on structure and property prediction tasks.
+        - t36_3B: 3B parameters, 36 layers, embedding dim 2560 - large model for more accurate representations and structure inference.
+        - t48_15B: 15B parameters, 48 layers, embedding dim 5120 - the largest public ESM-2 variant; offers the highest capacity and best single-sequence structure representational power.
 
         shukla_group_peptide_650M: 650M parameters, 33 layers, embedding dim 1280, trained on peptide sequences.
     """
