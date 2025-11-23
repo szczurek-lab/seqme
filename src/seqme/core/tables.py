@@ -41,7 +41,7 @@ def show(
         show_arrow: Whether to include the objective arrow in the column names.
         level: The tuple index-names level to consider as a group.
         hline_level: When to add horizontal lines seperaing model names. If ``None``, add horizontal lines at the first level if more than 1 level.
-        caption: Bottom caption text.
+        caption: Bottom caption text. If ``None``, no caption is added.
 
     Returns:
         Styler: pandas Styler object.
@@ -229,8 +229,9 @@ def to_latex(
     na_value: str = "-",
     show_arrow: bool = True,
     caption: str | None = None,
+    label: str | None = "tbl:benchmark",
 ):
-    """Convert a metric dataframe to a LaTeX table.
+    r"""Export a metric dataframe to a LaTeX table.
 
     Args:
         df: DataFrame with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], attributed with 'objective'.
@@ -239,7 +240,8 @@ def to_latex(
         color: Color for highlighting best scores. If ``None``, no coloring.
         na_value: str to show for cells with no metric value, i.e., cells with NaN values.
         show_arrow: Whether to include the objective arrow in the column names.
-        caption: Bottom caption text.
+        caption: Bottom caption text. If ``None``, no caption is added.
+        label: Table label. Identifier used to reference the table. If ``None``, no label is added.
     """
     # @TODO: support multi-index rows + levels
     if df.index.nlevels != 1:
@@ -367,6 +369,9 @@ def to_latex(
 
     if caption:
         buffer.inline(f"\\caption{{{caption}}}")
+
+    if label:
+        buffer.inline(f"\\label{{{label}}}")
 
     buffer.unindent()
     buffer.inline("\\end{table}")
