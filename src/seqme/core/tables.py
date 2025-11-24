@@ -430,7 +430,7 @@ def _round_dataframe(df: pd.DataFrame, n_decimals: list[int]) -> pd.DataFrame:
         elif col[1] == "deviation":
             df[col] = _ceil_column(series, n_decimal)
         else:
-            raise ValueError(f"Unknown Multi-index column: {col}")
+            raise ValueError(f"Invalid multi-index column: {col}")
     return df
 
 
