@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Literal
 
 import matplotlib as mpl
+import numpy as np
 import pandas as pd
 from pandas.io.formats.style import Styler
 
@@ -33,11 +34,11 @@ def show(
 
     Args:
         df: DataFrame with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], attributed with 'objective'.
-        n_decimals: Decimal precision for formatting.
+        n_decimals: Decimal precision for formatting. Value is rounded. Deviation is rounded up.
         color: Color for highlighting best scores. If ``None``, no coloring.
         color_style: Style of the coloring. Ignored if color is ``None``.
         notation: Whether to use scientific notation (exponent) or fixed-point notation (decimals).
-        na_value: str to show for cells with no metric value, i.e., cells with NaN values.
+        na_value: Text to show for cells with no metric value, i.e., cells with NaN values.
         show_arrow: Whether to include the objective arrow in the column names.
         level: The tuple index-names level to consider as a group.
         hline_level: When to add horizontal lines seperaing model names. If ``None``, add horizontal lines at the first level if more than 1 level.
@@ -156,7 +157,7 @@ def show(
     if level >= df.index.nlevels or level < 0:
         raise ValueError(f"Level should be in range [0;{df.index.nlevels - 1}].")
 
-    df = df.round(dict(zip(df.columns, [d for d in n_decimals for _ in range(2)], strict=True)))
+    df = _round_dataframe(df, n_decimals)
 
     arrows = {"maximize": "↑", "minimize": "↓"}
     metrics = pd.unique(df.columns.get_level_values(0)).tolist()
@@ -231,14 +232,14 @@ def to_latex(
     caption: str | None = None,
     label: str | None = "tbl:benchmark",
 ):
-    r"""Export a metric dataframe to a LaTeX table.
+    """Export a metric dataframe to a LaTeX table.
 
     Args:
         df: DataFrame with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], attributed with 'objective'.
         path: Output filename, e.g., ``"./path/table.tex"``.
-        n_decimals: Decimal precision for formatting.
+        n_decimals: Decimal precision for formatting. Value is rounded. Deviation is rounded up.
         color: Color for highlighting best scores. If ``None``, no coloring.
-        na_value: str to show for cells with no metric value, i.e., cells with NaN values.
+        na_value: Text to show for cells with no metric value, i.e., cells with NaN values.
         show_arrow: Whether to include the objective arrow in the column names.
         caption: Bottom caption text. If ``None``, no caption is added.
         label: Table label. Identifier used to reference the table. If ``None``, no label is added.
@@ -260,7 +261,7 @@ def to_latex(
             f"Expected {n_metrics} decimals, got {len(n_decimals)}. Provide a single int or a list matching the number of metrics."
         )
 
-    df = df.round(dict(zip(df.columns, [d for d in n_decimals for _ in range(2)], strict=True)))
+    df = _round_dataframe(df, n_decimals)
 
     best_indices, second_best_indices = {}, {}
     metrics = pd.unique(df.columns.get_level_values(0)).tolist()
@@ -417,6 +418,30 @@ def _get_top_indices(df: pd.DataFrame, metric: str) -> tuple[set[int], set[int]]
         raise ValueError(f"Unknown objective '{objective}' for metric '{metric}'.")
 
     return top_indices_helper(best_cells)
+
+
+def _round_dataframe(df: pd.DataFrame, n_decimals: list[int]) -> pd.DataFrame:
+    df = df.copy()
+
+    n_decimals = [d for d in n_decimals for _ in range(2)]
+    for n_decimal, (col, series) in zip(n_decimals, df.items(), strict=True):
+        if col[1] == "value":
+            df[col] = _round_column(series, n_decimal)
+        elif col[1] == "deviation":
+            df[col] = _ceil_column(series, n_decimal)
+        else:
+            raise ValueError(f"Unknown Multi-index column: {col}")
+    return df
+
+
+def _ceil_column(series: pd.Series, n: int) -> pd.Series:
+    factor = 10**n
+    return np.ceil(series * factor) / factor
+
+
+def _round_column(series: pd.Series, n: int) -> pd.Series:
+    factor = 10**n
+    return np.round(series * factor) / factor
 
 
 def _format_precision(val: float, n_decimals: int, suffix: str = "f") -> str:
