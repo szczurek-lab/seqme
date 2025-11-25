@@ -315,9 +315,9 @@ def plot_line(
         raise ValueError("sequences should have tuple names: (model name, iteration).")
 
     for model_name, iteration in df.index:
-        if not isinstance(model_name, str) or not isinstance(iteration, int | float):
+        if not isinstance(iteration, int | float):
             raise ValueError(
-                "Expected a tuple of type (str, int | float), "
+                "Expected a tuple of type (Any, int | float), "
                 f"but got ({model_name}, {iteration}) "
                 f"with types ({type(model_name).__name__}, {type(iteration).__name__})."
             )
