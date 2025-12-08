@@ -27,6 +27,7 @@ Utility functions to combine, filter, and reorganize metric dataframes.
 
     seqme.combine
     seqme.rank
+    seqme.extract_non_dominated
     seqme.top_k
     seqme.sort
     seqme.rename

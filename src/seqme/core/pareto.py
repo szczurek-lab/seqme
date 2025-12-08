@@ -87,7 +87,9 @@ def extract_non_dominated(
     metrics: list[str] | None = None,
     level: int = 0,
 ) -> pd.DataFrame:
-    """Extract the non-dominated rows.
+    """Extract the non-dominated rows using one or more metrics.
+
+    Same behavior as calling ``seqme.rank`` followed by ``seqme.top_k``, but improves the performance.
 
     Args:
         df: Metric dataframe.
