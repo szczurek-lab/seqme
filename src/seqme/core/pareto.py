@@ -85,6 +85,7 @@ def rank(
 def extract_non_dominated(
     df: pd.DataFrame,
     metrics: list[str] | None = None,
+    *,
     level: int = 0,
 ) -> pd.DataFrame:
     """Extract the non-dominated rows using one or more metrics.
