@@ -75,7 +75,7 @@ def evaluate(
         and columns are a MultiIndex [metric_name, {"value", "deviation"}].
     """
     if len(metrics) == 0:
-        raise ValueError("No metrics provided")
+        raise ValueError("No metrics provided.")
 
     metric_names = [m.name for m in metrics]
     metric_duplicates = [name for name, count in Counter(metric_names).items() if count > 1]

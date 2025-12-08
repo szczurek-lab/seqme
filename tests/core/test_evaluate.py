@@ -27,7 +27,7 @@ def test_empty_metrics_list_raises():
     sequences = {"random": ["MKQW", "RKSPL"]}
     metrics = []
 
-    with pytest.raises(ValueError, match=r"^No metrics provided$"):
+    with pytest.raises(ValueError, match=r"^No metrics provided.$"):
         evaluate(sequences, metrics)
 
 

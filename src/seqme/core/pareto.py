@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing import Literal
 
 import moocore
@@ -51,9 +52,11 @@ def rank(
 
     if metrics is None:
         metrics = df.columns.get_level_values(0).unique().tolist()
-
         if name in metrics:
             metrics.remove(name)
+
+    if len(metrics) == 0:
+        raise ValueError("Empty list of metrics specified.")
 
     for metric in metrics:
         if metric not in df.columns.get_level_values(0):
@@ -69,7 +72,7 @@ def rank(
     signs = {"maximize": -1, "minimize": 1}
     costs = np.column_stack([df[metric]["value"] * signs[objs[metric]] for metric in metrics])
 
-    ranks = non_dominated_rank(costs, tie_break=tiebreak, ties=ties)
+    ranks = _non_dominated_rank(costs, tie_break=tiebreak, ties=ties)
 
     df[(name, "value")] = pd.Series(ranks, index=df.index)
     df[(name, "deviation")] = float("nan")
@@ -79,7 +82,66 @@ def rank(
     return df
 
 
-def non_dominated_rank(
+def extract_non_dominated(
+    df: pd.DataFrame,
+    metrics: list[str] | None = None,
+    level: int = 0,
+) -> pd.DataFrame:
+    """Extract the non-dominated rows.
+
+    Args:
+        df: Metric dataframe.
+        metrics: Metrics for dominance-based comparison. If ``None``, use all metrics in dataframe.
+        level: The tuple index-names level to consider as a group.
+
+    Returns:
+        DataFrame: A subset of the metric dataframe with the non-dominated rows.
+    """
+    if level >= df.index.nlevels or level < 0:
+        raise ValueError(f"Level should be in range [0;{df.index.nlevels - 1}].")
+
+    if "objective" not in df.attrs:
+        raise ValueError("The DataFrame must have an 'objective' attribute.")
+
+    if metrics is None:
+        metrics = df.columns.get_level_values(0).unique().tolist()
+
+    if len(metrics) == 0:
+        raise ValueError("Empty list of metrics specified.")
+
+    for metric in metrics:
+        if metric not in df.columns.get_level_values(0):
+            raise ValueError(f"'{metric}' is not a column in the DataFrame.")
+
+    for metric in metrics:
+        if df[metric]["value"].isna().any():
+            raise ValueError(f"Metric {metric} contains NaN values which cannot be compared.")
+
+    df = df.copy()
+
+    objs = df.attrs["objective"]
+    signs = {"maximize": -1, "minimize": 1}
+
+    def _extract_non_dominated(df: pd.DataFrame, metrics: list[str]) -> pd.DataFrame:
+        costs = np.column_stack([df[metric]["value"] * signs[objs[metric]] for metric in metrics])
+        non_dominated = moocore.is_nondominated(costs)
+        return df[non_dominated]
+
+    groups = defaultdict(list)
+    for index in df.index:
+        level_index = index[:level]
+        groups[level_index].append(index)
+
+    dfs_nd = []
+    for group in groups.values():
+        df_sub = df.loc[group]
+        df_sub_best = _extract_non_dominated(df_sub, metrics)
+        dfs_nd.append(df_sub_best)
+
+    return pd.concat(dfs_nd)
+
+
+def _non_dominated_rank(
     costs: np.ndarray,
     tie_break: Literal["crowding-distance", "mean-rank"] | None = None,
     ties: Literal["min", "max", "mean", "dense", "auto"] = "auto",
