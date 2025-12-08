@@ -80,7 +80,7 @@ class RNAFM:
         if self.model_name == "mRNA":
             for sequence in sequences:
                 if len(sequence) % 3 != 0:
-                    raise ValueError(f"Found non-codon aligned sequence with {len(sequence)}) nucleotides.")
+                    raise ValueError(f"Found non-codon aligned sequence with {len(sequence)} nucleotides.")
 
         embeddings = []
         for i in tqdm(range(0, len(sequences), self.batch_size), disable=not self.verbose):
