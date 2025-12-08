@@ -15,7 +15,7 @@ class Fold(Metric):
         self,
         metric: Metric,
         *,
-        deviation: Literal["se", "std", "var"] = "se",
+        deviation: Literal["std", "se", "var"] = "std",
         estimate: Literal["biased", "unbiased"] = "unbiased",
         n_splits: int | None = None,
         split_size: int | None = None,
@@ -31,8 +31,8 @@ class Fold(Metric):
             metric: The underlying metric to evaluate per fold.
             deviation: Type of deviation to compute:
 
-                - ``'se'``: Standard error
                 - ``'std'``: Standard deviation
+                - ``'se'``: Standard error
                 - ``'var'``: Variance
 
             estimate: How to estimate the deviation.
@@ -71,7 +71,7 @@ class Fold(Metric):
             sequences: Sequences to split into folds.
 
         Returns:
-            MetricResult: Aggregated mean value and standard error, standard error or variance across folds.
+            MetricResult: Aggregated mean value and standard deviation, standard error or variance across folds.
         """
         n = len(sequences)
         indices = np.arange(n)
