@@ -6,7 +6,7 @@ from .exceptions import OptionalDependencyError
 
 
 class SAScore:
-    """Synthetic Accessibility Score (SA Score) for SMILE sequences.
+    """Synthetic Accessibility Score (SA Score) for SMILES sequences.
 
     Installation: ``pip install "seqme[molecule_descriptors]"``
 
@@ -50,7 +50,7 @@ class SAScore:
 
 
 class QED:
-    """Quantitative Estimate of Drug-likeness for SMILE sequences.
+    """Quantitative Estimate of Drug-likeness for SMILES sequences.
 
     Installation: ``pip install "seqme[molecule_descriptors]"``
 
@@ -78,7 +78,7 @@ class QED:
 
 
 class LogP:
-    """Lipophilicity for SMILE sequences.
+    """Lipophilicity for SMILES sequences.
 
     Installation: ``pip install "seqme[molecule_descriptors]"``
 
