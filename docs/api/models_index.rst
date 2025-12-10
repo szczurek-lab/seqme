@@ -34,6 +34,11 @@ Models
     seqme.models.IsoelectricPoint
     seqme.models.ProteinWeight
 
+    seqme.models.LogP
+    seqme.models.QED
+    seqme.models.SAScore
+    
+
 Miscellaneous
 -------------
 These models perform special-purpose operations or combine multiple models.
@@ -169,6 +174,24 @@ Supported sequence types
      - |no|
      - |no|
      - |no|
+   * - :py:class:`seqme.models.LogP`
+     - |no|
+     - |no|
+     - |no|
+     - |no|
+     - |ok|
+   * - :py:class:`seqme.models.QED`
+     - |no|
+     - |no|
+     - |no|
+     - |no|
+     - |ok|
+   * - :py:class:`seqme.models.SAScore`
+     - |no|
+     - |no|
+     - |no|
+     - |no|
+     - |ok|
    * - :py:class:`seqme.models.ThirdPartyModel`
      - |ok|
      - |ok|
