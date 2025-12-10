@@ -6,7 +6,7 @@ from seqme.core.base import Metric, MetricResult
 
 
 class Fold(Metric):
-    """A cross-validation wrapper for any Metric.
+    """A wrapper for any metric, which splits the sequences into non-overlapping subsets, computes the metric on each split and aggregates the results.
 
     Fold splits the data into k-folds or fixed-size splits, with optional shuffling, and then aggregates the results.
     """

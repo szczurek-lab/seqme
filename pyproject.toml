@@ -62,6 +62,8 @@ dependencies = [
 esm2 = ["transformers"]
 esmfold = ["transformers"]
 aa_descriptors = ["modlamp"]
+molecule_descriptors = ["rdkit"]
+
 hyformer_molecules = [
     "deepchem",
     "torchvision",
