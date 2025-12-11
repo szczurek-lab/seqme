@@ -34,10 +34,8 @@ class Diversity(Metric):
         if self.k is not None:
             if self.k <= 0:
                 raise ValueError("Expected k > 0.")
-
-            if self.reference:
-                if len(self.reference) < self.k:
-                    raise ValueError("Fewer sequences in reference than k.")
+            if self.reference and (len(self.reference) < self.k):
+                raise ValueError("Fewer sequences in reference than k.")
 
     def __call__(self, sequences: list[str]) -> MetricResult:
         """
@@ -51,12 +49,7 @@ class Diversity(Metric):
         Returns:
             MetricResult: Diversity score.
         """
-        score = compute_diversity(
-            sequences,
-            reference=self.reference,
-            k=self.k,
-            seed=self.seed,
-        )
+        score = compute_diversity(sequences, reference=self.reference, k=self.k, seed=self.seed)
         return MetricResult(score)
 
     @property

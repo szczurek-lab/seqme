@@ -65,7 +65,7 @@ class FKEA(Metric):
         self.strict = strict
         self._name = name
 
-        self._n_sequences: int | None = None
+        self._n_sequences: int = None
 
         if (self.n_random_fourier_features is not None) and (self.n_random_fourier_features <= 0):
             raise ValueError("Expected n_random_fourier_features > 0.")

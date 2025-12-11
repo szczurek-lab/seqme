@@ -9,12 +9,8 @@ def discriminator(sequences: list[str]) -> np.ndarray:
     return np.array(lengths)
 
 
-def test_above_threshold_inclusive():
-    metric = Threshold(
-        predictor=discriminator,
-        name="Sequence length",
-        threshold=2,
-    )
+def test_min_value():
+    metric = Threshold(predictor=discriminator, name="Sequence length", min_value=2)
 
     assert metric.name == "Sequence length"
     assert metric.objective == "maximize"
@@ -25,34 +21,23 @@ def test_above_threshold_inclusive():
     assert result.deviation is None
 
 
-def test_above_threshold_exclusive():
-    metric = Threshold(
-        predictor=discriminator,
-        name="Sequence length",
-        threshold=2,
-        inclusive=False,
-    )
+def test_max_value():
+    metric = Threshold(predictor=discriminator, name="Sequence length2", max_value=2)
 
-    assert metric.name == "Sequence length"
+    assert metric.name == "Sequence length2"
     assert metric.objective == "maximize"
 
     result = metric(["A", "AA", "AAAA"])
 
-    assert result.value == pytest.approx(1 / 3)
+    assert result.value == pytest.approx(2 / 3)
     assert result.deviation is None
 
 
-def test_below_threshold_inclusive():
-    metric = Threshold(
-        predictor=discriminator,
-        name="Sequence length2",
-        threshold=2,
-        inclusive=False,
-        objective="minimize",
-    )
+def test_between():
+    metric = Threshold(predictor=discriminator, name="Sequence length2", min_value=1, max_value=1)
 
     assert metric.name == "Sequence length2"
-    assert metric.objective == "minimize"
+    assert metric.objective == "maximize"
 
     result = metric(["A", "AA", "AAAA"])
 

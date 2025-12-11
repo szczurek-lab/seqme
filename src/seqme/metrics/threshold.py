@@ -7,16 +7,15 @@ from seqme.core.base import Metric, MetricResult
 
 
 class Threshold(Metric):
-    """Fraction of sequences with a property above (or below) a user-defined threshold."""
+    """Fraction of sequences with property within [min, max] a user-defined threshold."""
 
     def __init__(
         self,
         predictor: Callable[[list[str]], np.ndarray],
         name: str,
         *,
-        threshold: float = 0.5,
-        objective: Literal["minimize", "maximize"] = "maximize",
-        inclusive: bool = True,
+        min_value: float | None = None,
+        max_value: float | None = None,
     ):
         """
         Initialize the metric.
@@ -24,15 +23,18 @@ class Threshold(Metric):
         Args:
             predictor: A function that takes a list of sequences and returns a 1D array of scalar values.
             name: Name of the metric.
-            threshold: Threshold value.
-            objective: Specifies whether lower or higher values of the metric are better.
-            inclusive: Whether to include the threshold value as a hit.
+            min_value: Minimum threshold value.
+            max_value: Maximum threshold value.
         """
         self.predictor = predictor
-        self.threshold = threshold
-        self.inclusive = inclusive
         self._name = name
-        self._objective = objective
+        self.min_value = min_value
+        self.max_value = max_value
+
+        if (self.min_value is None) and (self.max_value is None):
+            raise ValueError("'min_value' and/or 'max_value' must be set.")
+        if (self.min_value is not None) and (self.max_value is not None) and (self.min_value > self.max_value):
+            raise ValueError(f"Expected min_value ({self.min_value}) <= max_value ({self.max_value}).")
 
     def __call__(self, sequences: list[str]) -> MetricResult:
         """
@@ -46,12 +48,11 @@ class Threshold(Metric):
         """
         values = self.predictor(sequences)
 
-        if self.inclusive:
-            within_threshold = values >= self.threshold if self.objective == "maximize" else values <= self.threshold
-        else:
-            within_threshold = values > self.threshold if self.objective == "maximize" else values < self.threshold
+        above = values >= self.min_value if self.min_value is not None else True
+        below = values <= self.max_value if self.max_value is not None else True
+        within = above & below
 
-        return MetricResult(within_threshold.mean().item())
+        return MetricResult(np.mean(within).item())
 
     @property
     def name(self) -> str:
@@ -59,4 +60,4 @@ class Threshold(Metric):
 
     @property
     def objective(self) -> Literal["minimize", "maximize"]:
-        return self._objective
+        return "maximize"
