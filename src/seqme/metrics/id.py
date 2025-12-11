@@ -43,15 +43,13 @@ class ID(Metric):
         """
         Evaluate the predictor on the provided sequences.
 
-        Applies the predictor to the sequences and returns the mean and standard deviation of the resulting values (if more than one sequence).
+        Applies the predictor to the sequences and returns the mean and standard error of the resulting values (if more than one sequence).
 
         Args:
             sequences: Sequences to evaluate.
 
         Returns:
-            MetricResult:
-                - value: Mean of predictor outputs.
-                - std: Standard deviation of predictor outputs.
+            MetricResult: Mean predictor value and deviation.
         """
         values = self.predictor(sequences)
 
