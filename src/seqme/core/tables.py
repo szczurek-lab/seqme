@@ -422,15 +422,12 @@ def _get_top_indices(df: pd.DataFrame, metric: str) -> tuple[set[int], set[int]]
 
 def _round_dataframe(df: pd.DataFrame, n_decimals: list[int]) -> pd.DataFrame:
     df = df.copy()
-
-    n_decimals = [d for d in n_decimals for _ in range(2)]
-    for n_decimal, (col, series) in zip(n_decimals, df.items(), strict=True):
-        if col[1] == "value":
-            df[col] = _round_column(series, n_decimal)
-        elif col[1] == "deviation":
-            df[col] = _ceil_column(series, n_decimal)
-        else:
-            raise ValueError(f"Invalid multi-index column: {col}")
+    metrics = df.columns.get_level_values(0).unique().tolist()
+    for n_decimal, metric in zip(n_decimals, metrics, strict=True):
+        val_col = (metric, "value")
+        dev_col = (metric, "deviation")
+        df.loc[:, val_col] = _round_column(df.loc[:, val_col], n_decimal)
+        df.loc[:, dev_col] = _ceil_column(df.loc[:, dev_col], n_decimal)
     return df
 
 
