@@ -16,16 +16,16 @@ def test_multiple_sequences():
     assert result.deviation is None
 
 
-def test_reference():
-    metric = Diversity(reference=["AB", "BA", "CCCC"], k=2, seed=42)
+def test_k():
+    metric = Diversity(k=1, seed=42)
 
     # Name and objective
     assert metric.name == "Diversity"
     assert metric.objective == "maximize"
 
     # Compute on a sample set
-    result = metric(["AA"])
+    result = metric(["AB", "BA", "CCCC"])
 
     # Compare value and deviation
-    assert result.value == 0.75
+    assert result.value == 1.0
     assert result.deviation is None

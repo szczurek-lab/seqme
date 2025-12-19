@@ -11,7 +11,6 @@ class Diversity(Metric):
 
     def __init__(
         self,
-        reference: list[str] = None,
         k: int | None = None,
         *,
         seed: int = 0,
@@ -21,21 +20,16 @@ class Diversity(Metric):
         Initialize the metric.
 
         Args:
-            reference: Reference sequences to compare against. If ``None``, compare against other sequences within ``sequences``.
             k: If not ``None`` randomly sample ``k`` other sequences to compute diversity against.
             seed: For deterministic sampling. Only used if ``k`` is not ``None``.
             name: Metric name.
         """
-        self.reference = reference
         self.k = k
         self.seed = seed
         self._name = name
 
-        if self.k is not None:
-            if self.k <= 0:
-                raise ValueError("Expected k > 0.")
-            if self.reference and (len(self.reference) < self.k):
-                raise ValueError("Fewer sequences in reference than k.")
+        if (self.k is not None) and (self.k <= 0):
+            raise ValueError("Expected k > 0.")
 
     def __call__(self, sequences: list[str]) -> MetricResult:
         """
@@ -49,7 +43,7 @@ class Diversity(Metric):
         Returns:
             MetricResult: Diversity score.
         """
-        score = compute_diversity(sequences, reference=self.reference, k=self.k, seed=self.seed)
+        score = compute_diversity(sequences, k=self.k, seed=self.seed)
         return MetricResult(score)
 
     @property
@@ -64,7 +58,6 @@ class Diversity(Metric):
 def compute_diversity(
     sequences: list[str],
     *,
-    reference: list[str] = None,
     k: int | None = None,
     seed: int = 0,
 ) -> float:
@@ -73,7 +66,6 @@ def compute_diversity(
 
     Args:
         sequences: Sequences to compute diversity on.
-        reference: Reference sequences to compare against. If ``None``, compare against other sequences within ``sequences``.
         k: If not ``None`` randomly sample ``k`` other sequences to compute diversity against.
         seed: For deterministic sampling. Only used if k is not ``None``.
 
@@ -85,7 +77,7 @@ def compute_diversity(
 
     divs = []
     for i, sequence in enumerate(sequences):
-        others = reference if reference else sequences[:i] + sequences[i + 1 :]
+        others = sequences[:i] + sequences[i + 1 :]
 
         if k and k < len(others):
             idxs = rng.choice(np.arange(len(others)), size=k, replace=False)
