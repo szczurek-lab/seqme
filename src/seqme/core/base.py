@@ -123,16 +123,21 @@ def evaluate(
 def combine(
     dfs: list[pd.DataFrame],
     *,
-    on_overlap: Literal["fail", "mean,std"] = "fail",
+    value: Literal["mean"] | None = None,
+    deviation: Literal["std", "se", "var"] | None = "std",
 ) -> pd.DataFrame:
     """Combine multiple DataFrames with metric results into a single DataFrame.
 
     Args:
         dfs: Metric dataframes, each with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], and an 'objective' attribute.
-        on_overlap: How to handle cells with multiple values.
+        value: How to handle cells with multiple values. If ``None`` and a cell has multiple values, raises an ValueError.
 
-            - ``'fail'``: raises an exception on overlap.
-            - ``'mean,std'``: sets the cell value to the mean and the deviation to the std of the values.
+            - ``'mean'``: Mean.
+        deviation: Parameter is ignored if ``value=None``, otherwise computes a deviation for multiple values in a cell. A cells deviation is ``None`` if the cell has a single value.
+
+            - ``'std'``: Standard deviation.
+            - ``'se'``: Standard error.
+            - ``'var'``: Variance.
 
     Returns:
         DataFrame: A single DataFrame combining multiple metric dataframes.
@@ -177,32 +182,47 @@ def combine(
                 seen_cols.add(col)
                 combined_cols.append(col)
 
-    # extract cell values
-    values: dict[tuple[Any, tuple[str, str]], list[float]] = defaultdict(list)
+    values_dict: dict[Any, list[float]] = defaultdict(list)
+    deviations_dict: dict[Any, list[float]] = defaultdict(list)
     for df in dfs:
         for col in df.columns:
-            for idx, val in df[col].items():
-                if pd.isna(val):
-                    continue
-                values[(idx, col)].append(val)  # type: ignore
+            series = df[col].dropna()
+            metric, kind = col  # split the tuple
+            target_dict = values_dict if kind == "value" else deviations_dict
+            for row, val in series.items():
+                target_dict[(row, metric)].append(val)
 
-    # handle on_overlap
+    # handle multiple values
     res: dict[tuple[Any, tuple[str, str]], float] = {}
-    if on_overlap == "fail":
-        for cell_name, vs in values.items():
+    if value is None:
+        for (row, col), vs in values_dict.items():
             if len(vs) > 1:
-                raise ValueError(f"Multiple values in cell: [{cell_name[0]}, {cell_name[1]}]")
-            res[cell_name] = vs[0]
-    elif on_overlap == "mean,std":
-        for cell_name, vs in values.items():
-            col_subname = cell_name[1][1]  # either "value" or "deviation"
-            if col_subname == "value":
-                res[cell_name] = np.mean(vs).item()
-                if len(vs) > 1:
-                    dev_cell = (cell_name[0], (cell_name[1][0], "deviation"))
-                    res[dev_cell] = np.std(vs).item()
+                raise ValueError(f"Multiple values in cell: [{row}, {col}].")
+            res[(row, (col, "value"))] = vs[0]
+            if (row, col) in deviations_dict:
+                if len(deviations_dict[(row, col)]) > 1:
+                    raise ValueError(f"Multiple deviations in cell: [{row}, {col}]")
+                res[(row, (col, "deviation"))] = deviations_dict[(row, col)][0]
     else:
-        raise ValueError(f"'{on_overlap}' not supported.")
+        if value == "mean":
+            val_reducer = lambda vs: np.mean(vs).item()
+        else:
+            raise ValueError(f"Invalid 'value' ({value})")
+
+        if deviation is None:
+            dev_reducer = lambda _: None
+        elif deviation == "se":
+            dev_reducer = lambda vs: np.std(vs, ddof=1).item() / (len(vs) ** 0.5)
+        elif deviation == "std":
+            dev_reducer = lambda vs: np.std(vs, ddof=1).item()
+        elif deviation == "var":
+            dev_reducer = lambda vs: np.var(vs, ddof=1).item()
+        else:
+            raise ValueError(f"Invalid 'deviation' ({deviation})")
+
+        for (row, col), vs in values_dict.items():
+            res[(row, (col, "value"))] = val_reducer(vs)
+            res[(row, (col, "deviation"))] = dev_reducer(vs) if len(vs) > 1 else None
 
     # construct combined dataframe
     row_index = (

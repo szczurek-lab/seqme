@@ -13,9 +13,9 @@ def test_mean_on_overlap():
     sequences2 = {"my_model": ["KKW", "KKW"]}
     df2 = evaluate(sequences2, metrics)
 
-    df = combine([df1, df2], on_overlap="mean,std")
+    df = combine([df1, df2], value="mean", deviation="std")
     assert df.loc[("my_model", ("Uniqueness", "value"))] == 0.75
-    assert df.loc[("my_model", ("Uniqueness", "deviation"))] == 0.25
+    assert df.loc[("my_model", ("Uniqueness", "deviation"))] == pytest.approx(0.35355339)
 
     assert df.shape == (1, 2)
 
@@ -28,6 +28,6 @@ def test_fail_on_overlap():
     df2 = evaluate(sequences, metrics)
 
     with pytest.raises(ValueError) as e:
-        combine([df1, df2], on_overlap="fail")
+        combine([df1, df2], value=None)
 
-    assert str(e.value) == "Multiple values in cell: [my_model, ('Novelty', 'value')]"
+    assert str(e.value) == "Multiple values in cell: [my_model, Novelty]."
