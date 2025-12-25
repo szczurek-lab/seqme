@@ -53,6 +53,7 @@ dependencies = [
     "torch",
     "tqdm",
     "scikit-learn",
+    "numba>=0.60.0",   # fixes the "uv add" issue due to umap-learn numba dependency resolution.
     "umap-learn",
     "polyleven",
 ]
