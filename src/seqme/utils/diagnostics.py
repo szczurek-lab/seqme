@@ -75,7 +75,7 @@ def plot_knn_alignment_score(
         created_fig = True
 
     ax.plot(n_neighbors, scores, label=label)
-    ax.set_xlabel("N_neighbors")
+    ax.set_xlabel("Number of neighbors")
     ax.set_ylabel("Score")
     ax.set_title("Feature alignment score")
     ax.grid(True, linestyle="--", linewidth=0.5, alpha=0.5)
