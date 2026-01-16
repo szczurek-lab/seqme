@@ -1,4 +1,5 @@
 from seqme.metrics.authenticity import AuthPct
+from seqme.metrics.clipped_density import ClippedDensity
 from seqme.metrics.conformity_score import ConformityScore
 from seqme.metrics.count import Count
 from seqme.metrics.diversity import Diversity
@@ -20,6 +21,7 @@ from seqme.metrics.uniqueness import Uniqueness
 
 __all__ = [
     "AuthPct",
+    "ClippedDensity",
     "ConformityScore",
     "Count",
     "Diversity",
