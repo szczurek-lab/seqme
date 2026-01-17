@@ -241,25 +241,18 @@ def combine(
     return combined_df
 
 
-def drop(
+def strip(
     df: pd.DataFrame,
     metrics: list[str] | str,
-    which: Literal["both", "deviation"] = "deviation",
 ) -> pd.DataFrame:
-    """Drop metrics or their deviations from a metric dataframe.
-
-    By default, only the deviations are dropped.
+    """Strip deviations from metrics in a metric dataframe.
 
     Args:
         df: Metric dataframe.
-        metrics: Metric(s) to drop.
-        which: Determines what to drop:
-
-            - ``'both'``: Drop the metric entirely (both value and deviation).
-            - ``'deviation'``: Drop only the deviation of the metric (set deviation to NaN).
+        metrics: Metric(s) whose deviations to strip.
 
     Returns:
-        DataFrame with specified metrics or their deviations dropped.
+        DataFrame with specified metrics deviations removed.
 
     Raises:
         ValueError: If any metric is not in the dataframe.
@@ -275,16 +268,8 @@ def drop(
     if len(unknown_metrics) > 0:
         raise ValueError(f"Metrics {list(unknown_metrics)} are not in the dataframe.")
 
-    if which == "deviation":
-        labels = [(metric, "deviation") for metric in metrics]
-        df[labels] = np.nan
-    elif which == "both":
-        df.drop(metrics, axis=1, level=0, inplace=True)
-
-        remaining_metrics = set(all_metrics) - set(metrics)
-        df.attrs["objective"] = {m: df.attrs["objective"][m] for m in remaining_metrics}
-    else:
-        raise ValueError(f"Invalid argument to 'which' ({which}).")
+    labels = [(metric, "deviation") for metric in metrics]
+    df[labels] = np.nan
 
     return df
 
