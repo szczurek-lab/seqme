@@ -8,7 +8,11 @@ from seqme.core.base import Metric, MetricResult
 
 
 class KLDivergence(Metric):
-    """KL-divergence between samples and reference for a single property."""
+    """KL-divergence between samples and reference for a single property.
+
+    This metric measures how much the empirical distribution of a property in the generated
+    samples deviates from the corresponding reference distribution.
+    """
 
     def __init__(
         self,

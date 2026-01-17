@@ -27,7 +27,7 @@ class FKEA(Metric):
     References:
         [1] Friedman et al., The Vendi Score: A Diversity Evaluation Metric for Machine Learning, 2023
             (https://arxiv.org/abs/2210.02410)
-        [2] Ospanov, Zhang, Jalali et al., "Towards a Scalable Reference-Free Evaluation of Generative Models", 2025
+        [2] Ospanov, Zhang, Jalali et al., "Towards a Scalable Reference-Free Evaluation of Generative Models", 2024
             (https://arxiv.org/pdf/2407.02961)
     """
 

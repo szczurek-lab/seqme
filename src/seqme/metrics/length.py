@@ -6,7 +6,10 @@ from seqme.core.base import Metric, MetricResult
 
 
 class Length(Metric):
-    """Average sequence length."""
+    """Average sequence length.
+
+    Sequence length is defined as the number of characters in each sequence.
+    """
 
     def __init__(self, objective: Literal["minimize", "maximize"] = "minimize"):
         """Initialize the metric.
