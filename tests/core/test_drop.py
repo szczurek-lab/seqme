@@ -3,7 +3,7 @@ import numpy as np
 import seqme as sm
 
 
-def test_strip_deviation():
+def test_drop_deviation():
     sequences = {
         "model1": ["A"],
         "model2": ["AA", "BB", "CC"],
@@ -17,13 +17,13 @@ def test_strip_deviation():
     df = sm.evaluate(sequences, metrics)
     assert df.shape == (4, 1 * 2)
 
-    df = sm.strip(df, ["Length"])
+    df = sm.drop(df, ["Length"])
 
     deviation_column = ("Length", "deviation")
     assert np.isnan(df[deviation_column].values).all()
 
 
-def test_strip_both():
+def test_drop_both():
     sequences = {
         "model1": ["A"],
         "model2": ["AA", "BB", "CC"],
@@ -37,6 +37,6 @@ def test_strip_both():
     df = sm.evaluate(sequences, metrics)
     assert df.shape == (4, 1 * 2)
 
-    df = sm.strip(df, ["Length"], "both")
+    df = sm.drop(df, ["Length"], "both")
 
     assert "Length" not in df.columns.get_level_values(0).unique()

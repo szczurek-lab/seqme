@@ -1,5 +1,5 @@
 from seqme import metrics, models, utils
-from seqme.core.base import Cache, Metric, MetricResult, combine, evaluate, rename, sort, strip, top_k
+from seqme.core.base import Cache, Metric, MetricResult, combine, drop, evaluate, rename, sort, top_k
 from seqme.core.io import read_fasta, read_pickle, to_fasta, to_pickle
 from seqme.core.pareto import extract_non_dominated, rank
 from seqme.core.plots import plot_bar, plot_line, plot_parallel, plot_scatter
@@ -28,6 +28,6 @@ __all__ = [
     "to_fasta",
     "sort",
     "to_pickle",
-    "strip",
+    "drop",
     "top_k",
 ]

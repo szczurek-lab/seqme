@@ -241,23 +241,25 @@ def combine(
     return combined_df
 
 
-def strip(
+def drop(
     df: pd.DataFrame,
     metrics: list[str] | str,
     which: Literal["both", "deviation"] = "deviation",
 ) -> pd.DataFrame:
-    """Remove metric values and/or deviations from metric dataframe.
+    """Drop metrics or their deviations from a metric dataframe.
+
+    By default, only the deviations are dropped.
 
     Args:
-        df: Metric Dataframe.
-        metrics: Metrics to strip / remove.
-        which: How to strip the ``metrics``
+        df: Metric dataframe.
+        metrics: Metric(s) to drop.
+        which: Determines what to drop:
 
-            - ``'both'``: Remove metrics (both value and deviation).
-            - ``'deviation'``: Remove deviation from metrics, i.e., set deviation to NaN.
+            - ``'both'``: Drop the metric entirely (both value and deviation).
+            - ``'deviation'``: Drop only the deviation of the metric (set deviation to NaN).
 
     Returns:
-        Metric dataframe with a set of metrics or their deviations removed.
+        DataFrame with specified metrics or their deviations dropped.
 
     Raises:
         ValueError: If any metric is not in the dataframe.
