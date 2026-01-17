@@ -313,18 +313,19 @@ def _compute_clipped_density_helper(
 
         dists = torch.cdist(points[start:end], ball_positions)  # [b, N]
 
-        # @Note:
-        # Make radii "eps" larger (for numerical stability) because points
-        # **on** the ball are also within the manifold / ball. The k'th nearest neighbor
-        # should also be counted as "within" the ball, in order to correctly normalize
-        # the density (if not, then division by zero can occur, which is not intended)
+        # Purpose of eps:
         #
-        # Example:
+        #   Make radii "eps" larger (for numerical stability) because points
+        #   **on** the ball are also within the manifold / ball. The k'th nearest neighbor
+        #   should also be counted as "within" the ball, in order to correctly normalize
+        #   the density (if not, then division by zero can occur, which is not intended)
         #
-        #    x  x  x  x    <- 4 ball centers
+        #   Example:
         #
-        # Clipped density norm (with k=1) is 0 if 1'th neighbor is within each ball.
-        # unnorm / 0 = inf (undesired)
+        #       x  x  x  x    <- 4 ball centers
+        #
+        #   Clipped density norm (with k=1) is 0 if 1'th neighbor is within each ball.
+        #   unnorm / 0 = inf (undesired)
 
         threshold = ball_radii[None] + eps  # threshold: [1, N] broadcast to [b, N]
 
@@ -348,7 +349,6 @@ def _compute_clipped_coverage(
     k: int,
     batch_size: int,
 ) -> float:
-    # @TODO: normalize
     unnorm = _compute_clipped_coverage_unnorm(
         points=points,
         ball_positions=ball_positions,
@@ -356,7 +356,14 @@ def _compute_clipped_coverage(
         k=k,
         batch_size=batch_size,
     )
-    return unnorm
+    norm = _normalize_clipped_coverage(
+        coverage_unnorm=unnorm,
+        k=k,
+        M=points.shape[0],
+        N=ball_positions.shape[0],
+        device=points.device,
+    )
+    return norm
 
 
 def _compute_clipped_coverage_unnorm(
@@ -368,7 +375,7 @@ def _compute_clipped_coverage_unnorm(
 ) -> float:
     N = ball_positions.shape[0]
 
-    pseudo_coverage = 0.0
+    clipped_coverage_unnorm = 0.0
 
     for start in range(0, N, batch_size):
         end = start + batch_size
@@ -379,8 +386,47 @@ def _compute_clipped_coverage_unnorm(
         n_points_inside = (dists <= threshold).sum(dim=0)  # [b]
         n_points_inside = torch.clamp_max((n_points_inside) / k, 1.0)
 
-        pseudo_coverage += n_points_inside.sum().item()
+        clipped_coverage_unnorm += n_points_inside.sum().item()
 
-    pseudo_coverage = pseudo_coverage / N
+    clipped_coverage_unnorm = clipped_coverage_unnorm / N
 
-    return pseudo_coverage
+    return clipped_coverage_unnorm
+
+
+def _normalize_clipped_coverage(coverage_unnorm: float, k: int, M: int, N: int, device: torch.device) -> float:
+    f_expected_rev = _get_f_expected_reversed(k=k, M=M, N=N, device=device)
+    idx = torch.searchsorted(f_expected_rev, coverage_unnorm)
+    # @NOTE: since f_expected is in the reverse order of how it is defined in Salvy et al., 2025,
+    #        no need to reverse again to compute the norm: 1 - idx / M.
+    norm = idx / M
+    return norm.item()
+
+
+def _get_f_expected_reversed(k: int, M: int, N: int, device: torch.device) -> torch.Tensor:
+    M_x = torch.arange(0, M, device=device)
+    min_jk = torch.clamp_max(M_x / k, 1.0)
+    log_gamma = torch.lgamma(torch.arange(0, M + N + 1, device=device))
+    log_beta_denom = _get_log_beta(k, N - k, log_gamma)
+
+    f_expected_rev = torch.zeros(M, device=device)
+
+    for mx in range(1, M):
+        j = torch.arange(1, mx, device=device)
+
+        log_binom_coef = _get_binom_coef(mx, j, log_gamma)
+
+        log_beta_num = _get_log_beta(k + j, mx - j + N - k, log_gamma)
+        log_beta = log_beta_num - log_beta_denom
+
+        binom_beta = (log_binom_coef + log_beta).exp()
+        f_expected_rev[mx] = (min_jk[j] * binom_beta).sum()
+
+    return f_expected_rev
+
+
+def _get_log_beta(a: torch.Tensor | int, b: torch.Tensor | int, log_gamma: torch.Tensor) -> torch.Tensor:
+    return log_gamma[a] + log_gamma[b] - log_gamma[a + b]
+
+
+def _get_binom_coef(n: torch.Tensor | int, k: torch.Tensor | int, log_gamma: torch.Tensor) -> torch.Tensor:
+    return log_gamma[n + 1] - log_gamma[k + 1] - log_gamma[n - k + 1]

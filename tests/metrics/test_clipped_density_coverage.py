@@ -41,6 +41,22 @@ def test_clipped_density():
 
 
 # @TODO: write test for clipped coverage
+def test_coverage():
+    reference = ["A" * 1, "A" * 2, "A" * 3]
+    metric = ClippedCoverage(
+        n_neighbors=1,
+        reference=reference,
+        embedder=length_mock_embedder,
+        batch_size=128,
+        strict=False,
+    )
+
+    assert metric.name == "Clipped coverage"
+    assert metric.objective == "maximize"
+
+    result = metric(["A" * 2, "A" * 4, "A" * 16])
+    assert result.value == 1.0
+    assert result.deviation is None
 
 
 def length_mock_embedder(sequences: list[str]) -> np.ndarray:
