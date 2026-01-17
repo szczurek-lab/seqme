@@ -146,10 +146,6 @@ class Recall(Metric):
         """
         Initialize the Improved Recall metric.
 
-        Constructs the reference manifold using the provided sequences and prepares the metric
-        for evaluation. The reference manifold is approximated using nearest-neighbor balls,
-        with radii determined by the specified number of neighbors.
-
         Args:
             n_neighbors: Number of nearest neighbors used to define the radii of the
                 nearest-neighbor balls. More neighbors result in larger radii.
