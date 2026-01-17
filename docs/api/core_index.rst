@@ -30,7 +30,7 @@ Utility functions to combine, filter, and reorganize metric dataframes.
     seqme.extract_non_dominated
     seqme.top_k
     seqme.sort
-    seqme.strip
+    seqme.drop
     seqme.rename
 
 
