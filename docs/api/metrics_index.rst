@@ -146,6 +146,18 @@ Supported sequence types
      - |ok|
      - |ok|
      - |ok|
+   * - :py:class:`seqme.metrics.ClippedDensity`
+     - |ok|
+     - |ok|
+     - |ok|
+     - |ok|
+     - |ok|
+   * - :py:class:`seqme.metrics.ClippedCoverage`
+     - |ok|
+     - |ok|
+     - |ok|
+     - |ok|
+     - |ok|
    * - :py:class:`seqme.metrics.AuthPct`
      - |ok|
      - |ok|
