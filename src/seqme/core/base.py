@@ -241,12 +241,12 @@ def combine(
     return combined_df
 
 
-def strip(df: pd.DataFrame, metrics: list[str] | str) -> pd.DataFrame:
+def strip(df: pd.DataFrame, metrics: list[str] | str | None = None) -> pd.DataFrame:
     """Strip deviations from metrics in a metric dataframe.
 
     Args:
         df: Metric dataframe.
-        metrics: Metric(s) whose deviations to strip.
+        metrics: Metric(s) whose deviations to strip. If ``None`` then strip all metrics.
 
     Returns:
         DataFrame with specified metrics deviations removed.
@@ -256,10 +256,14 @@ def strip(df: pd.DataFrame, metrics: list[str] | str) -> pd.DataFrame:
     """
     df = df.copy()
 
+    all_metrics = list(df.columns.get_level_values(0).unique())
+
+    if metrics is None:
+        metrics = all_metrics
+
     if isinstance(metrics, str):
         metrics = [metrics]
 
-    all_metrics = list(df.columns.get_level_values(0).unique())
     unknown_metrics = set(metrics) - set(all_metrics)
     if len(unknown_metrics) > 0:
         raise ValueError(f"Metrics {list(unknown_metrics)} are not in the dataframe.")
