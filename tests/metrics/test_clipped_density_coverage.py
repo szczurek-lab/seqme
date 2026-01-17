@@ -1,10 +1,10 @@
 import numpy as np
 import pytest
 
-from seqme.metrics import ClippedDensity
+from seqme.metrics import ClippedCoverage, ClippedDensity
 
 
-def test_basic():
+def test_density():
     reference = ["A" * 1, "A" * 2, "A" * 3]
     metric = ClippedDensity(
         n_neighbors=1,
@@ -22,7 +22,7 @@ def test_basic():
     assert result.deviation is None
 
 
-def test_clip():
+def test_clipped_density():
     reference = ["A" * 1, "A" * 2, "A" * 3, "A" * 10, "A" * 11, "A" * 100]
     metric = ClippedDensity(
         n_neighbors=2,
@@ -38,6 +38,9 @@ def test_clip():
     result = metric(["A" * 2, "A" * 12, "A" * 80])
     assert result.value == 1.0
     assert result.deviation is None
+
+
+# @TODO: write test for clipped coverage
 
 
 def length_mock_embedder(sequences: list[str]) -> np.ndarray:

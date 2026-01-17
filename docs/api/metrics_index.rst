@@ -31,6 +31,7 @@ Metrics that compare or assess distributions in an embedding (vector) space.
     seqme.metrics.Precision
     seqme.metrics.Recall
     seqme.metrics.ClippedDensity
+    seqme.metrics.ClippedCoverage
     seqme.metrics.AuthPct
     seqme.metrics.FKEA
 
