@@ -246,18 +246,21 @@ def strip(
     metrics: list[str] | str,
     which: Literal["both", "deviation"] = "deviation",
 ) -> pd.DataFrame:
-    """Removes metric values and/or deviations from metric dataframe.
+    """Remove metric values and/or deviations from metric dataframe.
 
     Args:
         df: Metric Dataframe.
         metrics: Metrics to strip / remove.
         which: How to strip the ``metrics``
 
-            - "both": Remove metrics (both value and deviation).
-            - "deviation: Remove deviation from metrics, i.e., set deviation to NaN.
+            - ``'both'``: Remove metrics (both value and deviation).
+            - ``'deviation'``: Remove deviation from metrics, i.e., set deviation to NaN.
 
     Returns:
         Metric dataframe with a set of metrics or their deviations removed.
+
+    Raises:
+        ValueError: If any metric is not in the dataframe.
     """
     df = df.copy()
 
