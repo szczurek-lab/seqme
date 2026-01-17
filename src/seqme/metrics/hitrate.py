@@ -7,7 +7,7 @@ from seqme.core.base import Metric, MetricResult
 
 
 class HitRate(Metric):
-    """Fraction of sequences that satisfy a given filter condition."""
+    """Fraction of sequences that satisfy a user-defined condition."""
 
     def __init__(self, condition_fn: Callable[[list[str]], np.ndarray], *, name: str = "Hit-rate"):
         """

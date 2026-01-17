@@ -7,7 +7,13 @@ from seqme.core.base import Metric, MetricResult
 
 
 class Diversity(Metric):
-    """Normalized pairwise Levenshtein distance between the sequences."""
+    """
+    Measures the diversity of synthetic sequences using normalized pairwise Levenshtein distance.
+
+    Evaluates how similar or different the synthetic sequences are relative to each other
+    in the sequence space. Higher values indicate greater diversity, while lower values
+    indicate more similarity or redundancy among sequences.
+    """
 
     def __init__(
         self,

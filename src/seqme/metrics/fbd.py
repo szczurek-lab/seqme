@@ -10,12 +10,15 @@ from seqme.core.base import Metric, MetricResult
 class FBD(Metric):
     """Fréchet Biological Distance (FBD) between a set of generated sequences and a reference dataset based on their embeddings.
 
-    This metric estimates how similar the distributions of two sets of embeddings
-    are using the Wasserstein-2 (Fréchet) distance.
+    This metric estimates how similar the distributions of two groups of embeddings are
+    using the Wasserstein-2 (Fréchet) distance. It is analogous to the Fréchet Inception
+    Distance (FID) [1], except that the embeddings are obtained from a biologically relevant
+    model rather than InceptionNet.
 
-    Reference:
-        Heusel et al., "GANs Trained by a Two Time-Scale Update Rule Converge to a
-        Local Nash Equilibrium" (https://arxiv.org/abs/1706.08500)
+    References:
+        [1] Heusel et al., "GANs Trained by a Two Time-Scale Update Rule Converge to a
+            Local Nash Equilibrium"
+            (https://arxiv.org/abs/1706.08500)
     """
 
     def __init__(

@@ -1,4 +1,3 @@
-import math
 from collections.abc import Callable
 from typing import Literal
 
@@ -146,10 +145,6 @@ class Recall(Metric):
         """
         Initialize the Improved Recall metric.
 
-        Constructs the reference manifold using the provided sequences and prepares the metric
-        for evaluation. The reference manifold is approximated using nearest-neighbor balls,
-        with radii determined by the specified number of neighbors.
-
         Args:
             n_neighbors: Number of nearest neighbors used to define the radii of the
                 nearest-neighbor balls. More neighbors result in larger radii.
@@ -225,13 +220,12 @@ class Recall(Metric):
 
 def _compute_knn_radii(embeddings: torch.Tensor, max_k: int, batch_size: int) -> torch.Tensor:
     N = embeddings.shape[0]
-
     k = min(max_k, N - 1)
+
     k_dists = torch.empty(N, device=embeddings.device, dtype=embeddings.dtype)
 
-    n_batches = math.ceil(N / batch_size)
-    for i in range(n_batches):
-        start, end = i * batch_size, min((i + 1) * batch_size, N)
+    for start in range(0, N, batch_size):
+        end = start + batch_size
 
         pairwise = torch.cdist(embeddings[start:end], embeddings)
         k_dists[start:end] = pairwise.kthvalue(k + 1, dim=1).values
@@ -248,10 +242,8 @@ def _compute_precision_or_recall(
     M = points.shape[0]
 
     total_in_manifold = 0.0
-
-    n_batches = math.ceil(M / batch_size)
-    for i in range(n_batches):
-        start, end = i * batch_size, min((i + 1) * batch_size, M)
+    for start in range(0, M, batch_size):
+        end = start + batch_size
 
         dists = torch.cdist(points[start:end], ball_positions)  # [b, N]
         threshold = ball_radii[None]  # threshold: [1, N] broadcast to [b, N]

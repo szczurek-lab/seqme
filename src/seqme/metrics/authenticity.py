@@ -13,8 +13,9 @@ class AuthPct(Metric):
 
     Authenticity is defined as the fraction of sequences whose nearest training neighbor is closer to some other training sample than to the sequence.
 
-    Reference:
-        Alaa et al., "How Faithful is your Synthetic Data? Sample-level Metrics for Evaluating and Auditing Generative Models." (2022). (https://arxiv.org/abs/2102.08921)
+    References:
+        [1] Alaa et al., "How Faithful is your Synthetic Data? Sample-level Metrics for Evaluating and Auditing Generative Models." (2022).
+            (https://arxiv.org/abs/2102.08921)
     """
 
     def __init__(

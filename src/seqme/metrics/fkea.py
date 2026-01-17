@@ -24,9 +24,11 @@ class FKEA(Metric):
     - If alpha=2, this corresponds to the RKE-score.
     - If alpha≠2, this corresponds to the VENDI-α score.
 
-    Reference:
-        Friedman et al., The Vendi Score: A Diversity Evaluation Metric for Machine Learning (https://arxiv.org/abs/2210.02410)
-        Ospanov, Zhang, Jalali et al., "Towards a Scalable Reference-Free Evaluation of Generative Models" (https://arxiv.org/pdf/2407.02961)
+    References:
+        [1] Friedman et al., The Vendi Score: A Diversity Evaluation Metric for Machine Learning
+            (https://arxiv.org/abs/2210.02410)
+        [2] Ospanov, Zhang, Jalali et al., "Towards a Scalable Reference-Free Evaluation of Generative Models"
+            (https://arxiv.org/pdf/2407.02961)
     """
 
     def __init__(
@@ -162,12 +164,11 @@ def _cov_random_fourier_features(
     rff = rff.unsqueeze(2)  # [B, 2 * feature_dim, 1]
 
     cov = torch.zeros((2 * n_features, 2 * n_features), device=xs.device)
-    n_batches = (xs.shape[0] // batch_size) + 1
 
-    for batch_idx in range(n_batches):
-        rff_slice = rff[
-            batch_idx * batch_size : min((batch_idx + 1) * batch_size, rff.shape[0])
-        ]  # [mini_B, 2 * feature_dim, 1]
+    for start in range(0, rff.shape[0], batch_size):
+        end = start + batch_size
+
+        rff_slice = rff[start:end]  # [mini_B, 2 * feature_dim, 1]
         cov += torch.bmm(rff_slice, rff_slice.transpose(1, 2)).sum(dim=0)
 
     cov /= xs.shape[0]
@@ -185,13 +186,13 @@ def calculate_vendi(xs: torch.Tensor, bandwidth: float, batch_size: int, alpha: 
 
 
 def _normalized_gaussian_kernel(xs: torch.Tensor, ys: torch.Tensor, std: float, batch_size: int) -> torch.Tensor:
-    n_batches = (ys.shape[0] // batch_size) + 1
     assert xs.shape[1:] == ys.shape[1:]
 
     total_res = torch.zeros((xs.shape[0], 0), device=xs.device)
-    for batch_idx in range(n_batches):
-        y_slice = ys[batch_idx * batch_size : min((batch_idx + 1) * batch_size, ys.shape[0])]
+    for start in range(0, ys.shape[0], batch_size):
+        end = start + batch_size
 
+        y_slice = ys[start:end]
         res = torch.norm(xs.unsqueeze(1) - y_slice, dim=2, p=2).pow(2)
         res = torch.exp((-1 / (2 * std * std)) * res)
         total_res = torch.hstack([total_res, res])
