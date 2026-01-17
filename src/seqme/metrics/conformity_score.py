@@ -12,9 +12,9 @@ class ConformityScore(Metric):
     """
     Distributional conformity score.
 
-    Reference:
-        Frey et al., "Protein Discovery With Discrete Walk-jump Sampling" (2024).
-        (https://arxiv.org/abs/2306.12360)
+    References:
+        [1] Frey et al., "Protein Discovery With Discrete Walk-jump Sampling" (2024).
+            (https://arxiv.org/abs/2306.12360)
     """
 
     def __init__(
