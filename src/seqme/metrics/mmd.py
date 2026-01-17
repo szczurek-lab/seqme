@@ -11,10 +11,13 @@ class MMD(Metric):
     """
     Maximum Mean Discrepancy (MMD) metric using a Gaussian kernel.
 
-    Reference:
-        Jayasumana, Sadeep, et al. "Rethinking fid: Towards a better evaluation metric for image generation."
-        Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2024.
-        (https://arxiv.org/pdf/2401.09603)
+    This metric measures the similarity between the distributions of synthetic sequences
+    and reference sequences in the embedding space.
+
+    References:
+        [1] Jayasumana, Sadeep, et al., "Rethinking FID: Towards a better evaluation metric for image generation,"
+            Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition, 2024
+            (https://arxiv.org/pdf/2401.09603)
     """
 
     def __init__(

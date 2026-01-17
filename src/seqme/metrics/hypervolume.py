@@ -9,7 +9,21 @@ from seqme.core.base import Metric, MetricResult
 
 
 class Hypervolume(Metric):
-    """Hypervolume metric for multi-objective optimization."""
+    """
+    Computes the Hypervolume metric for multi-objective optimization.
+
+    This metric evaluates how well the generated sequences cover the approximate Pareto front
+    by computing the hypervolume of the sequences' properties as evaluated by the predictors.
+    Higher hypervolume indicates better coverage of the Pareto front.
+
+    Two types of hypervolume computation are supported:
+        - Hypervolume indicator [1]
+        - Convex-hull
+
+    References:
+        [1] Zitler, E., and Thiele, L., "Multiobjective Evolutionary Algorithms: A Comparative Case Study and the Strength Pareto Approach," 1999
+            (https://www.cse.unr.edu/~sushil/class/gas/papers/StrengthParetoEA.pdf)
+    """
 
     def __init__(
         self,
