@@ -25,9 +25,9 @@ class FKEA(Metric):
     - If alpha≠2, this corresponds to the VENDI-α score.
 
     References:
-        [1] Friedman et al., The Vendi Score: A Diversity Evaluation Metric for Machine Learning
+        [1] Friedman et al., The Vendi Score: A Diversity Evaluation Metric for Machine Learning, 2023
             (https://arxiv.org/abs/2210.02410)
-        [2] Ospanov, Zhang, Jalali et al., "Towards a Scalable Reference-Free Evaluation of Generative Models"
+        [2] Ospanov, Zhang, Jalali et al., "Towards a Scalable Reference-Free Evaluation of Generative Models", 2025
             (https://arxiv.org/pdf/2407.02961)
     """
 
@@ -113,6 +113,22 @@ class FKEA(Metric):
         return "maximize"
 
 
+def _calculate_score(eigenvalues: torch.Tensor, alpha: float = 2, eps: float = 1e-8) -> float:
+    eigenvalues = torch.clamp(eigenvalues, min=eps)
+
+    if alpha == math.inf:
+        score = 1 / torch.max(eigenvalues)
+    elif alpha == 1:
+        log_eigenvalues = torch.log(eigenvalues)
+        entanglement_entropy = -torch.sum(eigenvalues * log_eigenvalues)  # * 100
+        score = torch.exp(entanglement_entropy)
+    else:
+        entropy = (1 / (1 - alpha)) * torch.log(torch.sum(eigenvalues**alpha))
+        score = torch.exp(entropy)
+
+    return score.item()
+
+
 def calculate_fourier_vendi(
     xs: torch.Tensor,
     random_fourier_feature_dim: int,
@@ -124,24 +140,8 @@ def calculate_fourier_vendi(
     std = math.sqrt(bandwidth / 2.0)
     x_cov = _cov_random_fourier_features(xs, random_fourier_feature_dim, std, batch_size, seed)
     eigenvalues, _ = torch.linalg.eigh(x_cov)
-    entropy = _calculate_renyi_entropy(eigenvalues.real, alpha)
-    return entropy
-
-
-def _calculate_renyi_entropy(eigenvalues: torch.Tensor, alpha: float | int = 2, eps: float = 1e-8) -> float:
-    eigenvalues = torch.clamp(eigenvalues, min=eps)
-
-    if alpha == math.inf:
-        score = 1 / torch.max(eigenvalues)
-    elif alpha != 1:
-        entropy = (1 / (1 - alpha)) * torch.log(torch.sum(eigenvalues**alpha))
-        score = torch.exp(entropy)
-    else:
-        log_eigenvalues = torch.log(eigenvalues)
-        entanglement_entropy = -torch.sum(eigenvalues * log_eigenvalues)  # * 100
-        score = torch.exp(entanglement_entropy)
-
-    return score.item()
+    score = _calculate_score(eigenvalues.real, alpha)
+    return score
 
 
 def _cov_random_fourier_features(
@@ -154,50 +154,48 @@ def _cov_random_fourier_features(
     assert len(xs.shape) == 2  # [B, dim]
 
     generator = torch.Generator(device=xs.device).manual_seed(seed)
-    omegas = torch.randn((xs.shape[-1], n_features), device=xs.device, generator=generator) * (1 / std)
+    omegas = torch.randn((xs.shape[-1], n_features), device=xs.device, generator=generator) / std
 
     product = torch.matmul(xs, omegas)
-    rff_cos = torch.cos(product)  # [B, feature_dim]
-    rff_sin = torch.sin(product)  # [B, feature_dim]
-
-    rff = torch.cat([rff_cos, rff_sin], dim=1) / np.sqrt(n_features)  # [B, 2 * feature_dim]
-    rff = rff.unsqueeze(2)  # [B, 2 * feature_dim, 1]
+    rff = torch.cat([torch.cos(product), torch.sin(product)], dim=1)
+    rff = rff / n_features**0.5  # [B, 2 * n_features]
 
     cov = torch.zeros((2 * n_features, 2 * n_features), device=xs.device)
 
     for start in range(0, rff.shape[0], batch_size):
         end = start + batch_size
-
-        rff_slice = rff[start:end]  # [mini_B, 2 * feature_dim, 1]
-        cov += torch.bmm(rff_slice, rff_slice.transpose(1, 2)).sum(dim=0)
+        chunk = rff[start:end]  # [mini_B, 2*n_features]
+        cov += torch.matmul(chunk.T, chunk)  # accumulate
 
     cov /= xs.shape[0]
-
-    assert cov.shape[0] == cov.shape[1] == n_features * 2
     return cov
 
 
-def calculate_vendi(xs: torch.Tensor, bandwidth: float, batch_size: int, alpha: float | int = 2) -> float:
+def calculate_vendi(xs: torch.Tensor, bandwidth: float, batch_size: int, alpha: float = 2) -> float:
     std = math.sqrt(bandwidth / 2.0)
     K = _normalized_gaussian_kernel(xs, xs, std, batch_size)
     eigenvalues, _ = torch.linalg.eigh(K)
-    entropy = _calculate_renyi_entropy(eigenvalues, alpha)
-    return entropy
+    score = _calculate_score(eigenvalues, alpha)
+    return score
 
 
 def _normalized_gaussian_kernel(xs: torch.Tensor, ys: torch.Tensor, std: float, batch_size: int) -> torch.Tensor:
     assert xs.shape[1:] == ys.shape[1:]
 
-    total_res = torch.zeros((xs.shape[0], 0), device=xs.device)
+    scalar = -1 / (2 * std * std)
+
+    chunks = []
     for start in range(0, ys.shape[0], batch_size):
         end = start + batch_size
-
         y_slice = ys[start:end]
-        res = torch.norm(xs.unsqueeze(1) - y_slice, dim=2, p=2).pow(2)
-        res = torch.exp((-1 / (2 * std * std)) * res)
-        total_res = torch.hstack([total_res, res])
 
-        del res, y_slice
+        diff = xs[:, None, :] - y_slice[None, :, :]
+        res = torch.sum(diff * diff, dim=2)
+        res = torch.exp(scalar * res)
 
+        chunks.append(res)
+
+    total_res = torch.hstack(chunks)
     total_res = total_res / np.sqrt(xs.shape[0] * ys.shape[0])
+
     return total_res

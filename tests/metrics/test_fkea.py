@@ -69,6 +69,7 @@ def test_vendi_different_lengths(shifted_embedder):
         n_random_fourier_features=None,
         alpha=2.0,
         seed=42,
+        batch_size=1,
     )
 
     assert metric.name == "FKEA"
