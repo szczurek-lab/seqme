@@ -1,4 +1,3 @@
-import math
 from collections.abc import Callable
 from typing import Literal
 
@@ -78,7 +77,7 @@ class ClippedDensity(Metric):
             raise ValueError("Reference embeddings must contain at least one samples.")
 
         self.reference_embeddings = torch.from_numpy(reference_embeddings).to(self.device)
-        self.ref_knn_radii, self.k = _compute_knn_radii(
+        self.reference_knn_radii, self.k = _compute_knn_radii(
             self.reference_embeddings,
             n_neighbors,
             self.batch_size,
@@ -108,7 +107,7 @@ class ClippedDensity(Metric):
         value = _compute_clipped_density(
             points=torch.from_numpy(embeddings).to(self.device),
             ball_positions=self.reference_embeddings,
-            ball_radii=self.ref_knn_radii,
+            ball_radii=self.reference_knn_radii,
             k=self.k,
             batch_size=self.batch_size,
         )
@@ -254,9 +253,8 @@ def _compute_knn_radii(
     k = min(max_k, N - 1)
     k_dists = torch.empty(N, device=embeddings.device, dtype=embeddings.dtype)
 
-    n_batches = math.ceil(N / batch_size)
-    for i in range(n_batches):
-        start, end = i * batch_size, min((i + 1) * batch_size, N)
+    for start in range(0, N, batch_size):
+        end = start + batch_size
 
         pairwise = torch.cdist(embeddings[start:end], embeddings)
         k_dists[start:end] = pairwise.kthvalue(k + 1, dim=1).values
@@ -310,9 +308,8 @@ def _compute_clipped_density_helper(
 
     pseudo_density = 0.0
 
-    n_batches = math.ceil(M / batch_size)
-    for i in range(n_batches):
-        start, end = i * batch_size, min((i + 1) * batch_size, M)
+    for start in range(0, M, batch_size):
+        end = start + batch_size
 
         dists = torch.cdist(points[start:end], ball_positions)  # [b, N]
 
@@ -371,20 +368,19 @@ def _compute_clipped_coverage_unnorm(
 ) -> float:
     N = ball_positions.shape[0]
 
-    pseudo_density = 0.0
+    pseudo_coverage = 0.0
 
-    n_batches = math.ceil(N / batch_size)
-    for i in range(n_batches):
-        start, end = i * batch_size, min((i + 1) * batch_size, N)
+    for start in range(0, N, batch_size):
+        end = start + batch_size
 
         dists = torch.cdist(points, ball_positions[start:end])  # [M, b]
         threshold = ball_radii[start:end][None, :]  # threshold: [1,b]
 
-        n_balls_inside = (dists <= threshold).sum(dim=0)  # [b]
-        n_balls_inside = torch.clamp_max((n_balls_inside) / k, 1.0)
+        n_points_inside = (dists <= threshold).sum(dim=0)  # [b]
+        n_points_inside = torch.clamp_max((n_points_inside) / k, 1.0)
 
-        pseudo_density += n_balls_inside.sum().item()
+        pseudo_coverage += n_points_inside.sum().item()
 
-    pseudo_density = pseudo_density / N
+    pseudo_coverage = pseudo_coverage / N
 
-    return pseudo_density
+    return pseudo_coverage
