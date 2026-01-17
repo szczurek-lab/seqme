@@ -140,7 +140,7 @@ def combine(
             - ``'var'``: Variance.
 
     Returns:
-        DataFrame: A single DataFrame combining multiple metric dataframes.
+        A single DataFrame combining multiple metric dataframes.
 
     Raises:
         ValueError: If ``dfs`` is empty, any DataFrame lacks 'objective', objectives conflict, or potentially overlapping non-null cells.
@@ -241,8 +241,51 @@ def combine(
     return combined_df
 
 
+def strip(
+    df: pd.DataFrame,
+    metrics: list[str] | str,
+    which: Literal["both", "deviation"] = "deviation",
+) -> pd.DataFrame:
+    """Removes metric values and/or deviations from metric dataframe.
+
+    Args:
+        df: Metric Dataframe.
+        metrics: Metrics to strip / remove.
+        which: How to strip the ``metrics``
+
+            - "both": Remove metrics (both value and deviation).
+            - "deviation: Remove deviation from metrics, i.e., set deviation to NaN.
+
+    Returns:
+        Metric dataframe with a set of metrics or their deviations removed.
+    """
+    df = df.copy()
+
+    all_metrics = list(df.columns.get_level_values(0).unique())
+
+    if isinstance(metrics, str):
+        metrics = [metrics]
+
+    unknown_metrics = set(metrics) - set(all_metrics)
+    if len(unknown_metrics) > 0:
+        raise ValueError(f"Metrics {list(unknown_metrics)} are not in the dataframe.")
+
+    if which == "deviation":
+        labels = [(metric, "deviation") for metric in metrics]
+        df[labels] = np.nan
+    elif which == "both":
+        df.drop(metrics, axis=1, level=0, inplace=True)
+
+        remaining_metrics = set(all_metrics) - set(metrics)
+        df.attrs["objective"] = {m: df.attrs["objective"][m] for m in remaining_metrics}
+    else:
+        raise ValueError(f"Invalid argument to 'which' ({which}).")
+
+    return df
+
+
 def rename(df: pd.DataFrame, metrics: dict[str, str]) -> pd.DataFrame:
-    """Rename one or more metrics.
+    """Rename one or more metrics in metric dataframe.
 
     Args:
         df: Metric Dataframe.
@@ -333,7 +376,7 @@ def top_k(
         keep: Which entry to keep if multiple are equally good.
 
     Returns:
-        DataFrame: A subset of the metric dataframe with the top-k rows.
+        A subset of the metric dataframe with the top-k rows.
     """
 
     def get_best(df: pd.DataFrame, metric: str, k: int, keep: str) -> pd.DataFrame:
