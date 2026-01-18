@@ -411,7 +411,7 @@ def _get_f_expected_reversed(k: int, M: int, N: int, device: torch.device) -> to
     f_expected_rev = torch.zeros(M, device=device)
 
     for mx in range(1, M):
-        j = torch.arange(1, mx, device=device)
+        j = torch.arange(1, mx + 1, device=device)
 
         log_binom_coef = _get_binom_coef(mx, j, log_gamma)
 
