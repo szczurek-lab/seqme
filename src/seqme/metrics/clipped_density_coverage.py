@@ -396,7 +396,7 @@ def _compute_clipped_coverage_unnorm(
 def _normalize_clipped_coverage(coverage_unnorm: float, k: int, M: int, N: int, device: torch.device) -> float:
     f_expected_rev = _get_f_expected_reversed(k=k, M=M, N=N, device=device)
     idx = torch.searchsorted(f_expected_rev, coverage_unnorm)
-    # @NOTE: since f_expected is in the reverse order of how it is defined in Salvy et al., 2025,
+    # @NOTE: since f_expected_rev is in the reverse order of how f_expected is defined in Salvy et al., 2025,
     #        no need to reverse again to compute the norm: 1 - idx / M.
     norm = idx / M
     return norm.item()
@@ -413,7 +413,7 @@ def _get_f_expected_reversed(k: int, M: int, N: int, device: torch.device) -> to
     for mx in range(1, M):
         j = torch.arange(1, mx + 1, device=device)
 
-        log_binom_coef = _get_binom_coef(mx, j, log_gamma)
+        log_binom_coef = _get_log_binom_coef(mx, j, log_gamma)
 
         log_beta_num = _get_log_beta(k + j, mx - j + N - k, log_gamma)
         log_beta = log_beta_num - log_beta_denom
@@ -428,5 +428,5 @@ def _get_log_beta(a: torch.Tensor | int, b: torch.Tensor | int, log_gamma: torch
     return log_gamma[a] + log_gamma[b] - log_gamma[a + b]
 
 
-def _get_binom_coef(n: torch.Tensor | int, k: torch.Tensor | int, log_gamma: torch.Tensor) -> torch.Tensor:
+def _get_log_binom_coef(n: torch.Tensor | int, k: torch.Tensor | int, log_gamma: torch.Tensor) -> torch.Tensor:
     return log_gamma[n + 1] - log_gamma[k + 1] - log_gamma[n - k + 1]
