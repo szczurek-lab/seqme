@@ -40,7 +40,6 @@ def test_clipped_density():
     assert result.deviation is None
 
 
-# @TODO: write test for clipped coverage
 def test_coverage():
     reference = ["A" * 1, "A" * 2, "A" * 3]
     metric = ClippedCoverage(

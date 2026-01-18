@@ -324,8 +324,11 @@ def _compute_clipped_density_helper(
         #
         #       x  x  x  x    <- 4 ball centers
         #
-        #   Clipped density norm (with k=1) is 0 if 1'th neighbor is within each ball.
-        #   unnorm / 0 = inf (undesired)
+        #   Clipped density norm (with k=1) is 0 if 1'th neighbor is within each ball,
+        #   but not counted as such: unnorm / 0 = inf (undesired)
+        #
+        #   Since we du equality check below: dists <= threshold, eps should be redundant.
+        #   But lets keep eps for now.
 
         threshold = ball_radii[None] + eps  # threshold: [1, N] broadcast to [b, N]
 
