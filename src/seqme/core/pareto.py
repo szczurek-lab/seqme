@@ -257,7 +257,7 @@ def _compute_rank_based_crowding_distance(ranks: np.ndarray) -> np.ndarray:
 
 
 def _min_tied_ranks(ranks: np.ndarray) -> np.ndarray:
-    """Rank [0, 1, 2, 3]."""
+    """Rank [0, 1, 1, 3]."""
     return np.searchsorted(np.sort(ranks), ranks, side="left")
 
 
