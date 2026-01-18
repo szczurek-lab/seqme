@@ -30,6 +30,8 @@ Metrics that compare or assess distributions in an embedding (vector) space.
     seqme.metrics.KID
     seqme.metrics.Precision
     seqme.metrics.Recall
+    seqme.metrics.ClippedDensity
+    seqme.metrics.ClippedCoverage
     seqme.metrics.AuthPct
     seqme.metrics.FKEA
 
@@ -139,6 +141,18 @@ Supported sequence types
      - |ok|
      - |ok|
    * - :py:class:`seqme.metrics.Recall`
+     - |ok|
+     - |ok|
+     - |ok|
+     - |ok|
+     - |ok|
+   * - :py:class:`seqme.metrics.ClippedDensity`
+     - |ok|
+     - |ok|
+     - |ok|
+     - |ok|
+     - |ok|
+   * - :py:class:`seqme.metrics.ClippedCoverage`
      - |ok|
      - |ok|
      - |ok|
