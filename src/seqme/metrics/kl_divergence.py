@@ -8,10 +8,25 @@ from seqme.core.base import Metric, MetricResult
 
 
 class KLDivergence(Metric):
-    """KL-divergence between samples and reference for a single property.
+    r"""
+    KL-divergence between samples and reference for a single property.
 
-    This metric measures how much the empirical distribution of a property in the generated
-    samples deviates from the corresponding reference distribution.
+    This metric measures how much the empirical distribution of a property
+    :math:`f(x)` in the generated samples deviates from the corresponding
+    reference distribution.
+
+    The KL-divergence is defined as:
+
+    .. math::
+
+        \mathrm{KL}\big(p_{f(\mathrm{ref})} \,\|\, p_{f(\mathrm{gen})}\big)
+        = \int p_{f(\mathrm{ref})}(y)
+        \log \frac{p_{f(\mathrm{ref})}(y)}{p_{f(\mathrm{gen})}(y)} \, dy,
+
+    where :math:`p_{f(\mathrm{ref})}` denotes the reference distribution and
+    :math:`p_{f(\mathrm{gen})}` denotes the generated distribution.
+
+    In practice, the KL-divergence is approximated using Monte-Carlo sampling.
     """
 
     def __init__(
@@ -83,30 +98,16 @@ def continuous_kl_mc(
     n_draws: int = 10_000,
     seed: int = 0,
 ) -> tuple[float, float]:
-    """
-    Monte-Carlo estimate of D_KL(P || Q) plus its standard error, where P ≈ KDE(x_reference), Q ≈ KDE(x_samples).
+    x_reference = x_reference.reshape(-1, 1)
+    x_samples = x_samples.reshape(-1, 1)
 
-    Args:
-        x_reference: Array of samples drawn from the reference distribution P.
-        x_samples: Array of samples drawn from the comparison distribution Q.
-        kde_bandwidth: Bandwidth parameter for the Gaussian KDE.
-        n_draws: Number of Monte Carlo samples to draw from P.
-        seed: Seed for deterministic sampling of Gaussian KDE.
+    kde_p = KernelDensity(kernel="gaussian", bandwidth=kde_bandwidth).fit(x_reference)
+    kde_q = KernelDensity(kernel="gaussian", bandwidth=kde_p.bandwidth_).fit(x_samples)
 
-    Returns:
-        A tuple containing:
-            kl_estimate: The estimated KL divergence between P and Q.
-            se: The Monte Carlo standard error of the estimate.
-    """
-    kde_p = KernelDensity(kernel="gaussian", bandwidth=kde_bandwidth).fit(x_reference[:, None])
-    kde_q = KernelDensity(kernel="gaussian", bandwidth=kde_p.bandwidth_).fit(x_samples[:, None])
+    x_p = kde_p.sample(n_draws, random_state=seed)
 
-    rng = np.random.default_rng(seed)
-    idx = rng.choice(len(x_reference), size=n_draws, replace=True)
-    x_p = x_reference[idx] + rng.normal(scale=kde_p.bandwidth_, size=n_draws)
-
-    log_p = kde_p.score_samples(x_p[:, None])
-    log_q = kde_q.score_samples(x_p[:, None])
+    log_p = kde_p.score_samples(x_p)
+    log_q = kde_q.score_samples(x_p)
 
     log_diff = log_p - log_q
 

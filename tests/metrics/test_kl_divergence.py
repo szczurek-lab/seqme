@@ -46,5 +46,5 @@ def test_different_sequences():
 
     result = metric(test)
 
-    assert result.value == pytest.approx(90.7, abs=0.01)
+    assert result.value == pytest.approx(90.9, abs=0.01)
     assert result.deviation == pytest.approx(0.13, abs=0.01)
