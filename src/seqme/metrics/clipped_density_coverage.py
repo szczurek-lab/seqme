@@ -256,8 +256,8 @@ def _compute_knn_radii(
     for start in range(0, N, batch_size):
         end = start + batch_size
 
-        pairwise = torch.cdist(embeddings[start:end], embeddings)
-        k_dists[start:end] = pairwise.kthvalue(k + 1, dim=1).values
+        dists = torch.cdist(embeddings[start:end], embeddings)
+        k_dists[start:end] = dists.kthvalue(k + 1, dim=1).values
 
     if median_clamp:
         median_dist = k_dists.quantile(0.5)

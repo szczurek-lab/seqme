@@ -26,7 +26,7 @@ class KLDivergence(Metric):
     where :math:`p_{f(\mathrm{ref})}` denotes the reference distribution and
     :math:`p_{f(\mathrm{gen})}` denotes the generated distribution.
 
-    In practice, the KL-divergence is approximated using Monte-Carlo sampling.
+    The KL-divergence is approximated using Monte-Carlo sampling.
     """
 
     def __init__(

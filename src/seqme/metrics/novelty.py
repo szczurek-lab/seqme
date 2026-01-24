@@ -8,7 +8,7 @@ class Novelty(Metric):
 
     def __init__(self, reference: list[str], *, name: str = "Novelty"):
         """
-        Initialize the metric with a reference corpus.
+        Initialize the Novelty metric.
 
         Args:
             reference: A list of reference sequences against which generated sequences will be compared.

@@ -11,7 +11,7 @@ def rank(
     df: pd.DataFrame,
     metrics: list[str] | None = None,
     *,
-    tiebreak: Literal["crowding-distance", "mean-rank"] | None = None,
+    tiebreak: Literal["mean-rank", "crowding-distance"] | None = None,
     ties: Literal["min", "max", "mean", "dense", "auto"] = "auto",
     name: str = "Rank",
 ) -> pd.DataFrame:
@@ -19,9 +19,14 @@ def rank(
 
     If the column already exists, then don't use it to compute the rank unless explicitly selected in ``metrics``. Rank overrides the column ``name`` if it already exists.
 
-    Reference:
-        - David Come and Joshua Knowles, *Techniques for Highly Multiobjective Optimisation: Some Nondominated Points are Better than Others* (https://arxiv.org/pdf/0908.3025.pdf)
-        - K. Deb et al., *A fast and elitist multiobjective genetic algorithm: NSGA-II*
+    References:
+        [1] David Come and Joshua Knowles.
+            "Techniques for Highly Multiobjective Optimisation:
+            Some Nondominated Points are Better than Others."
+            https://arxiv.org/pdf/0908.3025.pdf
+
+        [2] K. Deb, A. Pratap, S. Agarwal, and T. Meyarivan.
+            "A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II."
 
     Note:
         Deviations are ignored.
@@ -29,10 +34,17 @@ def rank(
     Args:
         df: Metric dataframe.
         metrics: Metrics for dominance-based comparison. If ``None``, use all metrics in dataframe (except the column with the same name if it exists).
-        tiebreak: How to break ties when rows have same rank. If ``None``, ranks correspond to each "peeled" Pareto set.
+        tiebreak:
+            How to break ties when the rows have same rank. In some cases, ties may not be resolvable by the selected method.
+            If ``None``, no tie-breaking occurs and ranks correspond to each "peeled" non-dominated set.
 
-            - ``'crowding-distance'``: Crowding distance.
-            - ``'mean-rank'``: Mean rank.
+            - ``'mean-rank'``:
+                Break ties by ranking each metric independently across all rows
+                in the tied group, then averaging those per-metric ranks for each row [1].
+            - ``'crowding-distance'``:
+                Break ties using the crowding distance within the tied group.
+                Rows with larger crowding distance (i.e., more isolated solutions
+                in metric space) are ranked better [2].
 
         ties: How to do rank numbering when there are ties.
 
@@ -146,7 +158,7 @@ def extract_non_dominated(
 
 def _non_dominated_rank(
     costs: np.ndarray,
-    tie_break: Literal["crowding-distance", "mean-rank"] | None = None,
+    tie_break: Literal["mean-rank", "crowding-distance"] | None = None,
     ties: Literal["min", "max", "mean", "dense", "auto"] = "auto",
 ) -> np.ndarray:
     """
@@ -154,27 +166,24 @@ def _non_dominated_rank(
 
     Args:
         costs: An array of costs (or objectives). The shape is (n_observations, n_objectives).
-        tie_break: Whether we apply tie-break or not.
+        tie_break: Tie-break strategy to apply.
         ties: How to do rank numbering when there are ties.
 
     Returns:
-        ranks:
-            If not tie_break:
-                The non-dominated rank of each observation. The shape is (n_observations, ). The rank starts from one and lower rank is better.
-            else:
-                The each non-dominated rank will be tie-broken so that we can sort identically.
-                The shape is (n_observations, ) and the array is a permutation of zero to n_observations - 1.
+        ranks
     """
     ranks = moocore.pareto_rank(costs)
 
     if tie_break is None:
         pass
-    elif tie_break == "crowding-distance":
-        ranks = _crowding_distance_tie_break(costs, ranks)
     elif tie_break == "mean-rank":
         ranks = _mean_rank_tie_break(costs, ranks)
+    elif tie_break == "crowding-distance":
+        ranks = _crowding_distance_tie_break(costs, ranks)
     else:
         raise ValueError(f"Unsupported tie-break: {tie_break}.")
+
+    # @NOTE: Ranking is still 0-based after tie-breaking, but changes to 1-based below.
 
     if ties == "auto":
         ranks = _dense_tied_ranks(ranks) if tie_break is None else _min_tied_ranks(ranks)
@@ -189,50 +198,44 @@ def _non_dominated_rank(
     else:
         raise ValueError(f"Invalid ties: {ties}.")
 
-    return ranks + 1
-
-
-def _crowding_distance_tie_break(costs: np.ndarray, nd_ranks: np.ndarray) -> np.ndarray:
-    # K. Deb et al., "A fast and elitist multiobjective genetic algorithm: NSGA-II"
-
-    ranks = scipy.stats.rankdata(costs, axis=0)
-    masks: list[list[int]] = [[] for _ in range(nd_ranks.max() + 1)]
-
-    for idx, nd_rank in enumerate(nd_ranks):
-        masks[nd_rank].append(idx)
-
-    n_checked = 0
-    tie_broken_nd_ranks = np.zeros(ranks.shape[0], dtype=int)
-
-    for mask in masks:
-        tie_break_ranks = _compute_rank_based_crowding_distance(ranks=ranks[mask])
-        tie_broken_nd_ranks[mask] = tie_break_ranks + n_checked - 1
-        n_checked += len(mask)
-
-    return tie_broken_nd_ranks
+    return ranks
 
 
 def _mean_rank_tie_break(costs: np.ndarray, nd_ranks: np.ndarray) -> np.ndarray:
-    # David Come and Joshua Knowles, "Techniques for Highly Multiobjective Optimisation: Some Nondominated Points are Better than Others"
-    # (https://arxiv.org/pdf/0908.3025.pdf)
+    indices_in_group: list[list[int]] = [[] for _ in range(nd_ranks.max() + 1)]
+    for idx, nd_rank in enumerate(nd_ranks):
+        indices_in_group[nd_rank].append(idx)
 
     ranks = scipy.stats.rankdata(costs, axis=0)
-    masks: list[list[int]] = [[] for _ in range(nd_ranks.max() + 1)]
-
-    for idx, nd_rank in enumerate(nd_ranks):
-        masks[nd_rank].append(idx)
-
     # min_ranks_factor plays a role when we tie-break same average ranks
     min_ranks_factor = np.min(ranks, axis=-1) / (nd_ranks.size**2 + 1)
     avg_ranks = np.mean(ranks, axis=-1) + min_ranks_factor
 
-    n_checked = 0
+    group_min_rank = 0
     tie_broken_nd_ranks = np.zeros(ranks.shape[0], dtype=int)
 
-    for mask in masks:
-        tie_break_ranks = scipy.stats.rankdata(avg_ranks[mask], method="min").astype(int)
-        tie_broken_nd_ranks[mask] = tie_break_ranks + n_checked - 1
-        n_checked += len(mask)
+    for indices in indices_in_group:
+        tie_break_ranks = scipy.stats.rankdata(avg_ranks[indices], method="min").astype(int) - 1
+        tie_broken_nd_ranks[indices] = tie_break_ranks + group_min_rank
+        group_min_rank += len(indices)
+
+    return tie_broken_nd_ranks
+
+
+def _crowding_distance_tie_break(costs: np.ndarray, nd_ranks: np.ndarray) -> np.ndarray:
+    indices_in_group: list[list[int]] = [[] for _ in range(nd_ranks.max() + 1)]
+    for idx, nd_rank in enumerate(nd_ranks):
+        indices_in_group[nd_rank].append(idx)
+
+    ranks = scipy.stats.rankdata(costs, axis=0)
+
+    group_min_rank = 0
+    tie_broken_nd_ranks = np.zeros(ranks.shape[0], dtype=int)
+
+    for indices in indices_in_group:
+        tie_break_ranks = _compute_rank_based_crowding_distance(ranks=ranks[indices])
+        tie_broken_nd_ranks[indices] = tie_break_ranks + group_min_rank
+        group_min_rank += len(indices)
 
     return tie_broken_nd_ranks
 
@@ -253,35 +256,24 @@ def _compute_rank_based_crowding_distance(ranks: np.ndarray) -> np.ndarray:
             else np.zeros(n_observations)
         )
         dists += crowding_dists[order_inv]
-    return scipy.stats.rankdata(-dists, method="min").astype(int)
+    return scipy.stats.rankdata(-dists, method="min").astype(int) - 1
 
 
 def _min_tied_ranks(ranks: np.ndarray) -> np.ndarray:
-    """Rank [0, 1, 1, 3]."""
-    return np.searchsorted(np.sort(ranks), ranks, side="left")
+    """Rank [1, 2, 2, 4]."""
+    return scipy.stats.rankdata(ranks, method="min")
 
 
 def _max_tied_ranks(ranks: np.ndarray) -> np.ndarray:
-    """Rank [0, 2, 2, 3]."""
-    return np.searchsorted(np.sort(ranks), ranks, side="right") - 1
+    """Rank [1, 3, 3, 4]."""
+    return scipy.stats.rankdata(ranks, method="max")
 
 
 def _mean_tied_ranks(ranks: np.ndarray) -> np.ndarray:
-    """Rank [0, 1.5, 1.5, 3]."""
-    idx = np.argsort(ranks)
-    sorted_x = ranks[idx]
-
-    _, inv_sorted = np.unique(sorted_x, return_inverse=True)
-    sum_pos = np.bincount(inv_sorted, weights=np.arange(ranks.size))
-    counts = np.bincount(inv_sorted)
-    mean_pos_per_group = sum_pos / counts
-
-    mean_sorted = mean_pos_per_group[inv_sorted]
-    out = np.empty(ranks.size, dtype=float)
-    out[idx] = mean_sorted
-    return out
+    """Rank [1, 2.5, 2.5, 4]."""
+    return scipy.stats.rankdata(ranks, method="average")
 
 
 def _dense_tied_ranks(ranks: np.ndarray) -> np.ndarray:
-    """Rank [0, 1, 1, 2]."""
-    return np.unique(ranks, return_inverse=True)[1]
+    """Rank [1, 2, 2, 3]."""
+    return scipy.stats.rankdata(ranks, method="dense")

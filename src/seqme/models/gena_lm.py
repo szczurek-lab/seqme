@@ -123,7 +123,12 @@ class GENALM:
         self.tokenizer = AutoTokenizer.from_pretrained(ckpt_name)
 
         if self.task == Task.EMBEDDING:
-            self.model = AutoModel.from_pretrained(ckpt_name, trust_remote_code=True, output_hidden_states=True)
+            self.model = AutoModel.from_pretrained(
+                ckpt_name,
+                trust_remote_code=True,
+                output_hidden_states=True,
+                return_dict_in_generate=True,
+            )
         elif self.task == Task.CLASSIFICATION:
             self.model = BertForSequenceClassification.from_pretrained(
                 ckpt_name, revision=branch_name, trust_remote_code=True, cache_dir=cache_dir

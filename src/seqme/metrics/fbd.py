@@ -58,7 +58,7 @@ class FBD(Metric):
             MetricResult: FBD score.
         """
         seq_embeddings = self.embedder(sequences)
-        dist = wasserstein_distance(seq_embeddings, self.reference_embeddings)
+        dist = _wasserstein_distance(seq_embeddings, self.reference_embeddings)
         return MetricResult(dist)
 
     @property
@@ -70,12 +70,9 @@ class FBD(Metric):
         return "minimize"
 
 
-def wasserstein_distance(e1: np.ndarray, e2: np.ndarray, eps: float = 1e-6) -> float:
+def _wasserstein_distance(e1: np.ndarray, e2: np.ndarray, eps: float = 1e-6) -> float:
     """
     Computes the Fréchet distance between two sets of embeddings.
-
-    This is defined as:
-        ||μ1 - μ2||² + Tr(Σ1 + Σ2 - 2(Σ1·Σ2)^{1/2})
 
     Args:
         e1: First set of embeddings, shape (N1, D).

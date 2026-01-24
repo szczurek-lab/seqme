@@ -20,8 +20,8 @@ class MetricResult:
 class Metric(abc.ABC):
     """Abstract base class for defining a metric.
 
-    Subclasses implement a callable interface to compute a score and
-    specify a name and optimization direction.
+    Subclasses implement a callable interface to compute the metric
+    and specify a name and optimization direction.
     """
 
     @abc.abstractmethod
@@ -29,20 +29,20 @@ class Metric(abc.ABC):
         """Calculate the metric for the provided sequences.
 
         Args:
-            sequences: Text inputs to evaluate.
+            sequences: Sequences to evaluate.
 
         Returns:
-            An object containing the score and optional details.
+            An object containing the metric value and optional deviation.
         """
         raise NotImplementedError()
 
     @property
     @abc.abstractmethod
     def name(self) -> str:
-        """A short identifier for this metric, used in reporting.
+        """Name of the metric.
 
         Returns:
-            The metric name.
+            The metric's name.
         """
         raise NotImplementedError()
 
@@ -52,7 +52,7 @@ class Metric(abc.ABC):
         """Whether lower or higher scores indicate better performance.
 
         Returns:
-            The optimization goal ('minimize' or 'maximize').
+            The optimization direction.
         """
         raise NotImplementedError()
 
@@ -242,7 +242,7 @@ def combine(
 
 
 def strip(df: pd.DataFrame, metrics: list[str] | str | None = None) -> pd.DataFrame:
-    """Strip deviations from metrics in a metric dataframe.
+    """Strip deviations from metrics in the metric dataframe.
 
     Args:
         df: Metric dataframe.
@@ -268,17 +268,17 @@ def strip(df: pd.DataFrame, metrics: list[str] | str | None = None) -> pd.DataFr
     if len(unknown_metrics) > 0:
         raise ValueError(f"Metrics {list(unknown_metrics)} are not in the dataframe.")
 
-    labels = [(metric, "deviation") for metric in metrics]
-    df[labels] = np.nan
+    cols = [(metric, "deviation") for metric in metrics]
+    df[cols] = float("nan")
 
     return df
 
 
 def rename(df: pd.DataFrame, metrics: dict[str, str]) -> pd.DataFrame:
-    """Rename one or more metrics in metric dataframe.
+    """Rename one or more metrics in the metric dataframe.
 
     Args:
-        df: Metric Dataframe.
+        df: Metric dataframe.
         metrics: Metrics to rename. Format: {old: new, ...}.
 
     Returns:
@@ -307,10 +307,10 @@ def rename(df: pd.DataFrame, metrics: dict[str, str]) -> pd.DataFrame:
 
 
 def sort(df: pd.DataFrame, metric: str, *, level: int = 0, order: Literal["best", "worst"] = "best") -> pd.DataFrame:
-    """Sort metric dataframe by a metrics values.
+    """Sort the metric dataframe by a metrics values.
 
     Args:
-        df: Metric Dataframe.
+        df: Metric dataframe.
         metric: Metric to consider when sorting.
         level: The tuple index-names level to consider as a group.
         order: Which sequences to be first after sorting.
@@ -359,7 +359,7 @@ def top_k(
     """Extract top-k rows of the metric dataframe based on a metrics values.
 
     Args:
-        df: Metric Dataframe.
+        df: Metric dataframe.
         metric: Metric to consider when selecting top-k rows.
         k: Number of rows to extract.
         level: The tuple index-names level to consider as a group.
