@@ -133,19 +133,8 @@ class ESM2:
         Returns:
             np.ndarray: Pseudo-perplexity scores, in the same order as the input sequences.
         """
-        inputs = self.tokenizer(sequences, return_tensors="pt", padding=True, truncation=False)
-        input_ids = inputs["input_ids"].to(self.device)
-        attention_mask = inputs["attention_mask"].to(self.device)
 
-        B, L = input_ids.size()
-
-        total_loglik = torch.zeros(B, device=self.device)
-        lengths = attention_mask.sum(dim=1)
-
-        valid_positions = [pos for pos in range(L) if attention_mask[:, pos].any()]
-
-        # Utility to chunk a list into size‐<=mask_size
-        def chunked(lst, n):
+        def chunked(lst: list[int], n: int):
             it = iter(lst)
             while True:
                 chunk = list(islice(it, n))
@@ -153,21 +142,38 @@ class ESM2:
                     break
                 yield chunk
 
-        for pos_chunk in chunked(valid_positions, mask_size):
-            masked_in = input_ids.clone()
+        total_loglik = torch.zeros(len(sequences), device=self.device)
+        all_lengths = torch.zeros(len(sequences), device=self.device)
 
-            for pos in pos_chunk:
-                real = attention_mask[:, pos] == 1
-                masked_in[real, pos] = self.tokenizer.mask_token_id
+        for start_idx in tqdm(range(0, len(sequences), self.batch_size), disable=not self.verbose):
+            batch = sequences[start_idx : start_idx + self.batch_size]
+            inputs = self.tokenizer(batch, return_tensors="pt", padding=True, truncation=False)
 
-            logits = self.model(masked_in, attention_mask=attention_mask.to(self.device)).logits
-            log_probs = torch.log_softmax(logits, dim=-1)
+            input_ids = inputs["input_ids"].to(self.device)
+            attention_mask = inputs["attention_mask"].to(self.device)
 
-            for pos in pos_chunk:
-                real = attention_mask[:, pos] == 1
-                true_ids = input_ids[:, pos]
-                pos_logps = log_probs[torch.arange(B, device=self.device), pos, true_ids]
-                total_loglik[real] += pos_logps[real]
+            B, L = input_ids.size()
 
-        pppls = torch.exp(-total_loglik / lengths).cpu().numpy()
+            lengths = attention_mask.sum(dim=1)
+            all_lengths[start_idx : start_idx + B] = lengths
+
+            valid_positions = [pos for pos in range(L) if attention_mask[:, pos].any()]
+
+            for pos_chunk in chunked(valid_positions, mask_size):
+                masked_in = input_ids.clone()
+
+                for pos in pos_chunk:
+                    real = attention_mask[:, pos] == 1
+                    masked_in[real, pos] = self.tokenizer.mask_token_id
+
+                logits = self.model(masked_in, attention_mask=attention_mask.to(self.device)).logits
+                log_probs = torch.log_softmax(logits, dim=-1)
+
+                for pos in pos_chunk:
+                    real = attention_mask[:, pos] == 1
+                    idx = real.nonzero(as_tuple=True)[0]
+                    true_ids = input_ids[idx, pos]
+                    total_loglik[start_idx + idx] += log_probs[idx, pos, true_ids]
+
+        pppls = torch.exp(-total_loglik / all_lengths).cpu().numpy()
         return pppls

@@ -30,7 +30,7 @@ class SAScore:
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         self._sascorer = module
-        assert hasattr(self._sascorer, "calculateScore"), "sascorer module has no expected function."
+        assert hasattr(self._sascorer, "calculateScore"), "Missing 'calculateScore' function in sascorer module."
 
     def __call__(self, sequences: list[str]) -> np.ndarray:
         """Compute SA score for a list of SMILES sequences.

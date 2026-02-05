@@ -22,7 +22,7 @@ def plot_bar(
     """Plot a bar chart for a given metric with optional error bars.
 
     Args:
-        df: A DataFrame with a MultiIndex column [metric, {"value", "deviation"}].
+        df: Metric dataframe.
         metric: The name of the metric to plot. If ``None``, plot all metrics in ``df``, assumes one metric is in the dataframe.
         color: Bar color. Default is teal.
         xticks_rotation: Rotation angle for x-axis labels.
@@ -104,7 +104,7 @@ def plot_parallel(
     """Plot a parallel coordinates plot where each coordinate is a metric.
 
     Args:
-        df: A DataFrame with a MultiIndex column [metric, {"value", "deviation"}].
+        df: Metric dataframe.
         metrics: Which metrics to plot. If ``None``, plot all metrics in ``df``.
         n_decimals: Decimal precision for formatting metric values.
         xticks_fontsize: Font size of x-ticks. If ``None``, selects default fontsize.
@@ -287,7 +287,7 @@ def plot_line(
     """Plot a series for a given metric across multiple iterations/steps with optional error bars.
 
     Args:
-        df: A DataFrame with a MultiIndex column [metric, {"value", "deviation"}].
+        df: Metric dataframe.
         metric: The name of the metric to plot. If ``None``, plot all metrics in ``df``, assumes one metric is in the dataframe.
         color: Color for each series.
         xlabel: Name of x-label.
@@ -408,7 +408,7 @@ def plot_scatter(
     """Plot a scatter plot for two metrics with optional error rectangles or bars.
 
     Args:
-        df: A DataFrame with a MultiIndex column [metric, {"value", "deviation"}].
+        df: Metric dataframe.
         metrics: The name of the metrics to plot. If ``None``, plot all metrics in ``df``, assumes two metrics are in the dataframe.
         color: Circle color.
         show_arrow: Whether to show an arrow indicating maximize/minimize in the x- and y-labels.

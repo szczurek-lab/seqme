@@ -94,8 +94,8 @@ class RNAFM:
 
             lengths = [len(s) // 3 if self.model_name == "mRNA" else len(s) for s in batch]
             means = [hidden_state[i, :length].mean(dim=-2) for i, length in enumerate(lengths)]
-            embed = torch.stack(means, dim=0)
+            batch_embeddings = torch.stack(means, dim=0)
 
-            embeddings.append(embed.cpu().numpy())
+            embeddings.append(batch_embeddings.cpu().numpy())
 
         return np.concatenate(embeddings)
