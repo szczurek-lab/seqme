@@ -387,7 +387,7 @@ def _compute_clipped_coverage_unnorm(
         threshold = ball_radii[start:end][None, :]  # threshold: [1,b]
 
         n_points_inside = (dists <= threshold).sum(dim=0)  # [b]
-        n_points_inside = torch.clamp_max((n_points_inside) / k, 1.0)
+        n_points_inside = torch.clamp_max(n_points_inside / k, 1.0)
 
         clipped_coverage_unnorm += n_points_inside.sum().item()
 

@@ -129,7 +129,7 @@ def combine(
     """Combine multiple DataFrames with metric results into a single DataFrame.
 
     Args:
-        dfs: Metric dataframes, each with MultiIndex columns [(metric, 'value'), (metric, 'deviation')], and an 'objective' attribute.
+        dfs: Metric dataframes.
         value: How to handle cells with multiple values. If ``None`` and a cell has multiple values, raises an ValueError.
 
             - ``'mean'``: Mean.
@@ -193,16 +193,16 @@ def combine(
                 target_dict[(row, metric)].append(val)
 
     # handle multiple values
-    res: dict[tuple[Any, tuple[str, str]], float] = {}
+    cell_to_value: dict[tuple[Any, tuple[str, str]], float] = {}
     if value is None:
         for (row, col), vs in values_dict.items():
             if len(vs) > 1:
                 raise ValueError(f"Multiple values in cell: [{row}, {col}].")
-            res[(row, (col, "value"))] = vs[0]
+            cell_to_value[(row, (col, "value"))] = vs[0]
             if (row, col) in deviations_dict:
                 if len(deviations_dict[(row, col)]) > 1:
                     raise ValueError(f"Multiple deviations in cell: [{row}, {col}]")
-                res[(row, (col, "deviation"))] = deviations_dict[(row, col)][0]
+                cell_to_value[(row, (col, "deviation"))] = deviations_dict[(row, col)][0]
     else:
         if value == "mean":
             val_reducer = lambda vs: np.mean(vs).item()
@@ -221,8 +221,8 @@ def combine(
             raise ValueError(f"Invalid 'deviation' ({deviation})")
 
         for (row, col), vs in values_dict.items():
-            res[(row, (col, "value"))] = val_reducer(vs)
-            res[(row, (col, "deviation"))] = dev_reducer(vs) if len(vs) > 1 else None
+            cell_to_value[(row, (col, "value"))] = val_reducer(vs)
+            cell_to_value[(row, (col, "deviation"))] = dev_reducer(vs) if len(vs) > 1 else None
 
     # construct combined dataframe
     row_index = (
@@ -235,7 +235,7 @@ def combine(
     combined_df = pd.DataFrame(index=row_index, columns=col_index, dtype=float)
     combined_df.attrs["objective"] = combined_objectives
 
-    for (row, col), val in res.items():  # type: ignore
+    for (row, col), val in cell_to_value.items():  # type: ignore
         combined_df.at[row, col] = val
 
     return combined_df

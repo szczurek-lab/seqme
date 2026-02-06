@@ -137,13 +137,13 @@ class KID(Metric):
             raise ValueError("Expected degree > 0")
 
     def __call__(self, sequences: list[str]) -> MetricResult:
-        """Compute the MMD between embeddings of the input sequences and the reference.
+        """Compute the KID between embeddings of the input sequences and the reference.
 
         Args:
             sequences: Sequences to evaluate.
 
         Returns:
-            MetricResult: MMD score.
+            MetricResult: KID score.
         """
         if len(sequences) == 0:
             raise ValueError("Sequences must contain at least one sample.")
@@ -171,7 +171,7 @@ def compute_mmd(
     k_xx: torch.Tensor,
     k_yy: torch.Tensor,
     k_xy: torch.Tensor,
-    estimate: Literal["biased", "unbiased"] = "biased",
+    estimate: Literal["biased", "unbiased"],
 ) -> float:
     if estimate == "biased":
         k_xx_avg = k_xx.mean()
@@ -193,7 +193,7 @@ def compute_mmd(
 def compute_gaussian_mmd(
     x: torch.Tensor,
     y: torch.Tensor,
-    estimate: Literal["biased", "unbiased"] = "unbiased",
+    estimate: Literal["biased", "unbiased"],
     sigma: float = 10.0,
     scale: float = 1000,
 ) -> float:
@@ -233,7 +233,7 @@ def gaussian_kernels(x: torch.Tensor, y: torch.Tensor, sigma: float) -> tuple[to
 def compute_polynomial_mmd(
     x: torch.Tensor,
     y: torch.Tensor,
-    estimate: Literal["biased", "unbiased"] = "unbiased",
+    estimate: Literal["biased", "unbiased"],
     degree: int = 3,
     coef0: float = 1.0,
 ) -> float:
