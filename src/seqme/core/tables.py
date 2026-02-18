@@ -33,7 +33,7 @@ def show(
         - Vertical divider between columns.
 
     Args:
-        df: Metric dataFrame.
+        df: Metric dataframe.
         n_decimals: Decimal precision for formatting. Value is rounded. Deviation is rounded up.
         color: Color for highlighting best scores. If ``None``, no coloring.
         color_style: Style of the coloring. Ignored if color is ``None``.
@@ -235,7 +235,7 @@ def to_latex(
     """Export a metric dataframe to a LaTeX table.
 
     Args:
-        df: Metric dataFrame.
+        df: Metric dataframe.
         path: Output filename, e.g., ``"./path/table.tex"``.
         n_decimals: Decimal precision for formatting. Value is rounded. Deviation is rounded up.
         color: Color for highlighting best scores. If ``None``, no coloring.

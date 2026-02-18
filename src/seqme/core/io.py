@@ -3,19 +3,29 @@ from pathlib import Path
 from typing import Any
 
 
-def read_fasta(path: str | Path) -> list[str]:
+def read_fasta(
+    path: str | Path,
+    *,
+    return_headers: bool = False,
+) -> list[str] | tuple[list[str], list[str]]:
     """Retrieve sequences from a FASTA file.
 
     Args:
         path: Path to FASTA file.
+        return_headers: Whether to return sequence headers alongside the sequences.
 
     Returns:
         The list of sequences.
+
+        If ``return_headers`` is ``True``, returns a tuple ``(headers, sequences)``,
+        where ``headers`` is a list of header strings (without the leading
+        ``>``) and ``sequences`` is the corresponding list of sequence strings.
     """
     path = Path(path)
     if not path.is_file():
         raise FileNotFoundError(f"File not found: {path}")
 
+    headers: list[str] = []
     sequences: list[str] = []
     current_seq: list[str] = []
 
@@ -25,6 +35,8 @@ def read_fasta(path: str | Path) -> list[str]:
             if not line:
                 continue  # skip empty lines
             if line.startswith(">"):
+                if return_headers:
+                    headers.append(line[1:])
                 if current_seq:
                     sequence = "".join(current_seq)
                     if sequence:
@@ -39,7 +51,7 @@ def read_fasta(path: str | Path) -> list[str]:
             if sequence:
                 sequences.append(sequence)
 
-    return sequences
+    return headers, sequences if return_headers else sequences
 
 
 def to_fasta(sequences: list[str], path: str | Path, *, headers: list[str] | None = None):
