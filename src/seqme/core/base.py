@@ -66,7 +66,7 @@ def evaluate(
     """Compute a set of metrics for multiple sequence groups.
 
     Args:
-        sequences: A dict mapping group name to lists of sequences.
+        sequences: A dict mapping group name to a list of sequences.
         metrics: Metrics to compute per sequence group.
         verbose: Whether to show a progress-bar.
 
@@ -126,7 +126,7 @@ def combine(
     value: Literal["mean"] | None = None,
     deviation: Literal["std", "se", "var"] | None = "std",
 ) -> pd.DataFrame:
-    """Combine multiple DataFrames with metric results into a single DataFrame.
+    """Combine multiple metric dataframes into a single metric dataframe.
 
     Args:
         dfs: Metric dataframes.
@@ -353,6 +353,7 @@ def top_k(
     metric: str,
     k: int,
     *,
+    criteria: Literal["best", "worst"] = "best",
     level: int = 0,
     keep: Literal["first", "last", "all"] = "all",
 ) -> pd.DataFrame:
@@ -362,6 +363,7 @@ def top_k(
         df: Metric dataframe.
         metric: Metric to consider when selecting top-k rows.
         k: Number of rows to extract.
+        criteria: Criteria for top sequences.
         level: The tuple index-names level to consider as a group.
         keep: Which entry to keep if multiple are equally good.
 
@@ -371,8 +373,13 @@ def top_k(
 
     def get_best(df: pd.DataFrame, metric: str, k: int, keep: str) -> pd.DataFrame:
         if df.attrs["objective"][metric] == "minimize":
-            return df.nsmallest(k, columns=(metric, "value"), keep=keep)  # type: ignore
-        return df.nlargest(k, columns=(metric, "value"), keep=keep)  # type: ignore
+            return df.nsmallest(k, columns=(metric, "value"), keep=keep)
+        return df.nlargest(k, columns=(metric, "value"), keep=keep)
+
+    def get_worst(df: pd.DataFrame, metric: str, k: int, keep: str) -> pd.DataFrame:
+        if df.attrs["objective"][metric] == "minimize":
+            return df.nlargest(k, columns=(metric, "value"), keep=keep)
+        return df.nsmallest(k, columns=(metric, "value"), keep=keep)
 
     if metric not in df.columns.get_level_values(0):
         raise ValueError(f"'{metric}' is not a column in the DataFrame.")
@@ -383,18 +390,21 @@ def top_k(
     if "objective" not in df.attrs:
         raise ValueError("The DataFrame must have an 'objective' attribute.")
 
+    extractors = {"best": get_best, "worst": get_worst}
+    extractor = extractors[criteria]
+
     groups = defaultdict(list)
     for index in df.index:
         level_index = index[:level]
         groups[level_index].append(index)
 
-    dfs_bests = []
+    dfs_top = []
     for group in groups.values():
         df_sub = df.loc[group]
-        df_sub_best = get_best(df_sub, metric, k, keep)
-        dfs_bests.append(df_sub_best)
+        df_sub_top = extractor(df_sub, metric, k, keep)
+        dfs_top.append(df_sub_top)
 
-    df_combined = pd.concat(dfs_bests)
+    df_combined = pd.concat(dfs_top)
 
     # keep the original index order
     top_k_indices = set(df_combined.index)

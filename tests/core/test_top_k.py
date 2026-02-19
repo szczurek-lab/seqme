@@ -4,7 +4,7 @@ import pytest
 import seqme as sm
 
 
-def test_top_k():
+def test_best_k():
     sequences = {
         "model1": ["AAA", "AAA", "AAA"],
         "model2": ["AAA", "KKK", "KKK"],
@@ -26,3 +26,21 @@ def test_top_k():
 
     assert pd.isna(df.at["model2", ("Uniqueness", "deviation")])
     assert pd.isna(df.at["model3", ("Uniqueness", "deviation")])
+
+
+def test_worst_k():
+    sequences = {
+        "model1": ["AAA", "AAA", "AAA"],
+        "model2": ["AAA", "KKK", "KKK"],
+        "model3": ["AAA", "KKK", "RRR"],
+    }
+    metrics = [sm.metrics.Uniqueness()]
+
+    df = sm.evaluate(sequences, metrics)
+    df = sm.top_k(df, metric="Uniqueness", k=2, criteria="worst")
+
+    assert df.shape == (2, 2)
+    assert df.attrs["objective"] == {"Uniqueness": "maximize"}
+
+    assert df.index.tolist() == ["model1", "model2"]
+    assert df.columns.tolist() == [("Uniqueness", "value"), ("Uniqueness", "deviation")]
