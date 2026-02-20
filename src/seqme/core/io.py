@@ -51,7 +51,7 @@ def read_fasta(
             if sequence:
                 sequences.append(sequence)
 
-    return headers, sequences if return_headers else sequences
+    return (headers, sequences) if return_headers else sequences
 
 
 def to_fasta(sequences: list[str], path: str | Path, *, headers: list[str] | None = None):
