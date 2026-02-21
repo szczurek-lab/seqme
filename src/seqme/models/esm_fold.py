@@ -154,7 +154,7 @@ class ESMFold:
 
             outputs = self.model(**tokens)
 
-            final_pos = outputs.positions[-1]  # (B, L, 14, 3)
+            final_pos = outputs.positions[-1]
             plddt = outputs.plddt
 
             lengths = [len(seq) for seq in batch]
@@ -169,20 +169,15 @@ class ESMFold:
             elif convention == "atom37":
                 mapping = outputs.residx_atom14_to_atom37
                 atom14_mask = outputs.atom14_atom_exists
-                atom37_mask = outputs.atom37_atom_exists
 
-                atom37 = final_pos.new_zeros(final_pos.shape[0], final_pos.shape[1], 37, 3)
+                atom37 = final_pos.new_zeros(B, final_pos.shape[1], 37, 3)
 
-                atom37.scatter_(
-                    2,
-                    mapping.unsqueeze(-1).expand(-1, -1, -1, 3),
-                    final_pos * atom14_mask.unsqueeze(-1),
-                )
+                b_idx, r_idx, a14_idx = torch.where(atom14_mask)
+                a37_idx = mapping[b_idx, r_idx, a14_idx]
 
-                atom37 *= atom37_mask.unsqueeze(-1)
+                atom37[b_idx, r_idx, a37_idx] = final_pos[b_idx, r_idx, a14_idx]
 
                 positions = [atom37[i, :L].cpu().numpy() for i, L in enumerate(lengths)]
-
             else:
                 raise ValueError(f"Unsupported convention: '{convention}'.")
 
