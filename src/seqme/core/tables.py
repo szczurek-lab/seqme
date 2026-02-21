@@ -229,6 +229,7 @@ def to_latex(
     color: str | None = None,
     na_value: str = "-",
     show_arrow: bool = True,
+    width: float | None = None,
     caption: str | None = None,
     label: str | None = "tbl:benchmark",
 ):
@@ -241,12 +242,12 @@ def to_latex(
         color: Color for highlighting best scores. If ``None``, no coloring.
         na_value: Text to show for cells with no metric value, i.e., cells with NaN values.
         show_arrow: Whether to include the objective arrow in the column names.
+        width: Table width as a fraction of the text width. If ``None``, use default width.
         caption: Bottom caption text. If ``None``, no caption is added.
         label: Table label. Identifier used to reference the table. If ``None``, no label is added.
     """
-    # @TODO: support multi-index rows + levels
-    if df.index.nlevels != 1:
-        raise ValueError("to_latex() does not support tuple sequence names.")
+    if (width is not None) and (width < 0.0 or width > 1.0):
+        raise ValueError("Width should be in range [0;1].")
 
     if color is not None:
         if not mpl.colors.is_color_like(color):
@@ -272,9 +273,7 @@ def to_latex(
     arrows = {"maximize": "↑", "minimize": "↓"}
 
     col_names = list(df.columns.get_level_values(0).unique())
-    n_cols = len(col_names)
-    n_row_levels = df.index.nlevels
-    n_cols_and_row_levels = n_row_levels + n_cols
+    n_cols = len(col_names) + 1
 
     # LaTeX formatting
 
@@ -316,9 +315,11 @@ def to_latex(
     buffer.indent()
 
     buffer.inline("\\centering")
-    buffer.inline("\\resizebox{\\textwidth}{!}{")
 
-    cols = "c" * n_cols_and_row_levels
+    if width is not None:
+        buffer.inline(f"\\resizebox{{{width}\\textwidth}}{{!}}{{")
+
+    cols = "c" * n_cols
     buffer.inline(f"\\begin{{tabular}}{{{cols}}}")
     buffer.indent()
 
@@ -329,7 +330,8 @@ def to_latex(
 
     buffer.inline("\\midrule")
 
-    for row_name, row in df.iterrows():
+    for row_index, row in df.iterrows():
+        row_name = ", ".join(map(str, row_index)) if isinstance(row_index, tuple) else str(row_index)
         values = [row_name]
         for i, (val, dev) in enumerate(zip(row[::2], row[1::2], strict=True)):
             if pd.isna(val):
@@ -342,8 +344,8 @@ def to_latex(
             fval = _format_precision(val, n_decimal)
             fdev = _format_precision(dev, n_decimal) if not pd.isna(dev) else None
 
-            best = row_name in best_indices[col_name]
-            second_best = row_name in second_best_indices[col_name]
+            best = row_index in best_indices[col_name]
+            second_best = row_index in second_best_indices[col_name]
 
             if best:
                 v = f"\\mathbf{{{fval}}}"
@@ -366,7 +368,8 @@ def to_latex(
     buffer.unindent()
     buffer.inline("\\end{tabular}")
 
-    buffer.inline("} %resizebox")
+    if width is not None:
+        buffer.inline("} %resizebox")
 
     if caption:
         buffer.inline(f"\\caption{{{caption}}}")
