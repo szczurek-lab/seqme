@@ -167,13 +167,10 @@ class ESMFold:
                 positions = [final_pos[i, :L].cpu().numpy() for i, L in enumerate(lengths)]
 
             elif convention == "atom37":
-                mapping = outputs.residx_atom14_to_atom37
-                atom14_mask = outputs.atom14_atom_exists
-
                 atom37 = final_pos.new_zeros(B, final_pos.shape[1], 37, 3)
 
-                b_idx, r_idx, a14_idx = torch.where(atom14_mask)
-                a37_idx = mapping[b_idx, r_idx, a14_idx]
+                b_idx, r_idx, a14_idx = torch.where(outputs.atom14_atom_exists)
+                a37_idx = outputs.residx_atom14_to_atom37[b_idx, r_idx, a14_idx]
 
                 atom37[b_idx, r_idx, a37_idx] = final_pos[b_idx, r_idx, a14_idx]
 
