@@ -5,7 +5,7 @@ import sklearn.decomposition
 
 
 class PCA:
-    """Principle component analysis."""
+    """Utility projecting sequence embeddings onto principle compoments."""
 
     def __init__(self, embedder: Callable[[list[str]], np.ndarray], reference: list[str], n_components: int):
         """Initialize principle component analysis.
@@ -27,7 +27,7 @@ class PCA:
         """Project sequences into PCA space.
 
         Args:
-            sequences: Sequences to project their embeddings.
+            sequences: Sequences to embed.
 
         Returns:
             A NumPy array of shape (n_sequences, n_components) containing the embeddings.

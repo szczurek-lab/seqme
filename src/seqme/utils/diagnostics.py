@@ -51,7 +51,7 @@ def plot_knn_alignment_score(
     n_neighbors: list[int],
     label: str | None = None,
     legend_loc: Literal["right margin"] | str | None = "right margin",
-    figsize: tuple[int, int] = (4, 3),
+    figsize: tuple[float, float] = (4, 3),
     ax: Axes | None = None,
 ):
     """

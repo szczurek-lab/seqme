@@ -16,7 +16,7 @@ def plot_bar(
     ylim: tuple[float, float] | None = None,
     show_arrow: bool = True,
     show_deviation: bool = True,
-    figsize: tuple[int, int] = (4, 3),
+    figsize: tuple[float, float] = (4, 3),
     ax: Axes | None = None,
 ):
     """Plot a bar chart for a given metric with optional error bars.
@@ -98,7 +98,7 @@ def plot_parallel(
     zero_width: float | None = 0.25,
     xpad: float = 0.25,
     legend_loc: Literal["right margin"] | str | None = "right margin",
-    figsize: tuple[int, int] = (5, 3),
+    figsize: tuple[float, float] = (5, 3),
     ax: Axes | None = None,
 ):
     """Plot a parallel coordinates plot where each coordinate is a metric.
@@ -152,9 +152,7 @@ def plot_parallel(
     ax.set_xticks(range(n_metrics))
 
     ax.set_yticklabels([])
-
-    ax.grid(True, axis="x", linewidth=1.0, color="black", linestyle="-", alpha=0.3)
-    ax.grid(True, axis="y", linewidth=0.8, color="gray", linestyle="--", alpha=0.2)
+    ax.tick_params(axis="y", which="both", length=0)
 
     objectives = df.attrs["objective"]
 
@@ -188,15 +186,6 @@ def plot_parallel(
                     alpha=0.8,
                 )
 
-    for i, m in enumerate(metrics):
-        vmin, vmax = ranges[m]
-        ax2 = ax.twinx()
-        ax2.set_ylim(0, 1)
-        ax2.yaxis.set_ticks_position("left")
-        ax2.set_yticks([])
-        ax2.spines["left"].set_position(("data", i))
-        ax2.spines["left"].set_visible(False)  # Hide duplicate spines
-
     if legend_loc == "right margin":
         ax.legend(
             frameon=False,
@@ -211,6 +200,9 @@ def plot_parallel(
     xlabels = [f"{m}{arrows[objectives[m]]}" if show_arrow else m for m in metrics]
     ax.set_xticklabels(xlabels, rotation=xticks_rotation, ha="center", va="top", fontsize=xticks_fontsize)
 
+    ax.spines["left"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+
     if arrow_size is not None:
         for i, m in enumerate(metrics):
             vmin, vmax = ranges[m]
@@ -224,7 +216,6 @@ def plot_parallel(
                 va="top" if objectives[m] == "maximize" else "bottom",
                 fontsize=arrow_size,
                 color="black",
-                clip_on=False,
             )
 
     if show_yticks:
@@ -264,6 +255,9 @@ def plot_parallel(
                 fontweight="bold" if objectives[m] == "minimize" else None,
             )
 
+    ax.grid(True, axis="x", linewidth=1.0, color="gray", linestyle="--", alpha=0.8)
+    # ax.grid(True, axis="y", linewidth=0.8, color="gray", linestyle="--", alpha=0.2)
+
     if created_fig:
         plt.show()
 
@@ -276,12 +270,12 @@ def plot_line(
     xlabel: str = "Iteration",
     linestyle: str | list[str] = "-",
     show_arrow: bool = True,
-    marker: str | None = "x",
+    marker: str | None | list[str | None] = "x",
     marker_size: float | None = None,
     show_deviation: bool = True,
     deviation_alpha: float = 0.4,
     legend_loc: Literal["right margin"] | str | None = "right margin",
-    figsize: tuple[int, int] = (4, 3),
+    figsize: tuple[float, float] = (4, 3),
     ax: Axes | None = None,
 ):
     """Plot a series for a given metric across multiple iterations/steps with optional error bars.
@@ -324,9 +318,17 @@ def plot_line(
 
     model_names = list(df.index.get_level_values(0).unique())
     linestyle = [linestyle] * len(model_names) if isinstance(linestyle, str) else linestyle
+    marker = [marker] * len(model_names) if (marker is None) or isinstance(marker, str) else marker
 
     if len(linestyle) != len(model_names):
-        f"Expected {len(model_names)} linestyles, got {len(linestyle)}. Provide a single linestyle or a list matching the number of entries."
+        raise ValueError(
+            f"Expected {len(model_names)} linestyles, got {len(linestyle)}. Provide a single linestyle or a list matching the number of entries."
+        )
+
+    if len(marker) != len(model_names):
+        raise ValueError(
+            f"Expected {len(model_names)} markers, got {len(marker)}. Provide a single marker or a list matching the number of entries."
+        )
 
     if color:
         if len(color) != len(model_names):
@@ -348,7 +350,7 @@ def plot_line(
         lines = ax.plot(
             xs,
             vs,
-            marker=marker,
+            marker=marker[i],
             markersize=marker_size,
             label=model_name,
             color=color[i] if color else None,
@@ -394,7 +396,7 @@ def plot_scatter(
     *,
     color: list[str] | None = None,
     show_arrow: bool = True,
-    marker: str | None = "o",
+    marker: str | list[str] = "o",
     marker_size: float | None = None,
     linestyle: str | None = "--",
     linewidth: float = 1.0,
@@ -402,7 +404,7 @@ def plot_scatter(
     deviation_alpha: float = 0.5,
     deviation_linewidth: float = 1.0,
     legend_loc: Literal["right margin"] | str | None = "right margin",
-    figsize: tuple[int, int] = (4, 3),
+    figsize: tuple[float, float] = (4, 3),
     ax: Axes | None = None,
 ):
     """Plot a scatter plot for two metrics with optional error rectangles or bars.
@@ -443,35 +445,53 @@ def plot_scatter(
         if len(color) != len(model_names):
             raise ValueError(f"Expected a color for each entry. Got {len(color)}, expected {len(model_names)}.")
 
+    marker = [marker] * len(model_names) if isinstance(marker, str) else marker
+
+    if len(marker) != len(model_names):
+        raise ValueError(
+            f"Expected {len(model_names)} markers, got {len(marker)}. Provide a single marker or a list matching the number of entries."
+        )
+
     created_fig = False
     if ax is None:
         _, ax = plt.subplots(figsize=figsize)
         created_fig = True
 
-    metric1, metric2 = metrics
+    x_metric, y_metric = metrics
 
     for i, model_name in enumerate(model_names):
         df_model = df.loc[model_name]
         df_model = df_model.sort_index()
 
-        xs = np.array(df_model[(metric1, "value")])
-        ys = np.array(df_model[(metric2, "value")])
+        xs = np.array(df_model[(x_metric, "value")])
+        ys = np.array(df_model[(y_metric, "value")])
 
         sc = ax.scatter(
             xs,
             ys,
-            marker=marker,
+            marker=marker[i],
             s=marker_size,
             color=color[i] if color else None,
             label=model_name,
             zorder=2,
         )
 
+        if xs.size > 1:
+            inner_size = sc.get_sizes()[0] * 0.15
+            ax.scatter(
+                xs[0],
+                ys[0],
+                marker=marker[i],
+                s=inner_size,
+                color="white",
+                zorder=sc.get_zorder() + 1,
+            )
+
         c = color[i] if color else sc.get_facecolors()  # type: ignore
 
         if show_deviation:
-            xs_dev = np.array(df_model[(metric1, "deviation")])
-            ys_dev = np.array(df_model[(metric2, "deviation")])
+            xs_dev = np.array(df_model[(x_metric, "deviation")])
+            ys_dev = np.array(df_model[(y_metric, "deviation")])
 
             nan_xs_dev = np.isnan(xs_dev).any()
             nan_ys_dev = np.isnan(ys_dev).any()
@@ -520,11 +540,11 @@ def plot_scatter(
 
     arrows = {"maximize": "↑", "minimize": "↓"}
 
-    arrow1 = arrows[df.attrs["objective"][metric1]]
-    ax.set_xlabel(f"{metric1}{arrow1}" if show_arrow else metric1)
+    x_arrow = arrows[df.attrs["objective"][x_metric]]
+    ax.set_xlabel(f"{x_metric}{x_arrow}" if show_arrow else x_metric)
 
-    arrow2 = arrows[df.attrs["objective"][metric2]]
-    ax.set_ylabel(f"{metric2}{arrow2}" if show_arrow else metric2)
+    y_arrow = arrows[df.attrs["objective"][y_metric]]
+    ax.set_ylabel(f"{y_metric}{y_arrow}" if show_arrow else y_metric)
 
     if legend_loc == "right margin":
         ax.legend(
