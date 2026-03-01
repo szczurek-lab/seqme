@@ -2,7 +2,7 @@ import abc
 from collections import Counter, defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 import numpy as np
 import pandas as pd
@@ -187,7 +187,7 @@ def combine(
     for df in dfs:
         for col in df.columns:
             series = df[col].dropna()
-            metric, kind = col  # split the tuple
+            metric, kind = cast("tuple[str, str]", col)  # split the tuple
             target_dict = values_dict if kind == "value" else deviations_dict
             for row, val in series.items():
                 target_dict[(row, metric)].append(val)
@@ -371,15 +371,15 @@ def top_k(
         A subset of the metric dataframe with the top-k rows.
     """
 
-    def get_best(df: pd.DataFrame, metric: str, k: int, keep: str) -> pd.DataFrame:
+    def get_best(df: pd.DataFrame, metric: str, k: int, keep: Literal["first", "last", "all"]) -> pd.DataFrame:
         if df.attrs["objective"][metric] == "minimize":
-            return df.nsmallest(k, columns=(metric, "value"), keep=keep)
-        return df.nlargest(k, columns=(metric, "value"), keep=keep)
+            return df.nsmallest(k, columns=(metric, "value"), keep=keep)  # type: ignore[arg-type]
+        return df.nlargest(k, columns=(metric, "value"), keep=keep)  # type: ignore[arg-type]
 
-    def get_worst(df: pd.DataFrame, metric: str, k: int, keep: str) -> pd.DataFrame:
+    def get_worst(df: pd.DataFrame, metric: str, k: int, keep: Literal["first", "last", "all"]) -> pd.DataFrame:
         if df.attrs["objective"][metric] == "minimize":
-            return df.nlargest(k, columns=(metric, "value"), keep=keep)
-        return df.nsmallest(k, columns=(metric, "value"), keep=keep)
+            return df.nlargest(k, columns=(metric, "value"), keep=keep)  # type: ignore[arg-type]
+        return df.nsmallest(k, columns=(metric, "value"), keep=keep)  # type: ignore[arg-type]
 
     if metric not in df.columns.get_level_values(0):
         raise ValueError(f"'{metric}' is not a column in the DataFrame.")

@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Literal
+from typing import Any, Literal
 
 import numpy as np
 import torch
@@ -57,7 +57,8 @@ class ESMFold:
         self.model.eval()
 
     def __call__(self, sequences: list[str]) -> list[np.ndarray]:
-        return self.fold(sequences, compute_ptm=False, return_type="dict")["positions"]  # type: ignore
+        fold = self.fold(sequences, convention="ca", compute_ptm=False, output_pdb=False, return_type="dict")
+        return fold["positions"]  # type: ignore
 
     @torch.inference_mode()
     def fold(
@@ -66,6 +67,7 @@ class ESMFold:
         *,
         convention: Literal["atom14", "atom37", "ca"] = "ca",
         compute_ptm: bool = True,
+        output_pdb: bool = True,
         return_type: Literal["dict", "list"] = "list",
     ) -> dict[str, list] | list[dict]:
         """
@@ -123,7 +125,8 @@ class ESMFold:
 
 
             compute_ptm: If ``True``, computes the ptm score (structure confidence score) but reduces the batch size to 1 in order to do so.
-            return_type: if "list", return list of dict else if "dict" return dict of lists.
+            output_pdb: Whether to return the 3D-structure encoded as a PDB for each sequence.
+            return_type: If ``"list"``, return list of dict else if ``"dict"`` return dict of lists.
 
         Returns:
             A dict with
@@ -135,8 +138,10 @@ class ESMFold:
 
                 "plddt": Numpy arrays of shape: sequence_length (pLDDT for carbon alpha atom)
                 "ptm": predicted TM-scores if `compute_ptm` is true.
+                "pdb": PDBs if `output_pdb` is true.
         """
         batch_size = 1 if compute_ptm else self.batch_size
+
         folds: dict[str, list] = defaultdict(list)
 
         for start in tqdm(range(0, len(sequences), batch_size), disable=not self.verbose):
@@ -150,36 +155,34 @@ class ESMFold:
                 truncation=False,
             )
 
-            tokens = {k: v.to(self.device) if torch.is_tensor(v) else v for k, v in tokens.items()}
+            tokens = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in tokens.items()}
 
             outputs = self.model(**tokens)
 
-            final_pos = outputs.positions[-1]
+            atom14 = outputs.positions[-1]
             plddt = outputs.plddt
 
             lengths = [len(seq) for seq in batch]
-            B = final_pos.shape[0]
+            B = atom14.shape[0]
 
             if convention == "ca":
-                positions = [final_pos[i, :L, 1].cpu().numpy() for i, L in enumerate(lengths)]
-
+                positions = [atom14[i, :L, 1].cpu().numpy() for i, L in enumerate(lengths)]
             elif convention == "atom14":
-                positions = [final_pos[i, :L].cpu().numpy() for i, L in enumerate(lengths)]
-
+                positions = [atom14[i, :L].cpu().numpy() for i, L in enumerate(lengths)]
             elif convention == "atom37":
-                atom37 = final_pos.new_zeros(B, final_pos.shape[1], 37, 3)
+                from transformers.models.esm.openfold_utils.feats import atom14_to_atom37
 
-                b_idx, r_idx, a14_idx = torch.where(outputs.atom14_atom_exists)
-                a37_idx = outputs.residx_atom14_to_atom37[b_idx, r_idx, a14_idx]
-
-                atom37[b_idx, r_idx, a37_idx] = final_pos[b_idx, r_idx, a14_idx]
-
+                atom37 = atom14_to_atom37(atom14, outputs)
                 positions = [atom37[i, :L].cpu().numpy() for i, L in enumerate(lengths)]
             else:
                 raise ValueError(f"Unsupported convention: '{convention}'.")
 
             folds["positions"].extend(positions)
             folds["plddt"].extend(plddt[i, :L, 1].cpu().numpy() for i, L in enumerate(lengths))
+
+            if output_pdb:
+                pdbs = _convert_outputs_to_pdb(outputs)
+                folds["pdb"].extend(pdbs)
 
             if compute_ptm:
                 ptm_val = outputs.ptm.item()
@@ -189,7 +192,41 @@ class ESMFold:
             return folds
 
         if return_type == "list":
-            keys = list(folds.keys())
-            return [dict(zip(keys, vals, strict=True)) for vals in zip(*folds.values(), strict=True)]
+            return _dict_to_list(folds)
 
         raise ValueError(f"Invalid return_type: '{return_type}'.")
+
+
+def _dict_to_list(_dict: dict[str, list[Any]]) -> list[dict[str, Any]]:
+    keys = list(_dict.keys())
+    return [dict(zip(keys, vals, strict=True)) for vals in zip(*_dict.values(), strict=True)]
+
+
+# Adapted from: https://github.com/huggingface/notebooks/blob/main/examples/protein_folding.ipynb
+def _convert_outputs_to_pdb(outputs: dict[str, Any]) -> list[str]:
+    from transformers.models.esm.openfold_utils.feats import atom14_to_atom37
+    from transformers.models.esm.openfold_utils.protein import Protein, to_pdb
+
+    atom_positions = atom14_to_atom37(outputs["positions"][-1], outputs).cpu().numpy()
+    outputs = {k: v.cpu().numpy() for k, v in outputs.items()}
+
+    atom_masks = outputs["atom37_atom_exists"]
+    aatypes = outputs["aatype"]
+    res_ids = outputs["residue_index"]
+    plddts = outputs["plddt"]
+
+    pdbs = []
+    for i in range(aatypes.shape[0]):
+        prot = Protein(
+            aatype=aatypes[i],
+            atom_positions=atom_positions[i],
+            atom_mask=atom_masks[i],
+            residue_index=res_ids[i] + 1,
+            b_factors=plddts[i],
+            chain_index=outputs["chain_index"][i] if "chain_index" in outputs else None,
+        )
+
+        pdb = to_pdb(prot)
+        pdbs.append(pdb)
+
+    return pdbs

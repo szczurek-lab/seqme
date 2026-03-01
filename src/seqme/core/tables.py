@@ -429,17 +429,17 @@ def _round_dataframe(df: pd.DataFrame, n_decimals: list[int]) -> pd.DataFrame:
     for n_decimal, metric in zip(n_decimals, metrics, strict=True):
         val_col = (metric, "value")
         dev_col = (metric, "deviation")
-        df.loc[:, val_col] = _round_column(df.loc[:, val_col], n_decimal)
-        df.loc[:, dev_col] = _ceil_column(df.loc[:, dev_col], n_decimal)
+        df.loc[:, val_col] = _round_column(df.loc[:, val_col], n_decimal)  # type: ignore[index]
+        df.loc[:, dev_col] = _ceil_column(df.loc[:, dev_col], n_decimal)  # type: ignore[index]
     return df
 
 
-def _ceil_column(series: pd.Series, n: int) -> pd.Series:
+def _ceil_column(series: pd.DataFrame, n: int) -> pd.DataFrame:
     factor = 10**n
     return np.ceil(series * factor) / factor
 
 
-def _round_column(series: pd.Series, n: int) -> pd.Series:
+def _round_column(series: pd.DataFrame, n: int) -> pd.DataFrame:
     factor = 10**n
     return np.round(series * factor) / factor
 

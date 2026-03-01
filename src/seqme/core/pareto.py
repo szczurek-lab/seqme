@@ -206,10 +206,10 @@ def _mean_rank_tie_break(costs: np.ndarray, nd_ranks: np.ndarray) -> np.ndarray:
     for idx, nd_rank in enumerate(nd_ranks):
         indices_in_group[nd_rank].append(idx)
 
-    ranks = scipy.stats.rankdata(costs, axis=0)
-    # min_ranks_factor plays a role when we tie-break same average ranks
-    min_ranks_factor = np.min(ranks, axis=-1) / (nd_ranks.size**2 + 1)
-    avg_ranks = np.mean(ranks, axis=-1) + min_ranks_factor
+    ranks = np.asarray(scipy.stats.rankdata(costs, axis=0), dtype=float)
+
+    min_ranks_factor = ranks.min(axis=-1) / (nd_ranks.size**2 + 1)
+    avg_ranks = ranks.mean(axis=-1) + min_ranks_factor
 
     group_min_rank = 0
     tie_broken_nd_ranks = np.zeros(ranks.shape[0], dtype=int)

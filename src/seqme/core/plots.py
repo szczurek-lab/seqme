@@ -160,7 +160,7 @@ def plot_parallel(
     normalized = {}
     ranges = {}
     for m in metrics:
-        vals = df[(m, "value")].values
+        vals = np.asarray(df[(m, "value")].values)
         vmin, vmax = vals.min(), vals.max()
         ranges[m] = (vmin, vmax)
 

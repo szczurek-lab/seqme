@@ -7,7 +7,7 @@ pytest.importorskip("transformers")
 
 @pytest.fixture(scope="module")
 def esm_fold():
-    return ESMFold(batch_size=32, device="cpu")
+    return ESMFold(batch_size=32, device="cpu").fold
 
 
 def test_esm_fold_shape_and_means(esm_fold):
@@ -15,9 +15,10 @@ def test_esm_fold_shape_and_means(esm_fold):
         "RVKRVWPLVIRTVIAGYNLYRAIKKK",
         "RKRIHIGPGRAFYTT",
     ]
-    embeddings = esm_fold(sequences)
+    folds = esm_fold(sequences, convention="atom37", compute_ptm=False, output_pdb=True, return_type="dict")
+    embeddings = folds["positions"]
 
     assert len(embeddings) == 2
 
     for i, sequence in enumerate(sequences):
-        assert embeddings[i].shape == (len(sequence), 3)
+        assert embeddings[i].shape == (len(sequence), 37, 3)
