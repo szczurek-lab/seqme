@@ -91,6 +91,12 @@ Supported sequence types
      - |no|
      - |no|
      - |no|
+   * - :py:class:`seqme.models.ESMIF1`
+     - |ok|
+     - |no|
+     - |no|
+     - |no|
+     - |no|
    * - :py:class:`seqme.models.Hyformer`
      - |no|
      - |ok|

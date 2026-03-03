@@ -62,7 +62,7 @@ dependencies = [
 
 esm2 = ["transformers"]
 esmfold = ["transformers"]
-esmif1 = ["fair-esm", "torch-scatter"]
+esmif1 = ["fair-esm", "biotite", "torch-geometric", "torch-scatter"]
 aa_descriptors = ["modlamp"]
 molecule_descriptors = ["rdkit"]
 
