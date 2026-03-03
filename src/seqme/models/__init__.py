@@ -13,6 +13,7 @@ from seqme.models.amino_acid_descriptors import (
 from seqme.models.ensemble import Ensemble
 from seqme.models.esm2 import ESM2, ESM2Checkpoint
 from seqme.models.esm_fold import ESMFold
+from seqme.models.esm_if1 import ESMIF1
 from seqme.models.gena_lm import GENALM, GENALMCheckpoint
 from seqme.models.hyformer import Hyformer, HyformerCheckpoint
 from seqme.models.kmers import KmerFrequencyEmbedding
@@ -39,6 +40,7 @@ __all__ = [
     "ESM2Checkpoint",
     "ESM2",
     "ESMFold",
+    "ESMIF1",
     "GENALM",
     "GENALMCheckpoint",
     "Hyformer",
