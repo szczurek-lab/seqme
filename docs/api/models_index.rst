@@ -18,6 +18,7 @@ Models
 
     seqme.models.ESM2
     seqme.models.ESMFold
+    seqme.models.ESMIF1
     seqme.models.Hyformer
     seqme.models.RNAFM
     seqme.models.GENALM
