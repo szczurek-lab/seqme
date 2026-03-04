@@ -11,6 +11,10 @@ class ESMIF1:
 
     Installation: ``pip install "seqme[esmif1]"``
 
+    Note:
+        If you have an issue with installing ESM-IF1 on a machine with cuda support due to torch-scatter,
+        try running ``pip install torch-scatter --no-build-isolation`` first.
+
     Warning:
         Experimental. May change in the future or get removed.
 
@@ -20,8 +24,8 @@ class ESMIF1:
         >>> folds = folder.fold(sequences, convention="atom37", compute_ptm=False, return_type="dict")
         >>> atom_indices = [0, 1, 2]  # atoms: N, CA, C
         >>> coords = [seq_pos[:, atom_indices, :] for seq_pos in folds["positions"]]
-        >>> inverse_folder = sm.models.ESMIF1()  # Inverse folding model
-        >>> inverse_folder.compute_perplexity(coords, sequences)  # scPerplexity
+        >>> inv_folder = sm.models.ESMIF1()  # Inverse folding model
+        >>> inv_folder.compute_perplexity(coords, sequences)  # scPerplexity
 
     Reference:
         Hsu et al., "Learning inverse folding from millions of predicted structures"

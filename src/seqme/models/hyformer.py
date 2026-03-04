@@ -197,10 +197,7 @@ class Hyformer:
 
         predictions = []
         with torch.inference_mode():
-            for batch in tqdm(
-                _dataloader,
-                disable=not self.verbose,
-            ):
+            for batch in tqdm(_dataloader, disable=not self.verbose):
                 batch = batch.to_device(self.device)
                 batch_predictions = self.model.predict(
                     input_ids=batch["input_ids"], attention_mask=batch["attention_mask"]
@@ -239,10 +236,7 @@ class Hyformer:
 
         embeddings = []
         with torch.inference_mode():
-            for batch in tqdm(
-                _dataloader,
-                disable=not self.verbose,
-            ):
+            for batch in tqdm(_dataloader, disable=not self.verbose):
                 batch = batch.to_device(self.device)
                 output = self.model(**batch, return_loss=False)
                 batch_embeddings = output["embeddings"][:, _CLS_TOKEN_IDX].detach().cpu().numpy()
@@ -268,60 +262,29 @@ class Hyformer:
             shuffle=False,
         )
 
-        logit_batches: list[torch.Tensor] = []
-        label_batches: list[torch.Tensor] = []
+        perplexities = []
 
         with torch.inference_mode():
-            for batch in tqdm(
-                _dataloader,
-                disable=not self.verbose,
-            ):
+            for batch in tqdm(_dataloader, disable=not self.verbose):
                 batch = batch.to_device(self.device)
                 output = self.model(**batch, return_loss=False)
-                logit_batches.append(output[self._logits_generation_key].cpu())
-                label_batches.append(batch["input_labels"].cpu())
 
-        logits = torch.cat(logit_batches, dim=0)
-        labels = torch.cat(label_batches, dim=0)
+                batch_perplexities = _compute_perplexity(
+                    logits=output[self._logits_generation_key],
+                    labels=batch["input_labels"],
+                )
 
-        return self._perplexity_from_logits(logits, labels)
+                perplexities.append(batch_perplexities.cpu().numpy())
 
-    @staticmethod
-    def _perplexity_from_logits(logits: torch.Tensor, labels: torch.Tensor, ignore_index: int = -100) -> np.ndarray:
-        """Compute sequence-level perplexity from token logits.
+        return np.concatenate(perplexities)
 
-        Args:
-            logits: Float tensor of shape (batch, seq_len, vocab_size) with unnormalized scores.
-            labels: Long tensor of shape (batch, seq_len) with token ids used as targets.
-            ignore_index: Index to ignore in the labels.
 
-        Returns:
-            Array of shape (batch,) with perplexity per sequence.
-        """
-        if logits.ndim != 3:
-            raise ValueError("logits must have shape (batch, seq_len, vocab_size)")
-        if labels.ndim != 2:
-            raise ValueError("labels must have shape (batch, seq_len)")
-        if labels.shape[:2] != logits.shape[:2]:
-            raise ValueError("labels and logits must share (batch, seq_len)")
+def _compute_perplexity(logits: torch.Tensor, labels: torch.Tensor, ignore_index: int = -100) -> torch.Tensor:
+    # shift log_probs and labels by one
+    logits = logits[:, :-1]
+    targets = labels[:, 1:]
+    mask = targets != ignore_index
 
-        # log-softmax over the vocabulary for numerical stability
-        log_probs = torch.log_softmax(logits, dim=-1)  # (batch, seq_len, vocab)
-
-        # shift log_probs and labels by one
-        log_probs = log_probs[:, :-1, :].contiguous()
-        labels = labels[:, 1:].contiguous()
-
-        ppls = torch.zeros(log_probs.shape[0])
-        for idx, (log_prob, label) in enumerate(zip(log_probs, labels, strict=True)):
-            ppl = 0
-            n = 0
-            for lp, lab in zip(log_prob, label, strict=True):
-                if lab == ignore_index:
-                    continue
-                n += 1
-                ppl += lp[lab]
-            ppls[idx] = ppl / n
-        ppls = torch.exp(-ppls)
-
-        return ppls.cpu().numpy().astype(float)
+    token_nll = torch.nn.functional.cross_entropy(logits.transpose(1, 2), targets, reduction="none")
+    nll = (token_nll * mask).sum(dim=1) / mask.sum(dim=1)
+    return nll.exp()
