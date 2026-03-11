@@ -93,7 +93,7 @@ class RNAFM:
             hidden_state = results["representations"][layer]
 
             lengths = [len(s) // 3 if self.model_name == "mRNA" else len(s) for s in batch]
-            means = [hidden_state[i, :length].mean(dim=-2) for i, length in enumerate(lengths)]
+            means = [hidden_state[i, 1 : length + 1].mean(dim=-2) for i, length in enumerate(lengths)]
             batch_embeddings = torch.stack(means, dim=0)
 
             embeddings.append(batch_embeddings.cpu().numpy())

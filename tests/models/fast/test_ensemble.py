@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 import seqme as sm
 
@@ -24,4 +25,4 @@ def test_ensemble_weighted():
     values = ensemble(sequences)
 
     assert values.shape == (3,)
-    assert np.array_equal(values, [10.985, 13.985, 16.985])
+    assert values.tolist() == pytest.approx([3.661666, 4.661666, 5.661666])

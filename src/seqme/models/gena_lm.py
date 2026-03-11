@@ -22,19 +22,19 @@ class GENALMCheckpoint(Enum):
 
     Downstream classification checkpoints:
         - bert_base_t2t_promoters: 110M parameters, 12 layers, task sequence length: 300bp.
-            Binary classification: determining the presence or absence of a promoter within a given region.
+            Classification: determining the absence (0) or presence (1) of a promoter within a given region.
 
         - bert_large_t2t_promoters: 336M parameters, 24 layers, task sequence length: 300bp.
-            Binary classification: determining the presence or absence of a promoter within a given region.
+            Classification: determining the absence (0) or presence (1) of a promoter within a given region.
 
         - bert_large_t2t_promoters2: 336M parameters, 24 layers, task sequence length: 2000bp.
-            Binary classification: determining the presence or absence of a promoter within a given region.
+            Classification: determining the absence (0) or presence (1) of a promoter within a given region.
 
         - bert_base_t2t_splice_site: 110M parameters, 12 layers, task sequence length: 15000bp. Identifies splicing sites.
-            Classification: determing the splice donor, splice acceptor and none
+            Classification: neither (0), splice acceptor (1) or splice doner (2)
 
         - bert_large_t2t_splice_site: 336M parameters, 24 layers, task sequence length: 15000bp. Identifies splicing sites.
-            Classification: determing the splice donor, splice acceptor and none
+            Classification: neither (0), splice acceptor (1) or splice doner (2)
     """
 
     # Embedding
@@ -169,9 +169,9 @@ class GENALM:
 
             hidden_state = self.model(**tokens)["hidden_states"][layer]
 
-            lengths = [len(s) for s in batch]
-            means = [hidden_state[i, :length].mean(dim=-2) for i, length in enumerate(lengths)]
-            batch_embeddings = torch.stack(means, dim=0)
+            attention_mask = tokens["attention_mask"].unsqueeze(-1)
+            attention_sum = attention_mask.sum(dim=1)
+            batch_embeddings = torch.sum(hidden_state * attention_mask, dim=1) / attention_sum
 
             embeddings.append(batch_embeddings.cpu().numpy())
 
