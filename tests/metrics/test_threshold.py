@@ -18,7 +18,7 @@ def test_min_value():
     result = metric(["A", "AA", "AAAA"])
 
     assert result.value == pytest.approx(2 / 3)
-    assert result.deviation is None
+    assert result.deviation == pytest.approx(0.27216552)
 
 
 def test_max_value():
@@ -30,7 +30,7 @@ def test_max_value():
     result = metric(["A", "AA", "AAAA"])
 
     assert result.value == pytest.approx(2 / 3)
-    assert result.deviation is None
+    assert result.deviation == pytest.approx(0.27216552)
 
 
 def test_between():
@@ -42,4 +42,4 @@ def test_between():
     result = metric(["A", "AA", "AAAA"])
 
     assert result.value == pytest.approx(1 / 3)
-    assert result.deviation is None
+    assert result.deviation == pytest.approx(0.27216552)

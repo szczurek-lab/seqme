@@ -66,7 +66,7 @@ class ESMFold:
         sequences: list[str],
         *,
         convention: Literal["atom14", "atom37", "ca"] = "ca",
-        compute_ptm: bool = True,
+        compute_ptm: bool = False,
         output_pdb: bool = True,
         return_type: Literal["dict", "list"] = "list",
     ) -> dict[str, list] | list[dict]:

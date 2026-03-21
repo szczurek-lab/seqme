@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from seqme.metrics import HitRate
 from seqme.models import Charge, Gravy
@@ -19,6 +20,7 @@ def test_hitrate():
 
     result = metric(["KKKPVAAA", "KARA"])
     assert result.value == 0.5
+    assert result.deviation == pytest.approx(0.3535533)
 
 
 def test_hitrate_custom_name():
@@ -30,3 +32,4 @@ def test_hitrate_custom_name():
 
     result = metric(["KKKPVAAA", "KKKPVAAA"])
     assert result.value == 1.0
+    assert result.deviation == 0.0

@@ -44,7 +44,7 @@ class Threshold(Metric):
             sequences: Sequences to evaluate.
 
         Returns:
-            MetricResult: Fraction of sequences within the threshold.
+            MetricResult: Fraction of sequences within the threshold, and the standard error.
         """
         values = self.predictor(sequences)
 
@@ -52,7 +52,10 @@ class Threshold(Metric):
         below = values <= self.max_value if self.max_value is not None else True
         within = above & below
 
-        return MetricResult(np.mean(within).item())
+        p = np.mean(within).item()
+        se = float(np.sqrt(p * (1 - p) / len(within)))
+
+        return MetricResult(value=p, deviation=se)
 
     @property
     def name(self) -> str:

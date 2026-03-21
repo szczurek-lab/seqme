@@ -57,6 +57,9 @@ class Hypervolume(Metric):
         self.strict = strict
         self._name = name
 
+        if len(predictors) < 2:
+            raise ValueError("Expected at least two predictor to compute the hypervolume.")
+
         if self.nadir.shape[0] != len(predictors):
             raise ValueError(
                 f"Expected nadir to have {len(predictors)} elements, but only has {self.nadir.shape[0]} elements."

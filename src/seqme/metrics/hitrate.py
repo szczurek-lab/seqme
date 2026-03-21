@@ -9,7 +9,12 @@ from seqme.core.base import Metric, MetricResult
 class HitRate(Metric):
     """Fraction of sequences that satisfy a user-defined condition."""
 
-    def __init__(self, condition_fn: Callable[[list[str]], np.ndarray], *, name: str = "Hit-rate"):
+    def __init__(
+        self,
+        condition_fn: Callable[[list[str]], np.ndarray],
+        *,
+        name: str = "Hit-rate",
+    ):
         """
         Initializes the hit-rate metric.
 
@@ -30,11 +35,14 @@ class HitRate(Metric):
             sequences: Sequences to evaluate.
 
         Returns:
-            MetricResult: Proportion of sequences where ``condition_fn`` returned ``True``.
+            MetricResult: Proportion of sequences where ``condition_fn`` returned ``True``, and standard error.
         """
         valid = self.condition_fn(sequences)
-        hit_rate = valid.mean().item()
-        return MetricResult(hit_rate)
+
+        p = float(valid.mean())
+        se = float(np.sqrt(p * (1 - p) / len(valid)))
+
+        return MetricResult(value=p, deviation=se)
 
     @property
     def name(self) -> str:
