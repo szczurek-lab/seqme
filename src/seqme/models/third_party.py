@@ -22,6 +22,7 @@ class ThirdPartyModel:
         path: str | Path,
         url: str | None = None,
         branch: str | None = None,
+        shallow: bool = True,
     ):
         """
         Initialize the third-party model.
@@ -31,6 +32,7 @@ class ThirdPartyModel:
             path: Path to the plugin repository. Cloned here if it does not exist and url is provided.
             url: Git repository URL to clone (optionally prefixed with 'git+'). If None, path must already exist.
             branch: Branch to clone. If None, clones the default branch.
+            shallow: If True, clones only the latest commit (no full history). Defaults to True.
 
         Raises:
             ValueError: If entry_point is not of the form 'module:function'.
@@ -48,13 +50,14 @@ class ThirdPartyModel:
         self.module = module
         self.fn = fn
 
-        _check_tool("git")
         _check_tool("uv")
 
         if not self.repo_dir.exists():
             if url is None:
                 raise FileNotFoundError(f"'{self.repo_dir}' does not exist. Provide a url to clone it.")
-            _clone_git_repository(self.repo_dir, url, branch)
+
+            _check_tool("git")
+            _clone_git_repository(self.repo_dir, url, branch, shallow)
 
     def __call__(self, *args, **kwargs) -> Any:
         """
@@ -75,7 +78,7 @@ def _check_tool(name: str) -> None:
         raise RuntimeError(f"'{name}' is not installed or not found on PATH.")
 
 
-def _clone_git_repository(repo_dir: Path, repo_url: str, branch: str | None = None):
+def _clone_git_repository(repo_dir: Path, repo_url: str, branch: str | None = None, shallow: bool = True):
     if repo_dir.exists():
         raise FileExistsError(f"'{repo_dir}' already exists.")
 
@@ -85,6 +88,8 @@ def _clone_git_repository(repo_dir: Path, repo_url: str, branch: str | None = No
     clone_cmd = ["git", "clone", url, str(repo_dir)]
     if branch:
         clone_cmd += ["-b", branch, "--single-branch"]
+    if shallow:
+        clone_cmd += ["--depth", "1"]
 
     subprocess.check_call(clone_cmd, stdout=subprocess.DEVNULL)
 
