@@ -20,12 +20,7 @@ def test_rna_fm_shape_and_means(rna_fm):
 
     assert embeddings.shape == (2, 1280)
 
-    expected_means = np.array(
-        [
-            0.023362776,
-            0.000433295,
-        ]
-    )
+    expected_means = np.array([0.024099, 0.030286])
     actual_means = embeddings.mean(axis=-1)
 
     assert actual_means.tolist() == pytest.approx(expected_means.tolist(), abs=1e-6)

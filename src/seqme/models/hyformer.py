@@ -280,7 +280,7 @@ class Hyformer:
 
 
 def _compute_perplexity(logits: torch.Tensor, labels: torch.Tensor, ignore_index: int = -100) -> torch.Tensor:
-    # shift log_probs and labels by one
+    # shift logits and labels by one
     logits = logits[:, :-1]
     targets = labels[:, 1:]
     mask = targets != ignore_index
