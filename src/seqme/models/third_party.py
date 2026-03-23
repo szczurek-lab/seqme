@@ -14,6 +14,18 @@ class ThirdPartyModel:
     uv is used over conda because it provides precise lockfile-based reproducibility,
     strict package version pinning, and per-project Python version isolation — ensuring
     the plugin runs in exactly the environment its author intended.
+
+    Examples:
+        >>> import seqme as sm
+        >>> hello_model = sm.models.ThirdPartyModel(
+        ...     entry_point="hello_model.model:embed",
+        ...     path="./thirdparty/hello-model",
+        ...     url="https://github.com/szczurek-lab/seqme-thirdparty",
+        ...     branch="main",
+        ... )
+        >>> hello_model(["MKQW", "RKSPL"], batch_size=32)
+        array([[44.,  8., 12., 32.],
+               [55., 10., 15., 40.]])
     """
 
     def __init__(
