@@ -1,4 +1,5 @@
 import pickle
+import shutil
 import subprocess
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -14,6 +15,10 @@ class ThirdPartyModel:
     uv is used over conda because it provides precise lockfile-based reproducibility,
     strict package version pinning, and per-project Python version isolation — ensuring
     the plugin runs in exactly the environment its author intended.
+
+    Note:
+        ``uv`` and ``git`` may not be on the ``PATH`` of a Jupyter kernel. In that
+        case, pass their absolute paths via the ``uv`` and ``git`` parameters.
 
     Examples:
         >>> import seqme as sm
@@ -35,6 +40,8 @@ class ThirdPartyModel:
         url: str | None = None,
         branch: str | None = None,
         shallow: bool = True,
+        uv: str | Path | None = None,
+        git: str | Path | None = None,
     ):
         """
         Initialize the third-party model.
@@ -45,6 +52,8 @@ class ThirdPartyModel:
             url: Git repository URL to clone (optionally prefixed with 'git+'). If None, path must already exist.
             branch: Branch to clone. If None, clones the default branch.
             shallow: If True, clones only the latest commit (no full history). Defaults to True.
+            uv: Path to the uv executable. If None, 'uv' is looked up on PATH.
+            git: Path to the git executable. If None, 'git' is looked up on PATH.
 
         Raises:
             ValueError: If entry_point is not of the form 'module:function'.
@@ -61,15 +70,17 @@ class ThirdPartyModel:
         self.repo_dir = Path(path).resolve()
         self.module = module
         self.fn = fn
+        self.uv = str(uv) if uv is not None else "uv"
+        self.git = str(git) if git is not None else "git"
 
-        _check_tool("uv")
+        _check_tool(self.uv)
 
         if not self.repo_dir.exists():
             if url is None:
                 raise FileNotFoundError(f"'{self.repo_dir}' does not exist. Provide a url to clone it.")
 
-            _check_tool("git")
-            _clone_git_repository(self.repo_dir, url, branch, shallow)
+            _check_tool(self.git)
+            _clone_git_repository(self.repo_dir, url, branch, shallow, self.git)
 
     def __call__(self, *args, **kwargs) -> Any:
         """
@@ -82,22 +93,28 @@ class ThirdPartyModel:
         Returns:
             The return value of the plugin function.
         """
-        return _run(self.repo_dir, self.module, self.fn, args, kwargs)
+        return _run(self.repo_dir, self.module, self.fn, args, kwargs, self.uv)
 
 
 def _check_tool(name: str) -> None:
-    if subprocess.run([name, "--version"], capture_output=True).returncode != 0:
+    if shutil.which(name) is None:
         raise RuntimeError(f"'{name}' is not installed or not found on PATH.")
 
 
-def _clone_git_repository(repo_dir: Path, repo_url: str, branch: str | None = None, shallow: bool = True):
+def _clone_git_repository(
+    repo_dir: Path,
+    repo_url: str,
+    branch: str | None = None,
+    shallow: bool = True,
+    git: str = "git",
+):
     if repo_dir.exists():
         raise FileExistsError(f"'{repo_dir}' already exists.")
 
     repo_dir.parent.mkdir(parents=True, exist_ok=True)
 
     url = repo_url.removeprefix("git+")
-    clone_cmd = ["git", "clone", url, str(repo_dir)]
+    clone_cmd = [git, "clone", url, str(repo_dir)]
     if branch:
         clone_cmd += ["-b", branch, "--single-branch"]
     if shallow:
@@ -116,7 +133,7 @@ def _wrap_code(module: str, fn: str) -> str:
     )
 
 
-def _run(repo_dir: Path, module: str, fn: str, args: tuple, kwargs: dict) -> Any:
+def _run(repo_dir: Path, module: str, fn: str, args: tuple, kwargs: dict, uv: str = "uv") -> Any:
     with TemporaryDirectory(prefix="seqme") as tmpdir:
         in_path = Path(tmpdir) / "input.pkl"
         out_path = Path(tmpdir) / "output.pkl"
@@ -125,7 +142,7 @@ def _run(repo_dir: Path, module: str, fn: str, args: tuple, kwargs: dict) -> Any
             pickle.dump((args, kwargs), f)
 
         code = _wrap_code(module, fn)
-        cmd = ["uv", "run", "--project", str(repo_dir), "python", "-c", code, str(in_path), str(out_path)]
+        cmd = [uv, "run", "--project", str(repo_dir), "python", "-c", code, str(in_path), str(out_path)]
 
         try:
             subprocess.run(cmd, capture_output=True, text=True, check=True)
