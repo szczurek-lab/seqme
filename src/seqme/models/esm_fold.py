@@ -68,6 +68,7 @@ class ESMFold:
         convention: Literal["atom14", "atom37", "ca"] = "ca",
         compute_ptm: bool = False,
         output_pdb: bool = True,
+        output_pae: bool = True,
         return_type: Literal["dict", "list"] = "list",
     ) -> dict[str, list] | list[dict]:
         """
@@ -126,6 +127,7 @@ class ESMFold:
 
             compute_ptm: If ``True``, computes the ptm score (structure confidence score) but reduces the batch size to 1 in order to do so.
             output_pdb: Whether to return the 3D-structure encoded as a PDB for each sequence.
+            output_pae: If ``True``, returns the predicted aligned error matrix for each sequence.
             return_type: If ``"list"``, return list of dict else if ``"dict"`` return dict of lists.
 
         Returns:
@@ -161,6 +163,7 @@ class ESMFold:
 
             atom14 = outputs.positions[-1]
             plddt = outputs.plddt
+            pae = outputs.predicted_aligned_error
 
             lengths = [len(seq) for seq in batch]
             B = atom14.shape[0]
@@ -183,6 +186,10 @@ class ESMFold:
             if output_pdb:
                 pdbs = _convert_outputs_to_pdb(outputs)
                 folds["pdb"].extend(pdbs)
+
+            if output_pae:
+                paes = [pae[i, :L, :L].cpu().numpy() for i, L in enumerate(lengths)]
+                folds["pae"].extend(paes)
 
             if compute_ptm:
                 ptm_val = outputs.ptm.item()

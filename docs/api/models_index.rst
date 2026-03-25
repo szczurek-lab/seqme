@@ -10,7 +10,7 @@ The ``seqme`` library provides a suite of models that convert biological sequenc
 * **Embedding models** — map sequences to fixed-length vector representations.
 * **Property models** — compute interpretable scalar or descriptor values such as charge, weight, or hydrophobicity.
 
-Additional, third-party models can be found at https://github.com/szczurek-lab/seqme-thirdparty.
+Additional third-party models can be found at https://github.com/szczurek-lab/seqme-thirdparty.
 
 Models
 ------

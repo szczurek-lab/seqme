@@ -25,3 +25,6 @@ def test_esm_fold_shape_and_means(esm_fold):
 
     mean_plddts = [plddt.mean().item() for plddt in folds["plddt"]]
     assert mean_plddts == pytest.approx([0.882698, 0.822512])
+
+    mean_pae = [pae.mean().item() for pae in folds["pae"]]
+    assert mean_pae == pytest.approx([3.387295, 2.841406])
