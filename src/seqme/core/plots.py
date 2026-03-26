@@ -463,8 +463,8 @@ def plot_scatter(
         df_model = df.loc[model_name]
         df_model = df_model.sort_index()
 
-        xs = np.array(df_model[(x_metric, "value")])
-        ys = np.array(df_model[(y_metric, "value")])
+        xs = np.atleast_1d(df_model[(x_metric, "value")])
+        ys = np.atleast_1d(df_model[(y_metric, "value")])
 
         sc = ax.scatter(
             xs,
@@ -490,8 +490,8 @@ def plot_scatter(
         c = color[i] if color else sc.get_facecolors()  # type: ignore
 
         if show_deviation:
-            xs_dev = np.array(df_model[(x_metric, "deviation")])
-            ys_dev = np.array(df_model[(y_metric, "deviation")])
+            xs_dev = np.atleast_1d(df_model[(x_metric, "deviation")])
+            ys_dev = np.atleast_1d(df_model[(y_metric, "deviation")])
 
             nan_xs_dev = np.isnan(xs_dev).any()
             nan_ys_dev = np.isnan(ys_dev).any()
