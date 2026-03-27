@@ -117,7 +117,7 @@ class ESM2:
             means = [hidden_state[i, 1 : length + 1].mean(dim=-2) for i, length in enumerate(lengths)]
             batch_embeddings = torch.stack(means, dim=0)
 
-            embeddings.append(batch_embeddings.cpu().numpy())
+            embeddings.append(batch_embeddings.cpu().float().numpy())
 
         return np.concatenate(embeddings)
 

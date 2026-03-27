@@ -20,7 +20,6 @@ Models
 
     seqme.models.ESM2
     seqme.models.ESMFold
-    seqme.models.ESMIF1
     seqme.models.Hyformer
     seqme.models.RNAFM
     seqme.models.GENALM
@@ -88,12 +87,6 @@ Supported sequence types
      - |no|
      - |no|
    * - :py:class:`seqme.models.ESMFold`
-     - |ok|
-     - |no|
-     - |no|
-     - |no|
-     - |no|
-   * - :py:class:`seqme.models.ESMIF1`
      - |ok|
      - |no|
      - |no|
