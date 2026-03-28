@@ -164,7 +164,7 @@ def _run(repo_dir: Path, module: str, fn: str, args: tuple, kwargs: dict, uv: st
             pickle.dump((args, kwargs), f)
 
         code = _wrap_code(module, fn)
-        cmd = [uv, "run", "--project", str(repo_dir), "python", "-c", code, str(in_path), str(out_path)]
+        cmd = [uv, "run", "--no-sync", "--project", str(repo_dir), "python", "-c", code, str(in_path), str(out_path)]
 
         try:
             subprocess.run(cmd, capture_output=True, text=True, check=True)

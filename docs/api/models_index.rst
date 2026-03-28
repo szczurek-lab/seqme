@@ -1,16 +1,20 @@
 Models
 ======
 
-Models mapping biological sequences to feature representations.
+Models can be viewed as sequence transforms or measures. They operate on a single entity—typically a biological sequence (or, in some cases, a 3D structure) - and map it to another representation or compute a value.
+
+This distinguishes them from metrics: while a measure assigns a value to a single entity, a metric quantifies a relationship (e.g., distance or similarity) between two or more entities.
+
+In practice, models transform biological sequences into feature representations or derive specific properties from them.
 
 Overview
 --------
 The ``seqme`` library provides a suite of models that convert biological sequences into numerical representations. These models fall into two main categories:
 
 * **Embedding models** — map sequences to fixed-length vector representations.
-* **Property models** — compute interpretable scalar or descriptor values such as charge, weight, or hydrophobicity.
+* **Property models** — compute scalar values or descriptors such as charge, weight, or hydrophobicity.
 
-Additional third-party models can be found at https://github.com/szczurek-lab/seqme-thirdparty.
+Additional third-party models are available at: https://github.com/szczurek-lab/seqme-thirdparty.
 
 Models
 ------
