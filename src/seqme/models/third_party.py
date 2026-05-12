@@ -16,6 +16,8 @@ class ThirdPartyModel:
     strict package version pinning, and per-project Python version isolation — ensuring
     the plugin runs in exactly the environment its author intended.
 
+    Officially supported models can be found here: https://github.com/szczurek-lab/seqme-thirdparty
+
     Note:
         ``uv`` and ``git`` may not be on the ``PATH`` of a Jupyter kernel. In that
         case, pass their absolute paths via the ``uv`` and ``git`` parameters.

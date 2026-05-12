@@ -24,7 +24,6 @@ Models
 
     seqme.models.ESM2
     seqme.models.ESMFold
-    seqme.models.Hyformer
     seqme.models.RNAFM
     seqme.models.GENALM
     seqme.models.KmerFrequencyEmbedding
@@ -96,12 +95,6 @@ Supported sequence types
      - |no|
      - |no|
      - |no|
-   * - :py:class:`seqme.models.Hyformer`
-     - |no|
-     - |ok|
-     - |no|
-     - |no|
-     - |ok|
    * - :py:class:`seqme.models.RNAFM`
      - |no|
      - |no|

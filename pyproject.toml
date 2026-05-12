@@ -65,20 +65,6 @@ esmfold = ["transformers"]
 aa_descriptors = ["modlamp"]
 molecule_descriptors = ["rdkit"]
 
-hyformer_molecules = [
-    "deepchem",
-    "torchvision",
-    "transformers",
-    #"hyformer @ git+https://github.com/szczurek-lab/hyformer.git@main"
-]
-
-hyformer = [
-    "transformers",
-    "torchvision",
-    "einops>=0.7",
-    #"hyformer @ git+https://github.com/szczurek-lab/hyformer.git@v2.0"
-]
-
 rnafm = ["rna-fm"]
 genalm = ["transformers", "einops"]
 
