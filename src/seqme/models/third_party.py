@@ -16,6 +16,8 @@ class ThirdPartyModel:
     strict package version pinning, and per-project Python version isolation — ensuring
     the plugin runs in exactly the environment its author intended.
 
+    Officially supported models can be found here: https://github.com/szczurek-lab/seqme-thirdparty
+
     Note:
         ``uv`` and ``git`` may not be on the ``PATH`` of a Jupyter kernel. In that
         case, pass their absolute paths via the ``uv`` and ``git`` parameters.
@@ -40,6 +42,7 @@ class ThirdPartyModel:
         url: str | None = None,
         branch: str | None = None,
         shallow: bool = True,
+        extras: list[str] | None = None,
         uv: str | Path | None = None,
         git: str | Path | None = None,
     ):
@@ -52,6 +55,8 @@ class ThirdPartyModel:
             url: Git repository URL to clone (optionally prefixed with 'git+'). If None, path must already exist.
             branch: Branch to clone. If None, clones the default branch.
             shallow: If True, clones only the latest commit (no full history). Defaults to True.
+            extras: Optional dependency groups from the project to install, e.g. ``['cpu', 'cuda']``.
+                Each entry is passed to ``uv sync`` via ``--extra``.
             uv: Path to the uv executable. If None, 'uv' is looked up on PATH.
             git: Path to the git executable. If None, 'git' is looked up on PATH.
 
@@ -70,6 +75,7 @@ class ThirdPartyModel:
         self.repo_dir = Path(path).resolve()
         self.module = module
         self.fn = fn
+        self.extras = extras or []
         self.uv = str(uv) if uv is not None else "uv"
         self.git = str(git) if git is not None else "git"
 
@@ -81,6 +87,8 @@ class ThirdPartyModel:
 
             _check_tool(self.git)
             _clone_git_repository(self.repo_dir, url, branch, shallow, self.git)
+
+        _sync(self.repo_dir, self.extras, self.uv)
 
     def help(self) -> None:
         """Print the signature, docstring, and location of the plugin function."""
@@ -129,7 +137,23 @@ def _clone_git_repository(
     if shallow:
         clone_cmd += ["--depth", "1"]
 
-    subprocess.check_call(clone_cmd, stdout=subprocess.DEVNULL)
+    try:
+        subprocess.run(clone_cmd, capture_output=True, text=True, check=True)
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"git clone failed:\n{e.stderr}") from e
+
+
+def _sync(repo_dir: Path, extras: list[str], uv: str = "uv") -> None:
+    extra_flags = [flag for extra in extras for flag in ("--extra", extra)]
+    try:
+        subprocess.run(
+            [uv, "sync", "--project", str(repo_dir), *extra_flags],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"uv sync failed:\n{e.stderr}") from e
 
 
 def _wrap_code(module: str, fn: str) -> str:
@@ -161,7 +185,7 @@ def _inspect(repo_dir: Path, module: str, fn: str, uv: str = "uv") -> dict:
     with TemporaryDirectory(prefix="seqme") as tmpdir:
         out_path = Path(tmpdir) / "output.pkl"
         code = _wrap_inspect_code(module, fn)
-        cmd = [uv, "run", "--project", str(repo_dir), "python", "-c", code, str(out_path)]
+        cmd = [uv, "run", "--no-sync", "--project", str(repo_dir), "python", "-c", code, str(out_path)]
 
         try:
             subprocess.run(cmd, capture_output=True, text=True, check=True)
@@ -181,7 +205,7 @@ def _run(repo_dir: Path, module: str, fn: str, args: tuple, kwargs: dict, uv: st
             pickle.dump((args, kwargs), f)
 
         code = _wrap_code(module, fn)
-        cmd = [uv, "run", "--project", str(repo_dir), "python", "-c", code, str(in_path), str(out_path)]
+        cmd = [uv, "run", "--no-sync", "--project", str(repo_dir), "python", "-c", code, str(in_path), str(out_path)]
 
         try:
             subprocess.run(cmd, capture_output=True, text=True, check=True)
