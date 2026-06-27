@@ -90,6 +90,15 @@ class ThirdPartyModel:
 
         _sync(self.repo_dir, self.extras, self.uv)
 
+    def help(self) -> None:
+        """Print the signature, docstring, and location of the plugin function."""
+        info = _inspect(self.repo_dir, self.module, self.fn, self.uv)
+        parts = [f"{info['module']}.{self.fn}{info['signature']}"]
+        parts.append(f"File: {info['file']}")
+        if info["doc"]:
+            parts.append(f"\n{info['doc']}")
+        print("\n".join(parts))
+
     def __call__(self, *args, **kwargs) -> Any:
         """
         Execute the plugin's function with the given arguments.
@@ -155,6 +164,36 @@ def _wrap_code(module: str, fn: str) -> str:
         f"result = {module}.{fn}(*args, **kwargs);"
         "pickle.dump(result, open(sys.argv[2],'wb'))"
     )
+
+
+def _wrap_inspect_code(module: str, fn: str) -> str:
+    return (
+        "import inspect, pickle, sys;"
+        f"import {module};"
+        f"func = {module}.{fn};"
+        "result = {"
+        "  'signature': str(inspect.signature(func)),"
+        "  'doc': inspect.getdoc(func),"
+        "  'module': func.__module__,"
+        "  'file': inspect.getfile(func),"
+        "};"
+        "pickle.dump(result, open(sys.argv[1],'wb'))"
+    )
+
+
+def _inspect(repo_dir: Path, module: str, fn: str, uv: str = "uv") -> dict:
+    with TemporaryDirectory(prefix="seqme") as tmpdir:
+        out_path = Path(tmpdir) / "output.pkl"
+        code = _wrap_inspect_code(module, fn)
+        cmd = [uv, "run", "--no-sync", "--project", str(repo_dir), "python", "-c", code, str(out_path)]
+
+        try:
+            subprocess.run(cmd, capture_output=True, text=True, check=True)
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(f"Plugin subprocess failed:\n{e.stderr}") from e
+
+        with open(out_path, "rb") as f:
+            return pickle.load(f)
 
 
 def _run(repo_dir: Path, module: str, fn: str, args: tuple, kwargs: dict, uv: str = "uv") -> Any:
