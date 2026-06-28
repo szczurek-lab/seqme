@@ -93,7 +93,7 @@ class ThirdPartyModel:
     def help(self) -> None:
         """Print the signature, docstring, and location of the plugin function."""
         info = _inspect(self.repo_dir, self.module, self.fn, self.uv)
-        parts = [f"{info['module']}.{self.fn}{info['signature']}"]
+        parts = [f"{self.fn}{info['signature']}"]
         parts.append(f"File: {info['file']}")
         if info["doc"]:
             parts.append(f"\n{info['doc']}")
@@ -174,7 +174,6 @@ def _wrap_inspect_code(module: str, fn: str) -> str:
         "result = {"
         "  'signature': str(inspect.signature(func)),"
         "  'doc': inspect.getdoc(func),"
-        "  'module': func.__module__,"
         "  'file': inspect.getfile(func),"
         "};"
         "pickle.dump(result, open(sys.argv[1],'wb'))"
