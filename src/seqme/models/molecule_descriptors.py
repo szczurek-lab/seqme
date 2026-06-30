@@ -93,11 +93,15 @@ class MoleculeValidity:
             True if the sequence is a valid SMILES string, else False, for each sequence.
         """
         try:
-            from rdkit import Chem
+            from rdkit import Chem, RDLogger
         except ModuleNotFoundError:
             raise OptionalDependencyError("molecule_descriptors") from None
 
-        return np.array([Chem.MolFromSmiles(sequence) is not None for sequence in sequences])
+        RDLogger.DisableLog("rdApp.*")
+        try:
+            return np.array([Chem.MolFromSmiles(sequence) is not None for sequence in sequences])
+        finally:
+            RDLogger.EnableLog("rdApp.*")
 
 
 class LogP:
