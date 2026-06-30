@@ -77,6 +77,29 @@ class QED:
         return np.array([qed(Chem.MolFromSmiles(sequence)) for sequence in sequences])
 
 
+class MoleculeValidity:
+    """Chemical validity for SMILES sequences.
+
+    Installation: ``pip install "seqme[molecule_descriptors]"``
+    """
+
+    def __call__(self, sequences: list[str]) -> np.ndarray:
+        """Compute validity of SMILES sequences.
+
+        Args:
+            sequences: SMILES sequences.
+
+        Returns:
+            True if the sequence is a valid SMILES string, else False, for each sequence.
+        """
+        try:
+            from rdkit import Chem
+        except ModuleNotFoundError:
+            raise OptionalDependencyError("molecule_descriptors") from None
+
+        return np.array([Chem.MolFromSmiles(sequence) is not None for sequence in sequences])
+
+
 class LogP:
     """Lipophilicity for SMILES sequences.
 

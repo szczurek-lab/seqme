@@ -42,7 +42,8 @@ Models
     seqme.models.LogP
     seqme.models.QED
     seqme.models.SAScore
-    
+    seqme.models.MoleculeValidity
+
 
 Miscellaneous
 -------------
@@ -186,6 +187,12 @@ Supported sequence types
      - |no|
      - |ok|
    * - :py:class:`seqme.models.SAScore`
+     - |no|
+     - |no|
+     - |no|
+     - |no|
+     - |ok|
+   * - :py:class:`seqme.models.MoleculeValidity`
      - |no|
      - |no|
      - |no|
