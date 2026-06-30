@@ -171,7 +171,7 @@ class Recall(Metric):
         if self.n_neighbors < 1:
             raise ValueError("n_neighbors must be greater than 0.")
 
-        self.reference_embeddings = torch.from_numpy(self.embedder(self.reference))
+        self.reference_embeddings = torch.from_numpy(self.embedder(self.reference)).to(self.device)
 
         if self.reference_embeddings.shape[0] < 1:
             raise ValueError("Reference embeddings must contain at least one samples.")
