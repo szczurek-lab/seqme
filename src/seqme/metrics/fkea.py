@@ -39,7 +39,7 @@ class FKEA(Metric):
         alpha: float | int = 2,
         n_random_fourier_features: int | None = 2048,
         batch_size: int = 256,
-        device: str = "cpu",
+        device: str | None = "cpu",
         seed: int = 0,
         strict: bool = True,
         name: str = "FKEA",
@@ -52,7 +52,7 @@ class FKEA(Metric):
             alpha: alpha-norm of the normalized kernels eigenvalues. If ``alpha=2`` then it corresponds to the RKE-score otherwise VENDI-alpha.
             n_random_fourier_features: Number of random Fourier features. Used to approximate the kernel function. Consider increasing this to get a better approximation. If ``None``, use the exact kernel covariance matrix.
             batch_size: Number of samples per batch when computing the kernel.
-            device: Compute device, e.g., ``"cpu"`` or ``"cuda"``.
+            device: Compute device, e.g., ``"cpu"`` or ``"cuda"``. If ``None``, uses ``"cuda"`` when available, otherwise ``"cpu"``.
             seed: Seed for deterministic sampling of Fourier features.
             strict: Enforce equal number of samples for computation.
             name: Metric name.
@@ -62,7 +62,7 @@ class FKEA(Metric):
         self.alpha = alpha
         self.bandwidth = bandwidth
         self.batch_size = batch_size
-        self.device = device
+        self.device = device if device is not None else ("cuda" if torch.cuda.is_available() else "cpu")
         self.seed = seed
         self.strict = strict
         self._name = name

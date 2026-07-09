@@ -37,7 +37,7 @@ class ClippedDensity(Metric):
         embedder: Callable[[list[str]], np.ndarray],
         *,
         batch_size: int = 256,
-        device: str = "cpu",
+        device: str | None = "cpu",
         strict: bool = True,
         name: str = "Clipped density",
     ):
@@ -54,7 +54,7 @@ class ClippedDensity(Metric):
             reference: List of reference sequences used to build the reference manifold.
             embedder: Function mapping sequences to embeddings.
             batch_size: Number of samples per batch when computing distances.
-            device: Compute device, e.g., ``"cpu"`` or ``"cuda"``.
+            device: Compute device, e.g., ``"cpu"`` or ``"cuda"``. If ``None``, uses ``"cuda"`` when available, otherwise ``"cpu"``.
             strict: If True, enforces an equal number of evaluation and reference samples.
             name: Metric name.
 
@@ -65,7 +65,7 @@ class ClippedDensity(Metric):
         self.embedder = embedder
 
         self.batch_size = batch_size
-        self.device = device
+        self.device = device if device is not None else ("cuda" if torch.cuda.is_available() else "cpu")
         self.strict = strict
         self._name = name
 
@@ -152,7 +152,7 @@ class ClippedCoverage(Metric):
         embedder: Callable[[list[str]], np.ndarray],
         *,
         batch_size: int = 256,
-        device: str = "cpu",
+        device: str | None = "cpu",
         strict: bool = True,
         name: str = "Clipped coverage",
     ):
@@ -169,7 +169,7 @@ class ClippedCoverage(Metric):
             reference: List of reference sequences used to build the reference manifold.
             embedder: Function mapping sequences to embeddings.
             batch_size: Number of samples per batch when computing distances.
-            device: Compute device, e.g., ``"cpu"`` or ``"cuda"``.
+            device: Compute device, e.g., ``"cpu"`` or ``"cuda"``. If ``None``, uses ``"cuda"`` when available, otherwise ``"cpu"``.
             strict: If True, enforces an equal number of evaluation and reference samples.
             name: Metric name.
 
@@ -181,7 +181,7 @@ class ClippedCoverage(Metric):
         self.embedder = embedder
 
         self.batch_size = batch_size
-        self.device = device
+        self.device = device if device is not None else ("cuda" if torch.cuda.is_available() else "cpu")
         self.strict = strict
         self._name = name
 

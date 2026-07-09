@@ -28,7 +28,7 @@ class MMD(Metric):
         estimate: Literal["biased", "unbiased"] = "biased",
         sigma: float = 10,
         scale: float = 1000,
-        device: str = "cpu",
+        device: str | None = "cpu",
         name: str = "MMD",
     ):
         """
@@ -40,7 +40,7 @@ class MMD(Metric):
             estimate: Expectation estimate.
             sigma: Bandwidth parameter for the Gaussian RBF kernel.
             scale: Scaling factor for the MMD score.
-            device: Compute device, e.g., ``"cpu"`` or ``"cuda"``.
+            device: Compute device, e.g., ``"cpu"`` or ``"cuda"``. If ``None``, uses ``"cuda"`` when available, otherwise ``"cpu"``.
             name: Metric name.
         """
         self.reference = reference
@@ -48,7 +48,7 @@ class MMD(Metric):
         self.estimate = estimate
         self.sigma = sigma
         self.scale = scale
-        self.device = device
+        self.device = device if device is not None else ("cuda" if torch.cuda.is_available() else "cpu")
         self._name = name
 
         self.reference_embeddings = torch.from_numpy(self.embedder(self.reference)).to(self.device)
@@ -105,7 +105,7 @@ class KID(Metric):
         estimate: Literal["biased", "unbiased"] = "biased",
         degree: int = 3,
         coef0: float = 1.0,
-        device: str = "cpu",
+        device: str | None = "cpu",
         name: str = "KID",
     ):
         """
@@ -117,7 +117,7 @@ class KID(Metric):
             estimate: Expectation estimate.
             degree: Polynomial kernel degree.
             coef0: Coefficient.
-            device: Compute device, e.g., ``"cpu"`` or ``"cuda"``.
+            device: Compute device, e.g., ``"cpu"`` or ``"cuda"``. If ``None``, uses ``"cuda"`` when available, otherwise ``"cpu"``.
             name: Metric name.
         """
         self.reference = reference
@@ -125,7 +125,7 @@ class KID(Metric):
         self.estimate = estimate
         self.degree = degree
         self.coef0 = coef0
-        self.device = device
+        self.device = device if device is not None else ("cuda" if torch.cuda.is_available() else "cpu")
         self._name = name
 
         self.reference_embeddings = torch.from_numpy(self.embedder(self.reference)).to(self.device)
