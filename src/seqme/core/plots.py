@@ -11,7 +11,7 @@ def plot_bar(
     df: pd.DataFrame,
     metric: str | None = None,
     *,
-    color: str = "#68d6bc",
+    color: str | list[str] = "#68d6bc",
     xticks_rotation: float = 45,
     ylim: tuple[float, float] | None = None,
     show_arrow: bool = True,
@@ -24,7 +24,7 @@ def plot_bar(
     Args:
         df: Metric dataframe.
         metric: The name of the metric to plot. If ``None``, plot all metrics in ``df``, assumes one metric is in the dataframe.
-        color: Bar color. Default is teal.
+        color: Bar color, or a list of colors that cycles across bars. Default is teal.
         xticks_rotation: Rotation angle for x-axis labels.
         ylim: y-axis limits (optional).
         show_arrow: Whether to show an arrow indicating maximize/minimize in the x-labels.
