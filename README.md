@@ -67,16 +67,19 @@ Check out the [docs](https://seqme.readthedocs.io/en/stable/tutorials/index.html
 
 ## Citation
 
-If you use **seqme** in your research, consider citing our [publication](https://arxiv.org/abs/2511.04239):
+If you use **seqme** in your research, consider citing our [publication](https://academic.oup.com/bioinformaticsadvances/article/6/1/vbag212/8753987):
 
 ```bibtex
-@article{mollerlarsen2025seqme,
-      title={seqme: a Python library for evaluating biological sequence design}, 
-      author={Rasmus Møller-Larsen and Adam Izdebski and Jan Olszewski and Pankhil Gawade and Michal Kmicikiewicz and Wojciech Zarzecki and Ewa Szczurek},
-      year={2025},
-      eprint={2511.04239},
-      archivePrefix={arXiv},
-      primaryClass={cs.LG},
-      url={https://arxiv.org/abs/2511.04239}, 
+@article{10.1093/bioadv/vbag212,
+    author  = {Møller-Larsen, Rasmus and Izdebski, Adam and Olszewski, Jan and Gawade, Pankhil and Kmicikiewicz, Michal and Zarzecki, Wojciech and Szczurek, Ewa},
+    title   = {seqme: a Python library for evaluating biological sequence design from generative models},
+    journal = {Bioinformatics Advances},
+    volume  = {6},
+    number  = {1},
+    pages   = {vbag212},
+    year    = {2026},
+    month   = {01},
+    issn    = {2635-0041},
+    doi     = {10.1093/bioadv/vbag212},
 }
 ```
